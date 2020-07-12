@@ -13,20 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package okhttp3.tls.internal.der
+package app.cash.certifikit
 
+import app.cash.certifikit.CertificateAdapters.generalNameDnsName
+import app.cash.certifikit.CertificateAdapters.generalNameIpAddress
+import app.cash.certifikit.ObjectIdentifiers.basicConstraints
+import app.cash.certifikit.ObjectIdentifiers.commonName
+import app.cash.certifikit.ObjectIdentifiers.sha256WithRSAEncryption
+import app.cash.certifikit.ObjectIdentifiers.subjectAlternativeName
 import java.math.BigInteger
 import java.net.InetAddress
 import java.net.ProtocolException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.TimeZone
-import okhttp3.tls.internal.der.CertificateAdapters.generalNameDnsName
-import okhttp3.tls.internal.der.CertificateAdapters.generalNameIpAddress
-import okhttp3.tls.internal.der.ObjectIdentifiers.basicConstraints
-import okhttp3.tls.internal.der.ObjectIdentifiers.commonName
-import okhttp3.tls.internal.der.ObjectIdentifiers.sha256WithRSAEncryption
-import okhttp3.tls.internal.der.ObjectIdentifiers.subjectAlternativeName
 import okio.Buffer
 import okio.ByteString.Companion.decodeHex
 import okio.ByteString.Companion.encodeUtf8
@@ -931,8 +931,10 @@ internal class DerTest {
     companion object {
       val ADAPTER = Adapters.sequence(
           "Point",
-          Adapters.INTEGER_AS_LONG.withTag(tag = 0L).optional(),
-          Adapters.INTEGER_AS_LONG.withTag(tag = 1L).optional(),
+          Adapters.INTEGER_AS_LONG.withTag(tag = 0L)
+              .optional(),
+          Adapters.INTEGER_AS_LONG.withTag(tag = 1L)
+              .optional(),
           decompose = { listOf(it.x, it.y) },
           construct = { Point(it[0] as Long?, it[1] as Long?) }
       )

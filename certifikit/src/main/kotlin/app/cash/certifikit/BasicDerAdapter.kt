@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package okhttp3.tls.internal.der
+package app.cash.certifikit
 
 import java.net.ProtocolException
 
