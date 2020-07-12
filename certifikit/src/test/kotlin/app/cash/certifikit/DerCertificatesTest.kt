@@ -13,8 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package okhttp3.tls.internal.der
+package app.cash.certifikit
 
+import app.cash.certifikit.ObjectIdentifiers.basicConstraints
+import app.cash.certifikit.ObjectIdentifiers.commonName
+import app.cash.certifikit.ObjectIdentifiers.organizationalUnitName
+import app.cash.certifikit.ObjectIdentifiers.rsaEncryption
+import app.cash.certifikit.ObjectIdentifiers.sha256WithRSAEncryption
+import app.cash.certifikit.ObjectIdentifiers.subjectAlternativeName
 import java.math.BigInteger
 import java.security.KeyFactory
 import java.security.spec.PKCS8EncodedKeySpec
@@ -22,14 +28,6 @@ import java.security.spec.X509EncodedKeySpec
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.TimeZone
-import okhttp3.tls.HeldCertificate
-import okhttp3.tls.decodeCertificatePem
-import okhttp3.tls.internal.der.ObjectIdentifiers.basicConstraints
-import okhttp3.tls.internal.der.ObjectIdentifiers.commonName
-import okhttp3.tls.internal.der.ObjectIdentifiers.organizationalUnitName
-import okhttp3.tls.internal.der.ObjectIdentifiers.rsaEncryption
-import okhttp3.tls.internal.der.ObjectIdentifiers.sha256WithRSAEncryption
-import okhttp3.tls.internal.der.ObjectIdentifiers.subjectAlternativeName
 import okio.Buffer
 import okio.ByteString
 import okio.ByteString.Companion.decodeBase64
@@ -642,21 +640,25 @@ internal class DerCertificatesTest {
     val okHttpCertificate = CertificateAdapters.certificate
         .fromDer(certificateByteString)
 
-    assertThat(okHttpCertificate.basicConstraints).isEqualTo(Extension(
+    assertThat(okHttpCertificate.basicConstraints).isEqualTo(
+        Extension(
         id = basicConstraints,
         critical = true,
         value = BasicConstraints(true, 3)
-    ))
+    )
+    )
     assertThat(okHttpCertificate.commonName).isEqualTo("Jurassic Park")
     assertThat(okHttpCertificate.organizationalUnitName).isEqualTo("Gene Research")
-    assertThat(okHttpCertificate.subjectAlternativeNames).isEqualTo(Extension(
+    assertThat(okHttpCertificate.subjectAlternativeNames).isEqualTo(
+        Extension(
         id = subjectAlternativeName,
         critical = true,
         value = listOf(
             CertificateAdapters.generalNameDnsName to "*.example.com",
             CertificateAdapters.generalNameDnsName to "www.example.org"
         )
-    ))
+    )
+    )
     assertThat(okHttpCertificate.tbsCertificate.validity).isEqualTo(Validity(-1000L, 2000L))
     assertThat(okHttpCertificate.tbsCertificate.serialNumber).isEqualTo(BigInteger("17"))
   }
@@ -891,7 +893,8 @@ internal class DerCertificatesTest {
         .decodeBase64()!!
 
     val decoded = CertificateAdapters.certificate.fromDer(certificateByteString)
-    assertThat(decoded.subjectAlternativeNames).isEqualTo(Extension(
+    assertThat(decoded.subjectAlternativeNames).isEqualTo(
+        Extension(
         id = subjectAlternativeName,
         critical = false,
         value = listOf(
@@ -903,7 +906,8 @@ internal class DerCertificatesTest {
                 bytes = "ca@trustwave.com".encodeUtf8()
             )
         )
-    ))
+    )
+    )
   }
 
   /** Converts public key bytes to SubjectPublicKeyInfo bytes. */

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package okhttp3.tls.internal.der
+package app.cash.certifikit
 
 /** ASN.1 object identifiers used internally by this implementation. */
 internal object ObjectIdentifiers {

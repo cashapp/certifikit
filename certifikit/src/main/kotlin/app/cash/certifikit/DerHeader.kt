@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package okhttp3.tls.internal.der
+package app.cash.certifikit
 
 /**
  * The first two bytes of each value is a header that includes its tag (field ID) and length.
