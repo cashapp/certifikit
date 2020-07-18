@@ -111,7 +111,7 @@ class Main : Runnable {
     private fun versionString(): String? {
       val prop = Properties()
       Main::class.java.getResourceAsStream("/certifikit-version.properties")
-          .use {
+          ?.use {
             prop.load(it)
           }
       return prop.getProperty("version", "dev")
