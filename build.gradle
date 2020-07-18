@@ -6,7 +6,6 @@ buildscript {
       'kotlin': '1.3.72',
       'ktlint': '0.36.0',
       'okio': '2.7.0',
-      'picocli': '4.2.0',
   ]
 
   ext.deps = [
@@ -14,7 +13,6 @@ buildscript {
       'junit': "junit:junit:${versions.junit}",
       'kotlinStdlib': "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}",
       'okio': "com.squareup.okio:okio:${versions.okio}",
-      'picocli': "info.picocli:picocli:${versions.picocli}",
   ]
 
   dependencies {

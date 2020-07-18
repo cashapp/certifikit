@@ -1,5 +1,10 @@
 plugins {
   id 'application'
+  id 'com.github.johnrengelman.shadow' version '6.0.0'
+}
+
+shadowJar {
+  mainClassName = 'app.cash.certifikit.cli.Main'
 }
 
 jar {
@@ -15,6 +20,7 @@ sourceSets {
 }
 compileJava {
   dependsOn 'copyResourcesTemplates'
+  options.compilerArgs += ["-Aproject=${project.group}/${project.name}"]
 }
 task copyResourcesTemplates(type: Copy) {
   from 'src/main/resources-templates'
@@ -23,11 +29,19 @@ task copyResourcesTemplates(type: Copy) {
   filteringCharset = 'UTF-8'
 }
 
+//https://github.com/remkop/picocli/tree/master/picocli-codegen
+configurations {
+  generateConfig
+}
+
 dependencies {
   api project(':certifikit')
   api deps.okio
-  implementation deps.picocli
+  implementation 'info.picocli:picocli:4.4.0'
   implementation 'com.squareup.okhttp3:okhttp:4.8.0'
+
+  annotationProcessor 'info.picocli:picocli-codegen:4.4.0'
+  generateConfig 'info.picocli:picocli-codegen:4.4.0'
 
   testImplementation deps.junit
   testImplementation deps.assertj
@@ -36,3 +50,13 @@ dependencies {
 application {
   mainClass = 'app.cash.certifikit.cli.Main'
 }
+
+task(generateGraalReflectionConfig, dependsOn: 'classes', type: JavaExec) {
+  main = 'picocli.codegen.aot.graalvm.ReflectionConfigGenerator'
+  classpath = configurations.generateConfig + sourceSets.main.runtimeClasspath
+  def outputFile = "${buildDir}/resources/main/META-INF/native-image/${project.group}/${project.name}/reflect-config.json"
+  args = ["--output=$outputFile", 'app.cash.certifikit.cli.Main']
+}
+assemble.dependsOn generateGraalReflectionConfig
+assemble.dependsOn installShadowDist
+
