@@ -662,6 +662,25 @@ internal class DerCertificatesTest {
     assertThat(okHttpCertificate.tbsCertificate.validity).isEqualTo(Validity(-1000L, 2000L))
     assertThat(okHttpCertificate.tbsCertificate.serialNumber).isEqualTo(BigInteger("17"))
   }
+  
+  @Test
+  fun `missing subject alternative names`() {
+    val certificate = HeldCertificate.Builder()
+        .certificateAuthority(3)
+        .commonName("Jurassic Park")
+        .organizationalUnit("Gene Research")
+        .validityInterval(-1000L, 2000L)
+        .serialNumber(17L)
+        .build()
+
+    val certificateByteString = certificate.certificate.encoded.toByteString()
+
+    val okHttpCertificate = CertificateAdapters.certificate
+        .fromDer(certificateByteString)
+
+    assertThat(okHttpCertificate.commonName).isEqualTo("Jurassic Park")
+    assertThat(okHttpCertificate.subjectAlternativeNames).isNull()
+  }
 
   @Test
   fun `public key`() {
