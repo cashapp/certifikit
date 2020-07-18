@@ -662,7 +662,7 @@ internal class DerCertificatesTest {
     assertThat(okHttpCertificate.tbsCertificate.validity).isEqualTo(Validity(-1000L, 2000L))
     assertThat(okHttpCertificate.tbsCertificate.serialNumber).isEqualTo(BigInteger("17"))
   }
-  
+
   @Test
   fun `missing subject alternative names`() {
     val certificate = HeldCertificate.Builder()
