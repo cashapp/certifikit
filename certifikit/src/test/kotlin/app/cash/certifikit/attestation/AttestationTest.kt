@@ -30,7 +30,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 
 class AttestTest {
-  @ExperimentalStdlibApi
   @Test
   fun `decode attestation certificate`() {
     // https://github.com/google/android-key-attestation/blob/master/server/examples/pem/algorithm_EC_SecurityLevel_StrongBox/cert0.pem
