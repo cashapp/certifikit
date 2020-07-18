@@ -23,7 +23,7 @@ import java.net.ProtocolException
  *
  * Types like ANY and CHOICE that don't have a consistent tag cannot use this.
  */
-internal data class BasicDerAdapter<T>(
+data class BasicDerAdapter<T>(
   private val name: String,
 
   /** The tag class this adapter expects, or -1 to match any tag class. */

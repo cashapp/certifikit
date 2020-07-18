@@ -25,7 +25,7 @@ import java.security.cert.X509Certificate
 import okio.Buffer
 import okio.ByteString
 
-internal data class Certificate(
+data class Certificate(
   val tbsCertificate: TbsCertificate,
   val signatureAlgorithm: AlgorithmIdentifier,
   val signatureValue: BitString
@@ -88,7 +88,7 @@ internal data class Certificate(
   }
 }
 
-internal data class TbsCertificate(
+data class TbsCertificate(
   /** This is a integer enum. Use 0L for v1, 1L for v2, and 2L for v3. */
   val version: Long,
   val serialNumber: BigInteger,
@@ -131,20 +131,20 @@ internal data class TbsCertificate(
   }
 }
 
-internal data class AlgorithmIdentifier(
+data class AlgorithmIdentifier(
   /** An OID string like "1.2.840.113549.1.1.11" for sha256WithRSAEncryption. */
   val algorithm: String,
   /** Parameters of a type implied by [algorithm]. */
   val parameters: Any?
 )
 
-internal data class AttributeTypeAndValue(
+data class AttributeTypeAndValue(
   /** An OID string like "2.5.4.11" for organizationalUnitName. */
   val type: String,
   val value: Any?
 )
 
-internal data class Validity(
+data class Validity(
   val notBefore: Long,
   val notAfter: Long
 ) {
@@ -157,18 +157,18 @@ internal data class Validity(
   }
 }
 
-internal data class SubjectPublicKeyInfo(
+data class SubjectPublicKeyInfo(
   val algorithm: AlgorithmIdentifier,
   val subjectPublicKey: BitString
 )
 
-internal data class Extension(
+data class Extension(
   val id: String,
   val critical: Boolean,
   val value: Any?
 )
 
-internal data class BasicConstraints(
+data class BasicConstraints(
   /** True if this certificate can be used as a Certificate Authority (CA). */
   val ca: Boolean,
   /** The maximum number of intermediate CAs between this and leaf certificates. */
@@ -176,7 +176,7 @@ internal data class BasicConstraints(
 )
 
 /** A private key. Note that this class doesn't support attributes or an embedded public key. */
-internal data class PrivateKeyInfo(
+data class PrivateKeyInfo(
   val version: Long, // v1(0), v2(1)
   val algorithmIdentifier: AlgorithmIdentifier, // v1(0), v2(1)
   val privateKey: ByteString

@@ -20,7 +20,7 @@ import okio.Buffer
 import okio.BufferedSink
 import okio.ByteString
 
-internal class DerWriter(sink: BufferedSink) {
+class DerWriter(sink: BufferedSink) {
   /** A stack of buffers that will be concatenated once we know the length of each. */
   private val stack = mutableListOf(sink)
 
