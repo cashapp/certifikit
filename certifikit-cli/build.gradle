@@ -1,0 +1,38 @@
+plugins {
+  id 'application'
+}
+
+jar {
+  manifest {
+    attributes 'Automatic-Module-Name': 'app.cash.certifikit.cli'
+    attributes 'Main-Class': 'app.cash.certifikit.cli.Main'
+  }
+}
+
+// resources-templates.
+sourceSets {
+  main.resources.srcDirs += "$buildDir/generated/resources-templates"
+}
+compileJava {
+  dependsOn 'copyResourcesTemplates'
+}
+task copyResourcesTemplates(type: Copy) {
+  from 'src/main/resources-templates'
+  into "$buildDir/generated/resources-templates"
+  expand('projectVersion': "${project.version}")
+  filteringCharset = 'UTF-8'
+}
+
+dependencies {
+  api project(':certifikit')
+  api deps.okio
+  implementation deps.picocli
+  implementation 'com.squareup.okhttp3:okhttp:4.8.0'
+
+  testImplementation deps.junit
+  testImplementation deps.assertj
+}
+
+application {
+  mainClass = 'app.cash.certifikit.cli.Main'
+}

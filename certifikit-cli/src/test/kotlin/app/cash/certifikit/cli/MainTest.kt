@@ -13,24 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.certifikit
+package app.cash.certifikit.cli
 
-import okio.ByteString
+import picocli.CommandLine
 
-/**
- * Like a [ByteString], but whose bits are not necessarily a strict multiple of 8.
- */
-data class BitString(
-  val byteString: ByteString,
+class MainTest {
+  @org.junit.Test fun version() {
+    CommandLine(Main()).execute("-V")
+  }
 
-  /** 0-7 unused bits in the last byte. */
-  val unusedBitsCount: Int
-) {
-  // Avoid Long.hashCode(long) which isn't available on Android 5.
-  override fun hashCode(): Int {
-    var result = 0
-    result = 31 * result + byteString.hashCode()
-    result = 31 * result + unusedBitsCount
-    return result
+  @org.junit.Test fun certificate() {
+    fromArgs("src/test/resources/cert.pem").run()
+  }
+
+  @org.junit.Test fun https() {
+    fromArgs("--host", "www.google.com").run()
+  }
+
+  companion object {
+    fun fromArgs(vararg args: kotlin.String?): Main {
+      return picocli.CommandLine.populateCommand(Main(), *args)
+    }
   }
 }
