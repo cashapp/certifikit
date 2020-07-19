@@ -11,6 +11,10 @@ _cft_files() {
   _alternative 'files:files:{_files -g "*.pem"}'
 }
 
+_cft_output_files() {
+  _alternative 'files:files:{_files -/}'
+}
+
 _cft_urls() {
   compadd google.com facebook.com twitter.com squareup.com cash.app
 }
@@ -24,6 +28,10 @@ _cft() {
   _arguments -C -S \
     {-h,--help}'[Show this help message and exit.]' \
     --host='[Show certificates for host]: :_cft_urls' \
+    --output='[Output directory or file]: :_cft_output_files' \
+    --verbose'[Verbose Output.]' \
+    --insecure'[Insecure HTTPS Mode.]' \
+    --no-redirect'[Avoid redirect]' \
     {-V,--version}'[Print version information and exit.]' \
     '*:File:_cft_files' \
     && ret=0
