@@ -59,6 +59,7 @@ class CertificateOutputTest {
       |CN: 	cash.app
       |SN: 	be6800b9a91fb97a0000000054d1321d
       |SAN: 	cash.app, www.cash.app
+      |Validity: 	2020-04-13T13:25:49Z..2021-04-12T13:55:49Z
     """.trimMargin())
   }
 }

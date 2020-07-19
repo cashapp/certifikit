@@ -12,7 +12,9 @@ fun Certificate.prettyPrintCertificate(): String {
     append("CN: \t$commonName\n")
     append("SN: \t${tbsCertificate.serialNumber.toString(16)}\n")
     append("SAN: \t${subjectAltNames()?.joinToString(", ") ?: "<N/A>"}\n")
-    append("OU: \t$organizationalUnitName\n")
+    if (organizationalUnitName != null) {
+      append("OU: \t$organizationalUnitName\n")
+    }
 
     append(
         "Validity: \t${
