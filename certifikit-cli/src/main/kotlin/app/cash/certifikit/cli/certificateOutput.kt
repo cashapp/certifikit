@@ -2,17 +2,25 @@ package app.cash.certifikit.cli
 
 import app.cash.certifikit.Certificate
 import app.cash.certifikit.ObjectIdentifiers
-import java.security.cert.X509Certificate
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
+import java.security.cert.X509Certificate
+import java.time.Instant
 
 fun Certificate.prettyPrintCertificate(): String {
   return buildString {
     append("CN: \t$commonName\n")
     append("SN: \t${tbsCertificate.serialNumber.toString(16)}\n")
+    append("SAN: \t${subjectAltNames()?.joinToString(", ") ?: "<N/A>"}\n")
+    append("OU: \t$organizationalUnitName\n")
 
-    val subjectAlternativeNames = subjectAltNames()
-    append("SAN: \t${subjectAlternativeNames?.joinToString(", ") ?: "<N/A>"}")
+    append(
+        "Validity: \t${
+          Instant.ofEpochMilli(tbsCertificate.validity.notBefore)
+        }..${
+          Instant.ofEpochMilli(tbsCertificate.validity.notAfter)
+        }"
+    )
   }
 }
 
