@@ -31,7 +31,7 @@ _cft() {
     --output='[Output directory or file]: :_cft_output_files' \
     --verbose'[Verbose Output.]' \
     --insecure'[Insecure HTTPS Mode.]' \
-    --no-redirect'[Avoid redirect]' \
+    --redirect'[Follow redirect]' \
     {-V,--version}'[Print version information and exit.]' \
     '*:File:_cft_files' \
     && ret=0

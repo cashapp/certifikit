@@ -25,6 +25,7 @@ import java.net.InetSocketAddress
 import java.net.Proxy
 import java.security.cert.X509Certificate
 import java.util.Properties
+import javax.net.ssl.HostnameVerifier
 import kotlin.system.exitProcess
 import okhttp3.Call
 import okhttp3.EventListener
@@ -32,6 +33,7 @@ import okhttp3.Handshake
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.Request
+import okhttp3.tls.HandshakeCertificates
 import okio.ByteString.Companion.decodeBase64
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine
@@ -54,8 +56,8 @@ class Main : Runnable {
   @Option(names = ["--insecure"], description = ["Insecure HTTPS"])
   var insecure: Boolean = false
 
-  @Option(names = ["--no-redirect"], description = ["Avoid redirect"])
-  var avoidRedirect: Boolean = false
+  @Option(names = ["--redirect"], description = ["Follow redirect"])
+  var followRedirect: Boolean = false
 
   @Option(names = ["--output"], description = ["Output file or directory"])
   var output: File? = null
@@ -77,7 +79,7 @@ class Main : Runnable {
   }
 
   private fun queryHost() {
-    val x509certificates = fromHttps("https://$host/")
+    val x509certificates = fromHttps(host!!)
     val certificates = x509certificates
         .map {
           CertificateAdapters.certificate.fromDer(it.encoded.toByteString())
@@ -119,9 +121,22 @@ class Main : Runnable {
     }
   }
 
-  private fun fromHttps(url: String): List<X509Certificate> {
+  private fun fromHttps(host: String): List<X509Certificate> {
     val client = OkHttpClient.Builder()
-        .followRedirects(!avoidRedirect)
+        .followRedirects(followRedirect)
+        .apply {
+          if (insecure) {
+            hostnameVerifier(HostnameVerifier { _, _ -> true })
+
+            val handshakeCertificates = HandshakeCertificates.Builder()
+                .addPlatformTrustedCertificates()
+                .addInsecureHost(host)
+                .build()
+            sslSocketFactory(
+                handshakeCertificates.sslSocketFactory(), handshakeCertificates.trustManager
+            )
+          }
+        }
         .eventListener(object : EventListener() {
           override fun dnsEnd(
             call: Call,
@@ -159,7 +174,7 @@ class Main : Runnable {
 
     val call = client.newCall(
         Request.Builder()
-            .url(url)
+            .url("https://$host/")
             .build()
     )
 
