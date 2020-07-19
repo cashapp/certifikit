@@ -17,7 +17,7 @@ fun Certificate.prettyPrintCertificate(): String {
     }
 
     append(
-        "Validity: \t${
+        "Valid: \t${
           Instant.ofEpochMilli(tbsCertificate.validity.notBefore)
         }..${
           Instant.ofEpochMilli(tbsCertificate.validity.notAfter)
