@@ -9,7 +9,7 @@ import okio.ByteString.Companion.toByteString
 fun Certificate.prettyPrintCertificate(): String {
   return buildString {
     append("CN: \t$commonName\n")
-    append("SN: \t${tbsCertificate.serialNumber}\n")
+    append("SN: \t${tbsCertificate.serialNumber.toString(16)}\n")
 
     val subjectAlternativeNames = subjectAltNames()
     append("SAN: \t${subjectAlternativeNames?.joinToString(", ") ?: "<N/A>"}")

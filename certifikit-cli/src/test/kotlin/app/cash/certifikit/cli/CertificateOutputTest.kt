@@ -57,7 +57,7 @@ class CertificateOutputTest {
 
     assertThat(output).isEqualTo("""
       |CN: 	cash.app
-      |SN: 	253093332781973022312510445874391888413
+      |SN: 	be6800b9a91fb97a0000000054d1321d
       |SAN: 	cash.app, www.cash.app
     """.trimMargin())
   }
