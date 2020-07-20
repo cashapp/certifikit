@@ -26,7 +26,7 @@ import okio.ByteString
  * [rfc_5280]: https://tools.ietf.org/html/rfc5280
  */
 @Suppress("UNCHECKED_CAST") // This needs to cast decoded collections.
-internal object CertificateAdapters {
+object CertificateAdapters {
   /**
    * ```
    * Time ::= CHOICE {
@@ -349,7 +349,7 @@ internal object CertificateAdapters {
    * }
    * ```
    */
-  internal val tbsCertificate: BasicDerAdapter<TbsCertificate> = Adapters.sequence(
+  val tbsCertificate: BasicDerAdapter<TbsCertificate> = Adapters.sequence(
       "TBSCertificate",
       Adapters.INTEGER_AS_LONG.withExplicitBox(tag = 0L).optional(defaultValue = 0), // v1 == 0
       Adapters.INTEGER_AS_BIG_INTEGER,
@@ -400,7 +400,7 @@ internal object CertificateAdapters {
    * }
    * ```
    */
-  internal val certificate: BasicDerAdapter<Certificate> = Adapters.sequence(
+  val certificate: BasicDerAdapter<Certificate> = Adapters.sequence(
       "Certificate",
       tbsCertificate,
       algorithmIdentifier,

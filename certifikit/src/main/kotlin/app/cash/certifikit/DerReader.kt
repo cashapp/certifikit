@@ -37,7 +37,7 @@ import okio.buffer
  * [x690]: https://www.itu.int/rec/T-REC-X.690
  * [asn1_and_der]: https://letsencrypt.org/docs/a-warm-welcome-to-asn1-and-der/
  */
-internal class DerReader(source: Source) {
+class DerReader(source: Source) {
   private val countingSource: CountingSource = CountingSource(source)
   private val source: BufferedSource = countingSource.buffer()
 
