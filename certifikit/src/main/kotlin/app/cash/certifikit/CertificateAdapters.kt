@@ -349,7 +349,7 @@ object CertificateAdapters {
    * }
    * ```
    */
-  internal val tbsCertificate: BasicDerAdapter<TbsCertificate> = Adapters.sequence(
+  val tbsCertificate: BasicDerAdapter<TbsCertificate> = Adapters.sequence(
       "TBSCertificate",
       Adapters.INTEGER_AS_LONG.withExplicitBox(tag = 0L).optional(defaultValue = 0), // v1 == 0
       Adapters.INTEGER_AS_BIG_INTEGER,
