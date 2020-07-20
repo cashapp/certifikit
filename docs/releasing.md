@@ -16,12 +16,6 @@ Releasing
     sed -i "" \
       "s/version = '.*'/version = '$RELEASE_VERSION'/g" \
       build.gradle
-    sed -i "" \
-      "s/\"app.cash.certifikit:\([^\:]*\):[^\"]*\"/\"app.cash.certifikit:\1:$RELEASE_VERSION\"/g" \
-      `find . -name "README.md"`
-    sed -i "" \
-      "s/\/app.cash.certifikit\/\([^\:]*\)\/[^\/]*\//\/app.cash.certifikit\/\1\/$RELEASE_VERSION\//g" \
-      `find . -name "README.md"`
     ```
 
 4. Tag the release, prepare for the next one, and push to GitHub.
