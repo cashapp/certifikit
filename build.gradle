@@ -83,6 +83,11 @@ subprojects { project ->
   apply plugin: 'signing'
 
   publishing {
+    java {
+      withJavadocJar()
+      withSourcesJar()
+    }
+
     publications {
       maven(MavenPublication) {
         groupId = project.group
