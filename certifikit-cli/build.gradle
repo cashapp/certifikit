@@ -36,7 +36,7 @@ configurations {
 
 dependencies {
   api project(':certifikit')
-  api deps.okio
+  api dep.okio
   implementation 'info.picocli:picocli:4.4.0'
   implementation 'com.squareup.okhttp3:okhttp:4.8.0'
   implementation 'com.squareup.okhttp3:okhttp-tls:4.8.0'
@@ -44,8 +44,8 @@ dependencies {
   annotationProcessor 'info.picocli:picocli-codegen:4.4.0'
   generateConfig 'info.picocli:picocli-codegen:4.4.0'
 
-  testImplementation deps.junit
-  testImplementation deps.assertj
+  testImplementation dep.junit
+  testImplementation dep.assertj
 }
 
 application {
