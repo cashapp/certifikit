@@ -23,6 +23,7 @@ import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
 import java.io.File
 import java.io.FileNotFoundException
+import java.io.IOException
 import java.security.cert.X509Certificate
 import java.util.Properties
 import java.util.concurrent.Callable
@@ -34,7 +35,6 @@ import picocli.CommandLine.Command
 import picocli.CommandLine.IVersionProvider
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
-import java.io.IOException
 
 @Command(
     name = NAME, description = ["An ergonomic CLI for understanding certificates."],
