@@ -1,29 +1,17 @@
 buildscript {
-  ext.versions = [
-      'assertj': '3.15.0',
-      'java': '1.8',
-      'junit': '4.13',
-      'kotlin': '1.3.72',
-      'ktlint': '0.36.0',
-      'okio': '2.7.0',
-  ]
-
-  ext.deps = [
-      'assertj': "org.assertj:assertj-core:${versions.assertj}",
-      'junit': "junit:junit:${versions.junit}",
-      'kotlinStdlib': "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}",
-      'okio': "com.squareup.okio:okio:${versions.okio}",
-  ]
-
-  dependencies {
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
-    classpath "org.jetbrains.dokka:dokka-gradle-plugin:0.10.1"
-    classpath 'com.diffplug.spotless:spotless-plugin-gradle:3.27.1'
-  }
-
   repositories {
     mavenCentral()
     gradlePluginPortal()
+  }
+
+  apply from: new File("./dependencies.gradle")
+
+  dependencies {
+    classpath dep.junitGradlePlugin
+    classpath dep.kotlinGradlePlugin
+    classpath dep.dokkaGradlePlugin
+    classpath dep.mavenPublishGradlePlugin
+    classpath dep.spotlessPlugin
   }
 }
 
@@ -40,25 +28,33 @@ allprojects {
   }
 }
 
-/** Configure building for Java+Kotlin projects. */
-subprojects { project ->
+subprojects {
   apply plugin: 'java-library'
   apply plugin: 'org.jetbrains.kotlin.platform.jvm'
   apply plugin: 'org.jetbrains.dokka'
   apply plugin: 'com.diffplug.gradle.spotless'
-  sourceCompatibility = JavaVersion.VERSION_1_8
-  targetCompatibility = JavaVersion.VERSION_1_8
+
+  compileJava {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+  }
 
   spotless {
     kotlin {
       target "**/*.kt"
-      ktlint(versions.ktlint).userData(['indent_size': '2', 'continuation_indent_size': '2'])
+      ktlint(dep.ktlintVersion).userData(['indent_size': '2', 'continuation_indent_size': '2'])
     }
   }
 
-  tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+  compileKotlin {
     kotlinOptions {
-      jvmTarget = "1.8"
+      jvmTarget = JavaVersion.VERSION_1_8
+    }
+  }
+
+  compileTestKotlin {
+    kotlinOptions {
+      jvmTarget = JavaVersion.VERSION_1_8
     }
   }
 
@@ -73,6 +69,10 @@ subprojects { project ->
       perPackageOption {
         prefix = "app.cash.certifikit.internal"
         suppress = true
+      }
+      externalDocumentationLink {
+        url = new URL("https://square.github.io/okio/2.x/okio/")
+        packageListUrl = new URL("https://square.github.io/okio/2.x/okio/package-list")
       }
     }
   }

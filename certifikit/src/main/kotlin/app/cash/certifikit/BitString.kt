@@ -20,7 +20,7 @@ import okio.ByteString
 /**
  * Like a [ByteString], but whose bits are not necessarily a strict multiple of 8.
  */
-internal data class BitString(
+data class BitString(
   val byteString: ByteString,
 
   /** 0-7 unused bits in the last byte. */

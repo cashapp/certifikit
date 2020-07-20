@@ -5,10 +5,10 @@ jar {
 }
 
 dependencies {
-  api deps.okio
+  api dep.okio
 
-  testImplementation deps.junit
-  testImplementation deps.assertj
+  testImplementation dep.junit
+  testImplementation dep.assertj
 }
 
 afterEvaluate { project ->
