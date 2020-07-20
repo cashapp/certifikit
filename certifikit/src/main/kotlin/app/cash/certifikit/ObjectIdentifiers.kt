@@ -16,7 +16,7 @@
 package app.cash.certifikit
 
 /** ASN.1 object identifiers used internally by this implementation. */
-internal object ObjectIdentifiers {
+object ObjectIdentifiers {
   const val ecPublicKey = "1.2.840.10045.2.1"
   const val sha256withEcdsa = "1.2.840.10045.4.3.2"
   const val rsaEncryption = "1.2.840.113549.1.1.1"
