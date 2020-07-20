@@ -2,10 +2,10 @@ package app.cash.certifikit.cli
 
 import app.cash.certifikit.Certificate
 import app.cash.certifikit.ObjectIdentifiers
-import okio.ByteString
-import okio.ByteString.Companion.toByteString
 import java.security.cert.X509Certificate
 import java.time.Instant
+import okio.ByteString
+import okio.ByteString.Companion.toByteString
 
 fun Certificate.prettyPrintCertificate(): String {
   return buildString {
