@@ -10,7 +10,7 @@ env:
 
 jobs:
   publish:
-    runs-on: publish-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout the repo
