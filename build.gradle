@@ -126,6 +126,9 @@ subprojects { project ->
   }
 
   signing {
+    def signingKey = findProperty("signingKey")
+    def signingPassword = ""
+    useInMemoryPgpKeys(signingKey, signingPassword)
     sign publishing.publications.maven
   }
 }
