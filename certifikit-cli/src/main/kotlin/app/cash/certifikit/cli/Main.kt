@@ -32,6 +32,7 @@ import okio.ByteString.Companion.decodeBase64
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine
 import picocli.CommandLine.Command
+import picocli.CommandLine.Help.Ansi
 import picocli.CommandLine.IVersionProvider
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
@@ -67,13 +68,13 @@ class Main : Callable<Int> {
     }
     0
   } catch (ce: CertificationException) {
-    System.err.println("Error: ${ce.message}")
+    System.err.println("Error: ${Ansi.AUTO.string(" @|yellow ${ce.message}|@")}")
     if (verbose) {
       ce.cause?.printStackTrace()
     }
     -2
   } catch (ue: UsageException) {
-    System.err.println("Error: ${ue.message}")
+    System.err.println("Error: ${Ansi.AUTO.string(" @|red ${ue.message}|@")}")
     if (verbose) {
       ue.cause?.printStackTrace()
     }

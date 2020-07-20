@@ -19,12 +19,26 @@ import app.cash.certifikit.Certificate
 import app.cash.certifikit.ObjectIdentifiers
 import java.security.cert.X509Certificate
 import java.time.Instant
+import javax.net.ssl.X509TrustManager
+import okhttp3.internal.platform.Platform
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
+import picocli.CommandLine.Help.Ansi
 
-fun Certificate.prettyPrintCertificate(): String {
+fun Certificate.prettyPrintCertificate(
+  trustManager: X509TrustManager = Platform.get()
+      .platformTrustManager()
+): String {
   return buildString {
-    append("CN: \t$commonName\n")
+    val trustedRoot =
+      trustManager.acceptedIssuers.find { it.serialNumber == this@prettyPrintCertificate.tbsCertificate.serialNumber } != null
+    val trusted = if (trustedRoot) {
+      Ansi.AUTO.string(" @|green (Trusted)|@")
+    } else {
+        ""
+    }
+
+    append("CN: \t$commonName$trusted\n")
     append("SN: \t${tbsCertificate.serialNumber.toString(16)}\n")
     append("SAN: \t${subjectAltNames()?.joinToString(", ") ?: "<N/A>"}\n")
     if (organizationalUnitName != null) {

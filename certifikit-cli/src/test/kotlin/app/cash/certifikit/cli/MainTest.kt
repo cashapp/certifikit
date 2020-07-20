@@ -23,11 +23,11 @@ class MainTest {
   }
 
   @org.junit.Test fun certificate() {
-    fromArgs("src/test/resources/cert.pem").run()
+    fromArgs("src/test/resources/cert.pem").call()
   }
 
   @org.junit.Test fun https() {
-    fromArgs("--host", "www.google.com").run()
+    fromArgs("--host", "www.google.com").call()
   }
 
   companion object {
