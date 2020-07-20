@@ -40,7 +40,8 @@ markdown_extensions:
 
 nav:
   - 'Overview': index.md
+  - 'Security': security.md
   - '0.x API': 0.x/certifikit/app.cash.certifikit/index.md
-  - 'Changelog': changelog.md
+  - 'Change Log': changelog.md
   - 'Contributing': contributing.md
   - 'Code of Conduct': code_of_conduct.md
