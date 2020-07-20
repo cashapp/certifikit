@@ -1,0 +1,45 @@
+site_name: Certifikit
+site_url: https://cashapp.github.io/certifikit/
+repo_name: cashapp/certifikit
+repo_url: https://github.com/cashapp/certifikit
+site_description: "Kotlin Certificate processing library"
+site_author: Square, Inc.
+copyright: 'Copyright &copy; 2020 Square, Inc.'
+remote_branch: gh-pages
+
+theme:
+  name: 'material'
+  favicon: img/favicon.ico
+  logo: img/cashapp.png
+  palette:
+    primary: 'white'
+    accent: 'green'
+
+extra_css:
+  - 'css/app.css'
+
+markdown_extensions:
+  - smarty
+  - codehilite:
+      guess_lang: false
+  - footnotes
+  - meta
+  - toc:
+      permalink: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.inlinehilite
+  - pymdownx.magiclink
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tilde
+  - tables
+
+nav:
+  - 'Overview': index.md
+  - 'Security': security.md
+  - '0.x API': 0.x/certifikit/app.cash.certifikit/index.md
+  - 'Change Log': changelog.md
+  - 'Contributing': contributing.md
+  - 'Code of Conduct': code_of_conduct.md

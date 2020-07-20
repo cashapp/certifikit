@@ -15,6 +15,7 @@
  */
 package app.cash.certifikit
 
+import app.cash.certifikit.attestation.AttestationAdapters
 import java.math.BigInteger
 import java.net.ProtocolException
 import okio.ByteString
@@ -208,6 +209,7 @@ object CertificateAdapters {
     when (typeHint) {
       ObjectIdentifiers.subjectAlternativeName -> subjectAlternativeName
       ObjectIdentifiers.basicConstraints -> basicConstraints
+      AttestationAdapters.KEY_DESCRIPTION_OID -> AttestationAdapters.keyDescription
       else -> null
     }
   }.withExplicitBox(

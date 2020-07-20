@@ -8,3 +8,8 @@ build
 
 .DS_Store
 
+docs/0.x/*
+docs/index.md
+docs/changelog.md
+docs/contributing.md
+docs/releasing.md

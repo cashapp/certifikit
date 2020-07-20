@@ -46,9 +46,9 @@ data class Certificate(
           ?.value
     }
 
-  val subjectAlternativeNames: Extension
+  val subjectAlternativeNames: Extension?
     get() {
-      return tbsCertificate.extensions.first {
+      return tbsCertificate.extensions.firstOrNull {
         it.id == ObjectIdentifiers.subjectAlternativeName
       }
     }
@@ -168,7 +168,7 @@ data class Extension(
   val value: Any?
 )
 
-internal data class BasicConstraints(
+data class BasicConstraints(
   /** True if this certificate can be used as a Certificate Authority (CA). */
   val ca: Boolean,
   /** The maximum number of intermediate CAs between this and leaf certificates. */
@@ -176,7 +176,7 @@ internal data class BasicConstraints(
 )
 
 /** A private key. Note that this class doesn't support attributes or an embedded public key. */
-internal data class PrivateKeyInfo(
+data class PrivateKeyInfo(
   val version: Long, // v1(0), v2(1)
   val algorithmIdentifier: AlgorithmIdentifier, // v1(0), v2(1)
   val privateKey: ByteString

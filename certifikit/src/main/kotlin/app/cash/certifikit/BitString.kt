@@ -24,7 +24,7 @@ data class BitString(
   val byteString: ByteString,
 
   /** 0-7 unused bits in the last byte. */
-  val unusedBitsCount: Int
+  val unusedBitsCount: Int = 0
 ) {
   // Avoid Long.hashCode(long) which isn't available on Android 5.
   override fun hashCode(): Int {
