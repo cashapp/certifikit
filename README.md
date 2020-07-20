@@ -3,35 +3,32 @@ Certifikit
 
 Kotlin Certificate processing library.
 
+See the [project website](https://cashapp.github.io/certifikit) for documentation and APIs.
 
-Releases
---------
 
-Our [change log][CHANGELOG] has release history.
+Get Certifikit
+--------------
 
-The latest release is available on [Maven Central](https://search.maven.org/artifact/app.cash.certifikit/certifikit/0.1.0/jar).
+With Gradle:
 
-```kotlin
-implementation("app.cash.certifikit:certifikit:0.1.0")
+```groovy
+implementation "app.cash.certifikit:certifikit:0.1.0"
 ```
 
 
 License
 -------
 
-```
-Copyright 2020 Square, Inc.
+    Copyright 2020 Square, Inc.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
+       http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-```
-
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.

@@ -21,7 +21,7 @@ import okio.ByteString
  * A value whose type is not specified statically. Use this with [Adapters.any] which will attempt
  * to resolve a concrete type.
  */
-internal data class AnyValue(
+data class AnyValue(
   var tagClass: Int,
   var tag: Long,
   var constructed: Boolean = false,
