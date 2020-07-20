@@ -19,21 +19,14 @@ import app.cash.certifikit.Certificate
 import app.cash.certifikit.CertificateAdapters
 import app.cash.certifikit.cli.Main.Companion.NAME
 import app.cash.certifikit.cli.Main.VersionProvider
+import app.cash.certifikit.cli.errors.CertificationException
+import app.cash.certifikit.cli.errors.UsageException
 import java.io.File
-import java.net.InetAddress
-import java.net.InetSocketAddress
-import java.net.Proxy
+import java.io.FileNotFoundException
 import java.security.cert.X509Certificate
 import java.util.Properties
-import javax.net.ssl.HostnameVerifier
+import java.util.concurrent.Callable
 import kotlin.system.exitProcess
-import okhttp3.Call
-import okhttp3.EventListener
-import okhttp3.Handshake
-import okhttp3.OkHttpClient
-import okhttp3.Protocol
-import okhttp3.Request
-import okhttp3.tls.HandshakeCertificates
 import okio.ByteString.Companion.decodeBase64
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine
@@ -41,12 +34,13 @@ import picocli.CommandLine.Command
 import picocli.CommandLine.IVersionProvider
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
+import java.io.IOException
 
 @Command(
     name = NAME, description = ["An ergonomic CLI for understanding certificates."],
     mixinStandardHelpOptions = true, versionProvider = VersionProvider::class
 )
-class Main : Runnable {
+class Main : Callable<Int> {
   @Option(names = ["--host"], description = ["From HTTPS Handshake"])
   var host: String? = null
 
@@ -65,12 +59,25 @@ class Main : Runnable {
   @Parameters(paramLabel = "file", description = ["Input File"], arity = "0..1")
   var file: String? = null
 
-  override fun run() {
+  override fun call(): Int = try {
     if (host != null) {
       queryHost()
     } else if (file != null) {
       showPemFile()
     }
+    0
+  } catch (ce: CertificationException) {
+    System.err.println("Error: ${ce.message}")
+    if (verbose) {
+      ce.cause?.printStackTrace()
+    }
+    -2
+  } catch (ue: UsageException) {
+    System.err.println("Error: ${ue.message}")
+    if (verbose) {
+      ue.cause?.printStackTrace()
+    }
+    -1
   }
 
   private fun showPemFile() {
@@ -87,7 +94,11 @@ class Main : Runnable {
     prettyPrintChain(certificates)
 
     if (output != null) {
-      outputCertificates(output!!, x509certificates)
+      try {
+        outputCertificates(output!!, x509certificates)
+      } catch (ioe: IOException) {
+        throw UsageException("Unable to write to $output", ioe)
+      }
     }
   }
 
@@ -121,77 +132,17 @@ class Main : Runnable {
     }
   }
 
-  private fun fromHttps(host: String): List<X509Certificate> {
-    val client = OkHttpClient.Builder()
-        .followRedirects(followRedirect)
-        .apply {
-          if (insecure) {
-            hostnameVerifier(HostnameVerifier { _, _ -> true })
-
-            val handshakeCertificates = HandshakeCertificates.Builder()
-                .addPlatformTrustedCertificates()
-                .addInsecureHost(host)
-                .build()
-            sslSocketFactory(
-                handshakeCertificates.sslSocketFactory(), handshakeCertificates.trustManager
-            )
-          }
-        }
-        .eventListener(object : EventListener() {
-          override fun dnsEnd(
-            call: Call,
-            domainName: String,
-            inetAddressList: List<InetAddress>
-          ) {
-            if (verbose) {
-              println("DNS: \t" + inetAddressList.joinToString(", "))
-            }
-          }
-
-          override fun connectEnd(
-            call: Call,
-            inetSocketAddress: InetSocketAddress,
-            proxy: Proxy,
-            protocol: Protocol?
-          ) {
-            if (verbose) {
-              println("Connected: \t $inetSocketAddress")
-              println()
-            }
-          }
-
-          override fun secureConnectEnd(
-            call: Call,
-            handshake: Handshake?
-          ) {
-            if (verbose && handshake != null) {
-              println("Cipher: \t${handshake.cipherSuite}")
-              println("TLS: \t${handshake.tlsVersion}")
-            }
-          }
-        })
-        .build()
-
-    val call = client.newCall(
-        Request.Builder()
-            .url("https://$host/")
-            .build()
-    )
-
-    return call.execute()
-        .use {
-          it.handshake!!.peerCertificates
-        }
-        .map { it as X509Certificate }
-  }
-
   private fun parsePemCertificate(file: File): Certificate {
-    val data = file.readText()
-        .replace("-----BEGIN CERTIFICATE-----\n", "")
-        .replace("-----END CERTIFICATE-----\n", "")
-        .decodeBase64()!!
-    val certificate = CertificateAdapters.certificate.fromDer(data)
-    return certificate
+    try {
+      val data = file.readText()
+          .replace("-----BEGIN CERTIFICATE-----\n", "")
+          .replace("-----END CERTIFICATE-----\n", "")
+          .decodeBase64()!!
+      val certificate = CertificateAdapters.certificate.fromDer(data)
+      return certificate
+    } catch (fnfe: FileNotFoundException) {
+      throw UsageException("No such file: $file", fnfe)
+    }
   }
 
   class VersionProvider : IVersionProvider {
