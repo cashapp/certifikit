@@ -109,6 +109,7 @@ class Main : Callable<Int> {
   ) {
     when {
       output.isDirectory -> certificates.forEach {
+        // TODO check SHA as well
         val serialNumber = it.serialNumber.toString(16)
         outputCertificate(File(output, "$serialNumber.pem"), it)
       }
