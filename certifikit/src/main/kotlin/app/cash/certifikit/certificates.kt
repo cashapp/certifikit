@@ -53,9 +53,9 @@ data class Certificate(
       }
     }
 
-  val basicConstraints: Extension
+  val basicConstraints: Extension?
     get() {
-      return tbsCertificate.extensions.first {
+      return tbsCertificate.extensions.firstOrNull {
         it.id == ObjectIdentifiers.basicConstraints
       }
     }

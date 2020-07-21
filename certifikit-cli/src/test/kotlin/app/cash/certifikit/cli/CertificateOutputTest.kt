@@ -74,6 +74,7 @@ class CertificateOutputTest {
       |CN: 	cash.app
       |SAN: 	cash.app, www.cash.app
       |Valid: 	2020-04-13T13:25:49Z..2021-04-12T13:55:49Z
+      |CA: false
     """.trimMargin())
   }
 }

@@ -15,10 +15,11 @@
  */
 package app.cash.certifikit.cli
 
+import app.cash.certifikit.BasicConstraints
 import app.cash.certifikit.Certificate
 import app.cash.certifikit.ObjectIdentifiers
 import java.security.cert.X509Certificate
-import java.time.Instant
+import java.time.Instant.ofEpochMilli
 import javax.net.ssl.X509TrustManager
 import okhttp3.internal.platform.Platform
 import okio.ByteString
@@ -48,23 +49,31 @@ fun Certificate.prettyPrintCertificate(
     if (sha256 != null) {
       append("SHA256:\t${sha256.hex()}\n")
     }
-    append("SAN: \t${subjectAltNames()?.joinToString(", ") ?: "<N/A>"}\n")
+    append("SAN: \t${subjectAlternativeNameValue()?.joinToString(", ") ?: "<N/A>"}\n")
     if (organizationalUnitName != null) {
       append("OU: \t$organizationalUnitName\n")
     }
 
     append(
         "Valid: \t${
-          Instant.ofEpochMilli(tbsCertificate.validity.notBefore)
+          ofEpochMilli(tbsCertificate.validity.notBefore)
         }..${
-          Instant.ofEpochMilli(tbsCertificate.validity.notAfter)
+          ofEpochMilli(tbsCertificate.validity.notAfter)
         }"
     )
+
+    basicConstraintsValue()?.apply {
+      append("\nCA: $ca")
+      if (maxIntermediateCas != null) append(" Max Intermediate: $maxIntermediateCas")
+    }
   }
 }
 
-private fun Certificate.subjectAltNames(): List<String>? {
-  return tbsCertificate.extensions.firstOrNull {
+private fun Certificate.basicConstraintsValue() =
+  basicConstraints?.value as? BasicConstraints
+
+private fun Certificate.subjectAlternativeNameValue() =
+  tbsCertificate.extensions.firstOrNull {
     it.id == ObjectIdentifiers.subjectAlternativeName
   }
       ?.let {
@@ -74,7 +83,6 @@ private fun Certificate.subjectAltNames(): List<String>? {
       ?.map {
         it.second.toString()
       }
-}
 
 /**
  * Returns the certificate encoded in [PEM format][rfc_7468].
