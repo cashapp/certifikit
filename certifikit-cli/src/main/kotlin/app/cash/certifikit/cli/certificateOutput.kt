@@ -25,21 +25,29 @@ import okio.ByteString
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine.Help.Ansi
 
+fun X509Certificate.sha256Hash(): ByteString =
+  publicKey.encoded.toByteString()
+      .sha256()
+
 fun Certificate.prettyPrintCertificate(
+  sha256: ByteString? = null,
   trustManager: X509TrustManager = Platform.get()
       .platformTrustManager()
 ): String {
   return buildString {
-    val trustedRoot =
-      trustManager.acceptedIssuers.find { it.serialNumber == this@prettyPrintCertificate.tbsCertificate.serialNumber } != null
+    val trustedRoot = sha256 != null && trustManager.acceptedIssuers.find {
+      it.sha256Hash() == sha256
+    } != null
     val trusted = if (trustedRoot) {
       Ansi.AUTO.string(" @|green (Trusted)|@")
     } else {
-        ""
+      ""
     }
 
     append("CN: \t$commonName$trusted\n")
-    append("SN: \t${tbsCertificate.serialNumber.toString(16)}\n")
+    if (sha256 != null) {
+      append("SHA256:\t${sha256.hex()}\n")
+    }
     append("SAN: \t${subjectAltNames()?.joinToString(", ") ?: "<N/A>"}\n")
     if (organizationalUnitName != null) {
       append("OU: \t$organizationalUnitName\n")

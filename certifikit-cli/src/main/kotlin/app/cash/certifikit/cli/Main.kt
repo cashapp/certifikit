@@ -88,11 +88,7 @@ class Main : Callable<Int> {
 
   private fun queryHost() {
     val x509certificates = fromHttps(host!!)
-    val certificates = x509certificates
-        .map {
-          CertificateAdapters.certificate.fromDer(it.encoded.toByteString())
-        }
-    prettyPrintChain(certificates)
+    prettyPrintChain(x509certificates)
 
     if (output != null) {
       try {
@@ -109,9 +105,7 @@ class Main : Callable<Int> {
   ) {
     when {
       output.isDirectory -> certificates.forEach {
-        // TODO check SHA as well
-        val serialNumber = it.serialNumber.toString(16)
-        outputCertificate(File(output, "$serialNumber.pem"), it)
+        outputCertificate(File(output, "${it.sha256Hash().hex()}.pem"), it)
       }
       else -> outputCertificate(output, certificates.first())
     }
@@ -124,13 +118,16 @@ class Main : Callable<Int> {
     output.writeText(certificate.certificatePem())
   }
 
-  private fun prettyPrintChain(certificates: List<Certificate>) {
+  private fun prettyPrintChain(certificates: List<X509Certificate>) {
     certificates.forEachIndexed { i, certificate ->
       if (i > 0) {
         println()
       }
 
-      println(certificate.prettyPrintCertificate())
+      val sha256 = certificate.sha256Hash()
+      val certifikit = CertificateAdapters.certificate.fromDer(certificate.encoded.toByteString())
+
+      println(certifikit.prettyPrintCertificate(sha256))
     }
   }
 
