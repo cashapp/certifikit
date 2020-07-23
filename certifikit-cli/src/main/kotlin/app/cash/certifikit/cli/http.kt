@@ -24,15 +24,45 @@ import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit.SECONDS
 import javax.net.ssl.HostnameVerifier
 import okhttp3.Call
+import okhttp3.CipherSuite
 import okhttp3.ConnectionSpec
 import okhttp3.ConnectionSpec.Companion.COMPATIBLE_TLS
 import okhttp3.ConnectionSpec.Companion.MODERN_TLS
+import okhttp3.ConnectionSpec.Companion.RESTRICTED_TLS
 import okhttp3.EventListener
 import okhttp3.Handshake
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.Request
+import okhttp3.TlsVersion
+import okhttp3.TlsVersion.TLS_1_1
+import okhttp3.TlsVersion.TLS_1_2
+import okhttp3.TlsVersion.TLS_1_3
 import okhttp3.tls.HandshakeCertificates
+import picocli.CommandLine.Help.Ansi
+
+enum class Strength(val color: String) {
+  Good("green"), Weak("yellow"), Bad("red")
+}
+
+private val TlsVersion.strength: Strength
+  get() {
+    return when (this) {
+      TLS_1_3 -> Strength.Good
+      TLS_1_2 -> Strength.Good
+      TLS_1_1 -> Strength.Weak
+      else -> Strength.Bad
+    }
+  }
+
+private val CipherSuite.strength: Strength
+  get() {
+    return when {
+      RESTRICTED_TLS.cipherSuites!!.contains(this) -> Strength.Good
+      MODERN_TLS.cipherSuites!!.contains(this) -> Strength.Weak
+      else -> Strength.Bad
+    }
+  }
 
 fun Main.fromHttps(host: String): List<X509Certificate> {
   val client = OkHttpClient.Builder()
@@ -59,9 +89,7 @@ fun Main.fromHttps(host: String): List<X509Certificate> {
         } else {
           connectionSpecs(listOf(MODERN_TLS))
         }
-        if (verbose) {
-          eventListener(VerboseEventListener())
-        }
+        eventListener(VerboseEventListener(verbose))
       }
       .build()
 
@@ -83,13 +111,15 @@ fun Main.fromHttps(host: String): List<X509Certificate> {
       .map { it as X509Certificate }
 }
 
-class VerboseEventListener : EventListener() {
+class VerboseEventListener(val verbose: Boolean) : EventListener() {
   override fun dnsEnd(
     call: Call,
     domainName: String,
     inetAddressList: List<InetAddress>
   ) {
-    println("DNS: \t" + inetAddressList.joinToString(", "))
+    if (verbose) {
+      println("DNS: \t" + inetAddressList.joinToString(", "))
+    }
   }
 
   override fun connectEnd(
@@ -98,8 +128,10 @@ class VerboseEventListener : EventListener() {
     proxy: Proxy,
     protocol: Protocol?
   ) {
-    println("Connected: \t $inetSocketAddress")
-    println()
+    if (verbose) {
+      println("addr: \t$inetSocketAddress")
+      println()
+    }
   }
 
   override fun secureConnectEnd(
@@ -107,8 +139,25 @@ class VerboseEventListener : EventListener() {
     handshake: Handshake?
   ) {
     if (handshake != null) {
-      println("Cipher: \t${handshake.cipherSuite}")
-      println("TLS: \t${handshake.tlsVersion}")
+      val out = if (verbose) System.out else System.err
+
+      val cipherStrength = handshake.cipherSuite.strength
+      if (verbose || cipherStrength != Strength.Good) {
+        out.print("Cipher:\t${handshake.cipherSuite}")
+        if (cipherStrength != Strength.Good) {
+          out.print(" ${Ansi.AUTO.string(" @|${cipherStrength.color} ($cipherStrength)|@")}")
+        }
+        out.println()
+      }
+
+      val tlsStrength = handshake.tlsVersion.strength
+      if (verbose || tlsStrength != Strength.Good) {
+        out.print("TLS: \t${handshake.tlsVersion}")
+        if (tlsStrength != Strength.Good) {
+          out.print(" ${Ansi.AUTO.string(" @|${tlsStrength.color} ($tlsStrength)|@")}")
+        }
+        out.println()
+      }
     }
   }
 }
