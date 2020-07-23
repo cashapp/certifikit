@@ -124,10 +124,8 @@ class Main : Callable<Int> {
         println()
       }
 
-      val sha256 = certificate.sha256Hash()
       val certifikit = CertificateAdapters.certificate.fromDer(certificate.encoded.toByteString())
-
-      println(certifikit.prettyPrintCertificate(sha256))
+      println(certifikit.prettyPrintCertificate())
     }
   }
 

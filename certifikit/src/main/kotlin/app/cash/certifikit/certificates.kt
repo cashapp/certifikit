@@ -30,6 +30,10 @@ data class Certificate(
   val signatureAlgorithm: AlgorithmIdentifier,
   val signatureValue: BitString
 ) {
+  val sha256: ByteString
+    get() = CertificateAdapters.subjectPublicKeyInfo.toDer(tbsCertificate.subjectPublicKeyInfo)
+        .sha256()
+
   val commonName: Any?
     get() {
       return tbsCertificate.subject

@@ -31,10 +31,11 @@ fun X509Certificate.sha256Hash(): ByteString =
       .sha256()
 
 fun Certificate.prettyPrintCertificate(
-  sha256: ByteString? = null,
   trustManager: X509TrustManager = Platform.get()
       .platformTrustManager()
 ): String {
+  val sha256 = this.sha256
+
   return buildString {
     val trustedRoot = sha256 != null && trustManager.acceptedIssuers.find {
       it.sha256Hash() == sha256
