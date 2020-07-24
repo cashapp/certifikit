@@ -23,6 +23,7 @@ import app.cash.certifikit.ObjectIdentifiers.sha256WithRSAEncryption
 import app.cash.certifikit.ObjectIdentifiers.subjectAlternativeName
 import java.math.BigInteger
 import java.security.KeyFactory
+import java.security.cert.X509Certificate
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import java.text.SimpleDateFormat
@@ -36,7 +37,6 @@ import okio.ByteString.Companion.encodeUtf8
 import okio.ByteString.Companion.toByteString
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
-import java.security.cert.X509Certificate
 
 internal class DerCertificatesTest {
   private val stateOrProvince = "1.3.6.1.4.1.311.60.2.1.2"
