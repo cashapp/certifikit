@@ -23,6 +23,7 @@ import app.cash.certifikit.ObjectIdentifiers.sha256WithRSAEncryption
 import app.cash.certifikit.ObjectIdentifiers.subjectAlternativeName
 import java.math.BigInteger
 import java.security.KeyFactory
+import java.security.cert.X509Certificate
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import java.text.SimpleDateFormat
@@ -55,6 +56,9 @@ internal class DerCertificatesTest {
   private val authorityKeyIdentifier = "2.5.29.35"
   private val extendedKeyUsage = "2.5.29.37"
 
+  fun X509Certificate.sha256Hash(): ByteString =
+    publicKey.encoded.toByteString().sha256()
+
   @Test
   fun `decode simple certificate`() {
     val certificateBase64 = """
@@ -81,6 +85,8 @@ internal class DerCertificatesTest {
 
     assertThat(okHttpCertificate.signatureValue.byteString)
         .isEqualTo(javaCertificate.signature.toByteString())
+
+    assertThat(okHttpCertificate.sha256Hash()).isEqualTo(javaCertificate.sha256Hash())
 
     val publicKeyBytes = ("3081890281810080a451e1b6b2da9f6f2afa8328959b9a4df58103457968c22fab7d81" +
         "b25a10bba2e5bd7d70278604a140a30e53ceb6986ded72db5260676c8ccdf3d5cae1425533a4aaa772bcf0a9" +
