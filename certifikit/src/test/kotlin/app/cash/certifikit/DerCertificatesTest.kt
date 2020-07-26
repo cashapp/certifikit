@@ -646,24 +646,13 @@ internal class DerCertificatesTest {
     val okHttpCertificate = CertificateAdapters.certificate
         .fromDer(certificateByteString)
 
-    assertThat(okHttpCertificate.basicConstraints).isEqualTo(
-        Extension(
-        id = basicConstraints,
-        critical = true,
-        value = BasicConstraints(true, 3)
-    )
-    )
+    assertThat(okHttpCertificate.basicConstraints).isEqualTo(BasicConstraints(true, 3))
     assertThat(okHttpCertificate.commonName).isEqualTo("Jurassic Park")
     assertThat(okHttpCertificate.organizationalUnitName).isEqualTo("Gene Research")
-    assertThat(okHttpCertificate.subjectAlternativeNames).isEqualTo(
-        Extension(
-        id = subjectAlternativeName,
-        critical = true,
-        value = listOf(
+    assertThat(okHttpCertificate.subjectAlternativeNames).isEqualTo(listOf(
             CertificateAdapters.generalNameDnsName to "*.example.com",
             CertificateAdapters.generalNameDnsName to "www.example.org"
         )
-    )
     )
     assertThat(okHttpCertificate.tbsCertificate.validity).isEqualTo(Validity(-1000L, 2000L))
     assertThat(okHttpCertificate.tbsCertificate.serialNumber).isEqualTo(BigInteger("17"))
@@ -918,11 +907,7 @@ internal class DerCertificatesTest {
         .decodeBase64()!!
 
     val decoded = CertificateAdapters.certificate.fromDer(certificateByteString)
-    assertThat(decoded.subjectAlternativeNames).isEqualTo(
-        Extension(
-        id = subjectAlternativeName,
-        critical = false,
-        value = listOf(
+    assertThat(decoded.subjectAlternativeNames).isEqualTo(listOf(
             Adapters.ANY_VALUE to AnyValue(
                 tagClass = DerHeader.TAG_CLASS_CONTEXT_SPECIFIC,
                 tag = 1L,
@@ -931,7 +916,6 @@ internal class DerCertificatesTest {
                 bytes = "ca@trustwave.com".encodeUtf8()
             )
         )
-    )
     )
   }
 
