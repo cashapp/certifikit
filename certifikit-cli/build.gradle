@@ -1,0 +1,63 @@
+plugins {
+  id 'application'
+  id 'com.github.johnrengelman.shadow' version '6.0.0'
+}
+
+shadowJar {
+  mainClassName = 'app.cash.certifikit.cli.Main'
+}
+
+jar {
+  manifest {
+    attributes 'Automatic-Module-Name': 'app.cash.certifikit.cli'
+    attributes 'Main-Class': 'app.cash.certifikit.cli.Main'
+  }
+}
+
+// resources-templates.
+sourceSets {
+  main.resources.srcDirs += "$buildDir/generated/resources-templates"
+}
+compileJava {
+  dependsOn 'copyResourcesTemplates'
+  options.compilerArgs += ["-Aproject=${project.group}/${project.name}"]
+}
+task copyResourcesTemplates(type: Copy) {
+  from 'src/main/resources-templates'
+  into "$buildDir/generated/resources-templates"
+  expand('projectVersion': "${project.version}")
+  filteringCharset = 'UTF-8'
+}
+
+//https://github.com/remkop/picocli/tree/master/picocli-codegen
+configurations {
+  generateConfig
+}
+
+dependencies {
+  api project(':certifikit')
+  api dep.okio
+  implementation 'info.picocli:picocli:4.4.0'
+  implementation 'com.squareup.okhttp3:okhttp:4.8.0'
+  implementation 'com.squareup.okhttp3:okhttp-tls:4.8.0'
+
+  annotationProcessor 'info.picocli:picocli-codegen:4.4.0'
+  generateConfig 'info.picocli:picocli-codegen:4.4.0'
+
+  testImplementation dep.junit
+  testImplementation dep.assertj
+}
+
+application {
+  mainClass = 'app.cash.certifikit.cli.Main'
+}
+
+task(generateGraalReflectionConfig, dependsOn: 'classes', type: JavaExec) {
+  main = 'picocli.codegen.aot.graalvm.ReflectionConfigGenerator'
+  classpath = configurations.generateConfig + sourceSets.main.runtimeClasspath
+  def outputFile = "${buildDir}/resources/main/META-INF/native-image/${project.group}/${project.name}/reflect-config.json"
+  args = ["--output=$outputFile", 'app.cash.certifikit.cli.Main']
+}
+assemble.dependsOn generateGraalReflectionConfig
+assemble.dependsOn installShadowDist
+

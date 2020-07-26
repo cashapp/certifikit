@@ -315,7 +315,7 @@ object CertificateAdapters {
    * }
    * ```
    */
-  internal val subjectPublicKeyInfo: BasicDerAdapter<SubjectPublicKeyInfo> = Adapters.sequence(
+  val subjectPublicKeyInfo: BasicDerAdapter<SubjectPublicKeyInfo> = Adapters.sequence(
       "SubjectPublicKeyInfo",
       algorithmIdentifier,
       Adapters.BIT_STRING,
