@@ -15,6 +15,7 @@
  */
 package app.cash.certifikit.cli
 
+import app.cash.certifikit.Certifikit
 import app.cash.certifikit.cli.errors.classify
 import java.io.IOException
 import java.net.InetAddress
@@ -31,6 +32,7 @@ import okhttp3.ConnectionSpec.Companion.MODERN_TLS
 import okhttp3.ConnectionSpec.Companion.RESTRICTED_TLS
 import okhttp3.EventListener
 import okhttp3.Handshake
+import okhttp3.OkHttp
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.Request
@@ -64,6 +66,8 @@ private val CipherSuite.strength: Strength
     }
   }
 
+val userAgent = "Certifikit/" + Certifikit.VERSION + " OkHttp/" + OkHttp.VERSION
+
 fun Main.fromHttps(host: String): List<X509Certificate> {
   val client = OkHttpClient.Builder()
       .connectTimeout(2, SECONDS)
@@ -96,6 +100,7 @@ fun Main.fromHttps(host: String): List<X509Certificate> {
   val call = client.newCall(
       Request.Builder()
           .url("https://$host/")
+          .header("User-Agent", userAgent)
           .build()
   )
 

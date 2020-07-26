@@ -14,21 +14,6 @@ jar {
   }
 }
 
-// resources-templates.
-sourceSets {
-  main.resources.srcDirs += "$buildDir/generated/resources-templates"
-}
-compileJava {
-  dependsOn 'copyResourcesTemplates'
-  options.compilerArgs += ["-Aproject=${project.group}/${project.name}"]
-}
-task copyResourcesTemplates(type: Copy) {
-  from 'src/main/resources-templates'
-  into "$buildDir/generated/resources-templates"
-  expand('projectVersion': "${project.version}")
-  filteringCharset = 'UTF-8'
-}
-
 //https://github.com/remkop/picocli/tree/master/picocli-codegen
 configurations {
   generateConfig

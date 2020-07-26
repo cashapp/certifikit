@@ -17,6 +17,7 @@ package app.cash.certifikit.cli
 
 import app.cash.certifikit.Certificate
 import app.cash.certifikit.CertificateAdapters
+import app.cash.certifikit.Certifikit
 import app.cash.certifikit.cli.Main.Companion.NAME
 import app.cash.certifikit.cli.Main.VersionProvider
 import app.cash.certifikit.cli.errors.CertificationException
@@ -25,7 +26,6 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.security.cert.X509Certificate
-import java.util.Properties
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
 import okio.ByteString.Companion.decodeBase64
@@ -146,7 +146,7 @@ class Main : Callable<Int> {
 
   class VersionProvider : IVersionProvider {
     override fun getVersion(): Array<String> {
-      return arrayOf("$NAME ${versionString()}")
+      return arrayOf("$NAME ${Certifikit.VERSION}")
     }
   }
 
@@ -156,15 +156,6 @@ class Main : Callable<Int> {
     @JvmStatic
     fun main(args: Array<String>) {
       exitProcess(CommandLine(Main()).execute(*args))
-    }
-
-    private fun versionString(): String? {
-      val prop = Properties()
-      Main::class.java.getResourceAsStream("/certifikit-version.properties")
-          ?.use {
-            prop.load(it)
-          }
-      return prop.getProperty("version", "dev")
     }
   }
 }
