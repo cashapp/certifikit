@@ -25,7 +25,7 @@ import okio.ByteString
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine.Help.Ansi
 
-fun X509Certificate.publicKeySha256Hash(): ByteString =
+fun X509Certificate.publicKeySha256(): ByteString =
   publicKey.encoded.toByteString()
       .sha256()
 
@@ -33,11 +33,11 @@ fun Certificate.prettyPrintCertificate(
   trustManager: X509TrustManager = Platform.get()
       .platformTrustManager()
 ): String {
-  val sha256 = this.publicKeySha256Hash()
+  val sha256 = this.publicKeySha256()
 
   return buildString {
     val trustedRoot = trustManager.acceptedIssuers.find {
-      it.publicKeySha256Hash() == sha256
+      it.publicKeySha256() == sha256
     } != null
     val trusted = if (trustedRoot) {
       Ansi.AUTO.string(" @|green (signed by locally-trusted root)|@")

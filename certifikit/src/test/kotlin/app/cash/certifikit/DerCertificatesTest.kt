@@ -86,7 +86,7 @@ internal class DerCertificatesTest {
     assertThat(okHttpCertificate.signatureValue.byteString)
         .isEqualTo(javaCertificate.signature.toByteString())
 
-    assertThat(okHttpCertificate.publicKeySha256Hash()).isEqualTo(javaCertificate.sha256Hash())
+    assertThat(okHttpCertificate.publicKeySha256()).isEqualTo(javaCertificate.sha256Hash())
 
     val publicKeyBytes = ("3081890281810080a451e1b6b2da9f6f2afa8328959b9a4df58103457968c22fab7d81" +
         "b25a10bba2e5bd7d70278604a140a30e53ceb6986ded72db5260676c8ccdf3d5cae1425533a4aaa772bcf0a9" +
