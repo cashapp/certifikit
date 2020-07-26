@@ -67,7 +67,7 @@ private val CipherSuite.strength: Strength
 fun Main.fromHttps(host: String): List<X509Certificate> {
   val client = OkHttpClient.Builder()
       .connectTimeout(2, SECONDS)
-      .followRedirects(followRedirect)
+      .followRedirects(followRedirects)
       .apply {
         if (insecure) {
           hostnameVerifier(HostnameVerifier { _, _ -> true })

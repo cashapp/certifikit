@@ -16,6 +16,7 @@ _cft_output_files() {
 }
 
 _cft_urls() {
+  # TODO move host completion into the command and use more sources of hosts (history etc)
   compadd google.com facebook.com twitter.com squareup.com cash.app
 }
 

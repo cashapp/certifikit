@@ -51,8 +51,8 @@ class Main : Callable<Int> {
   @Option(names = ["--insecure"], description = ["Insecure HTTPS"])
   var insecure: Boolean = false
 
-  @Option(names = ["--redirect"], description = ["Follow redirect"])
-  var followRedirect: Boolean = false
+  @Option(names = ["--redirect"], description = ["Follow redirects"])
+  var followRedirects: Boolean = false
 
   @Option(names = ["--output"], description = ["Output file or directory"])
   var output: File? = null
@@ -60,25 +60,27 @@ class Main : Callable<Int> {
   @Parameters(paramLabel = "file", description = ["Input File"], arity = "0..1")
   var file: String? = null
 
-  override fun call(): Int = try {
-    if (host != null) {
-      queryHost()
-    } else if (file != null) {
-      showPemFile()
+  override fun call(): Int {
+    try {
+      if (host != null) {
+        queryHost()
+      } else if (file != null) {
+        showPemFile()
+      }
+      return 0
+    } catch (ce: CertificationException) {
+      System.err.println("Error: ${Ansi.AUTO.string(" @|yellow ${ce.message}|@")}")
+      if (verbose) {
+        ce.cause?.printStackTrace()
+      }
+      return -2
+    } catch (ue: UsageException) {
+      System.err.println("Error: ${Ansi.AUTO.string(" @|red ${ue.message}|@")}")
+      if (verbose) {
+        ue.cause?.printStackTrace()
+      }
+      return -1
     }
-    0
-  } catch (ce: CertificationException) {
-    System.err.println("Error: ${Ansi.AUTO.string(" @|yellow ${ce.message}|@")}")
-    if (verbose) {
-      ce.cause?.printStackTrace()
-    }
-    -2
-  } catch (ue: UsageException) {
-    System.err.println("Error: ${Ansi.AUTO.string(" @|red ${ue.message}|@")}")
-    if (verbose) {
-      ue.cause?.printStackTrace()
-    }
-    -1
   }
 
   private fun showPemFile() {

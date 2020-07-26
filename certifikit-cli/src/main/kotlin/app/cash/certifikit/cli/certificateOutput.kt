@@ -40,7 +40,7 @@ fun Certificate.prettyPrintCertificate(
       it.sha256Hash() == sha256
     } != null
     val trusted = if (trustedRoot) {
-      Ansi.AUTO.string(" @|green (Trusted)|@")
+      Ansi.AUTO.string(" @|green (signed by locally-trusted root)|@")
     } else {
       ""
     }
