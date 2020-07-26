@@ -33,7 +33,7 @@ data class Certificate(
   /**
    * Certificate hash as used in HTTP Public Key Pinning.
    */
-  fun sha256Hash(): ByteString =
+  fun publicKeySha256Hash(): ByteString =
     CertificateAdapters.subjectPublicKeyInfo.toDer(tbsCertificate.subjectPublicKeyInfo).sha256()
 
   val commonName: String?

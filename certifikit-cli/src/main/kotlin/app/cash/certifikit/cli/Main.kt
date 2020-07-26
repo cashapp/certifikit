@@ -107,7 +107,7 @@ class Main : Callable<Int> {
   ) {
     when {
       output.isDirectory -> certificates.forEach {
-        outputCertificate(File(output, "${it.sha256Hash().hex()}.pem"), it)
+        outputCertificate(File(output, "${it.publicKeySha256Hash().hex()}.pem"), it)
       }
       else -> outputCertificate(output, certificates.first())
     }
