@@ -12,7 +12,7 @@ Get Certifikit
 With Gradle:
 
 ```groovy
-implementation "app.cash.certifikit:certifikit:0.1.0"
+implementation "app.cash.certifikit:certifikit:0.2.0"
 ```
 
 
