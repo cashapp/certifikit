@@ -15,7 +15,6 @@
  */
 package app.cash.certifikit.cli
 
-import app.cash.certifikit.BasicConstraints
 import app.cash.certifikit.Certificate
 import app.cash.certifikit.ObjectIdentifiers
 import java.security.cert.X509Certificate
@@ -34,10 +33,10 @@ fun Certificate.prettyPrintCertificate(
   trustManager: X509TrustManager = Platform.get()
       .platformTrustManager()
 ): String {
-  val sha256 = this.sha256
+  val sha256 = this.sha256Hash()
 
   return buildString {
-    val trustedRoot = sha256 != null && trustManager.acceptedIssuers.find {
+    val trustedRoot = trustManager.acceptedIssuers.find {
       it.sha256Hash() == sha256
     } != null
     val trusted = if (trustedRoot) {
@@ -47,9 +46,7 @@ fun Certificate.prettyPrintCertificate(
     }
 
     append("CN: \t$commonName$trusted\n")
-    if (sha256 != null) {
-      append("SHA256:\t${sha256.hex()}\n")
-    }
+    append("SHA256:\t${sha256.hex()}\n")
     append("SAN: \t${subjectAlternativeNameValue()?.joinToString(", ") ?: "<N/A>"}\n")
     if (organizationalUnitName != null) {
       append("OU: \t$organizationalUnitName\n")
@@ -63,15 +60,12 @@ fun Certificate.prettyPrintCertificate(
         }"
     )
 
-    basicConstraintsValue()?.apply {
+    basicConstraints?.apply {
       append("\nCA: $ca")
       if (maxIntermediateCas != null) append(" Max Intermediate: $maxIntermediateCas")
     }
   }
 }
-
-private fun Certificate.basicConstraintsValue() =
-  basicConstraints?.value as? BasicConstraints
 
 private fun Certificate.subjectAlternativeNameValue() =
   tbsCertificate.extensions.firstOrNull {

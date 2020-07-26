@@ -30,39 +30,38 @@ data class Certificate(
   val signatureAlgorithm: AlgorithmIdentifier,
   val signatureValue: BitString
 ) {
-  val sha256: ByteString
-    get() = CertificateAdapters.subjectPublicKeyInfo.toDer(tbsCertificate.subjectPublicKeyInfo)
-        .sha256()
+  /**
+   * Certificate hash as used in HTTP Public Key Pinning.
+   */
+  fun sha256Hash(): ByteString =
+    CertificateAdapters.subjectPublicKeyInfo.toDer(tbsCertificate.subjectPublicKeyInfo).sha256()
 
-  val commonName: Any?
+  val commonName: String?
     get() {
       return tbsCertificate.subject
           .flatten()
           .firstOrNull { it.type == ObjectIdentifiers.commonName }
-          ?.value
+          ?.value as String?
     }
 
-  val organizationalUnitName: Any?
+  val organizationalUnitName: String?
     get() {
       return tbsCertificate.subject
           .flatten()
           .firstOrNull { it.type == ObjectIdentifiers.organizationalUnitName }
-          ?.value
+          ?.value as String?
     }
 
-  val subjectAlternativeNames: Extension?
-    get() {
-      return tbsCertificate.extensions.firstOrNull {
-        it.id == ObjectIdentifiers.subjectAlternativeName
-      }
-    }
+  @Suppress("UNCHECKED_CAST")
+  val subjectAlternativeNames: List<Pair<Any, Any>>?
+    get() = tbsCertificate.extensions.firstOrNull {
+      it.id == ObjectIdentifiers.subjectAlternativeName
+    }?.value as List<Pair<Any, Any>>?
 
-  val basicConstraints: Extension?
-    get() {
-      return tbsCertificate.extensions.firstOrNull {
-        it.id == ObjectIdentifiers.basicConstraints
-      }
-    }
+  val basicConstraints: BasicConstraints?
+    get() = tbsCertificate.extensions.firstOrNull {
+      it.id == ObjectIdentifiers.basicConstraints
+    }?.value as? BasicConstraints
 
   /** Returns true if the certificate was signed by [issuer]. */
   @Throws(SignatureException::class)
