@@ -23,6 +23,9 @@ import okhttp3.internal.platform.Platform
 @TargetClass(Platform.Companion::class)
 class TargetPlatform {
   @Substitute
-  /** Attempt to match the host runtime to a capable Platform implementation. */
+  /**
+   * Replace Platform logic that handles classpath variability (bad for graal)
+   * with a fixed implementation based on known setup.
+   */
   fun findPlatform(): Platform = Jdk9Platform.buildIfSupported()!!
 }
