@@ -11,6 +11,21 @@ dependencies {
   testImplementation dep.assertj
 }
 
+sourceSets {
+  main.kotlin.srcDirs += "$buildDir/generated/sources/kotlin-templates/kotlin/main"
+}
+
+compileKotlin {
+  dependsOn 'copyKotlinTemplates'
+}
+
+task copyKotlinTemplates(type: Copy) {
+  from 'src/main/kotlin-templates'
+  into "$buildDir/generated/sources/kotlin-templates/kotlin/main"
+  expand('projectVersion': "${project.version}")
+  filteringCharset = 'UTF-8'
+}
+
 afterEvaluate { project ->
   project.tasks.dokka {
     outputDirectory = "$rootDir/docs/0.x"
