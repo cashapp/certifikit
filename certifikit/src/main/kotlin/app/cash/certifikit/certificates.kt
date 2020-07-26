@@ -30,6 +30,12 @@ data class Certificate(
   val signatureAlgorithm: AlgorithmIdentifier,
   val signatureValue: BitString
 ) {
+  /**
+   * Certificate hash as used in HTTP Public Key Pinning.
+   */
+  fun sha256Hash(): ByteString =
+    CertificateAdapters.subjectPublicKeyInfo.toDer(tbsCertificate.subjectPublicKeyInfo).sha256()
+
   val commonName: String?
     get() {
       return tbsCertificate.subject
