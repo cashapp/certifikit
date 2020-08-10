@@ -134,9 +134,10 @@ class Main : Callable<Int> {
   private fun parsePemCertificate(file: File): Certificate {
     try {
       val data = file.readText()
-          .replace("-----BEGIN CERTIFICATE-----\n", "")
-          .replace("-----END CERTIFICATE-----\n", "")
+          .replace("-----BEGIN CERTIFICATE-----\r?\n".toRegex(), "")
+          .replace("-----END CERTIFICATE-----\r?\n.*".toRegex(), "")
           .decodeBase64()!!
+
       val certificate = CertificateAdapters.certificate.fromDer(data)
       return certificate
     } catch (fnfe: FileNotFoundException) {
