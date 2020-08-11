@@ -133,13 +133,15 @@ class Main : Callable<Int> {
 
   private fun parsePemCertificate(file: File): Certificate {
     try {
-      val data = file.readText()
-          .replace("-----BEGIN CERTIFICATE-----\r?\n".toRegex(), "")
-          .replace("-----END CERTIFICATE-----\r?\n.*".toRegex(), "")
-          .decodeBase64()!!
+      val pemText = file.readText()
 
-      val certificate = CertificateAdapters.certificate.fromDer(data)
-      return certificate
+      val regex = """-----BEGIN CERTIFICATE-----(.*)-----END CERTIFICATE-----""".toRegex(RegexOption.DOT_MATCHES_ALL)
+      val matchResult = regex.find(pemText) ?: throw UsageException("Invalid format: $file")
+      val (pemBody) = matchResult.destructured
+
+      val data = pemBody.decodeBase64()!!
+
+      return CertificateAdapters.certificate.fromDer(data)
     } catch (fnfe: FileNotFoundException) {
       throw UsageException("No such file: $file", fnfe)
     }

@@ -31,8 +31,8 @@ class MainTest {
   }
 
   companion object {
-    fun fromArgs(vararg args: kotlin.String?): Main {
-      return picocli.CommandLine.populateCommand(Main(), *args)
+    fun fromArgs(vararg args: String?): Main {
+      return CommandLine.populateCommand(Main(), *args)
     }
   }
 }
