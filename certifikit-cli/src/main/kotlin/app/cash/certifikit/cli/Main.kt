@@ -133,7 +133,6 @@ class Main : Callable<Int> {
 
   private fun parsePemCertificate(file: File): Certificate {
     try {
-
       val data = file.readText()
           .replace("-----BEGIN CERTIFICATE-----\n", "")
           .replace("-----END CERTIFICATE-----\n", "")
