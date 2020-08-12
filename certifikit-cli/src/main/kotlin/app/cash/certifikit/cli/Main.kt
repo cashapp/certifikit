@@ -66,6 +66,8 @@ class Main : Callable<Int> {
         queryHost()
       } else if (file != null) {
         showPemFile()
+      } else {
+        throw UsageException("No action to run")
       }
       return 0
     } catch (ce: CertificationException) {
