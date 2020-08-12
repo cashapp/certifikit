@@ -22,17 +22,20 @@ import app.cash.certifikit.cli.Main.Companion.NAME
 import app.cash.certifikit.cli.Main.VersionProvider
 import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
+import okio.ByteString.Companion.decodeBase64
+import okio.ByteString.Companion.toByteString
+import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Help.Ansi
+import picocli.CommandLine.IVersionProvider
+import picocli.CommandLine.Option
+import picocli.CommandLine.Parameters
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.security.cert.X509Certificate
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
-import okio.ByteString.Companion.decodeBase64
-import okio.ByteString.Companion.toByteString
-import picocli.CommandLine
-import picocli.CommandLine.*
-import picocli.CommandLine.Help.Ansi
 
 @Command(
     name = NAME, description = ["An ergonomic CLI for understanding certificates."],
