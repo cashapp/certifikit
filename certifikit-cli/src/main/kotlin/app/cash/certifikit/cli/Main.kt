@@ -31,11 +31,8 @@ import kotlin.system.exitProcess
 import okio.ByteString.Companion.decodeBase64
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine
-import picocli.CommandLine.Command
+import picocli.CommandLine.*
 import picocli.CommandLine.Help.Ansi
-import picocli.CommandLine.IVersionProvider
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
 
 @Command(
     name = NAME, description = ["An ergonomic CLI for understanding certificates."],
@@ -66,6 +63,8 @@ class Main : Callable<Int> {
         queryHost()
       } else if (file != null) {
         showPemFile()
+      } else {
+        throw UsageException("No action to run")
       }
       return 0
     } catch (ce: CertificationException) {
