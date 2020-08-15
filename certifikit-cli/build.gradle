@@ -2,16 +2,12 @@ import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
   id 'application'
-  id 'com.github.johnrengelman.shadow' version '6.0.0'
   id 'com.palantir.graal' version '0.7.1'
+  id "org.jetbrains.kotlin.kapt"
 }
 
 application {
   mainClassName = 'app.cash.certifikit.cli.Main'
-}
-
-shadowJar {
-  mainClassName = application.mainClassName
 }
 
 jar {
@@ -19,23 +15,6 @@ jar {
     attributes 'Automatic-Module-Name': 'app.cash.certifikit.cli'
     attributes 'Main-Class': application.mainClassName
   }
-}
-
-
-//https://github.com/remkop/picocli/tree/master/picocli-codegen
-configurations {
-  generateConfig
-}
-
-task(generateGraalReflectionConfig, dependsOn: 'classes', group:'graal', type: JavaExec) {
-  def reflectionOutputFile = "${buildDir}/resources/main/META-INF/native-image/${project.group}/${project.name}/reflect-config.json"
-
-  description 'Generates a temporary graal reflecftion config for native image.'
-  outputs.file(reflectionOutputFile)
-
-  main = 'picocli.codegen.aot.graalvm.ReflectionConfigGenerator'
-  classpath = configurations.generateConfig + sourceSets.main.runtimeClasspath
-  args = ["--output=$reflectionOutputFile", application.mainClassName]
 }
 
 graal {
@@ -54,17 +33,15 @@ graal {
     windowsVsVarsPath('C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat')
   }
 }
-nativeImage.dependsOn generateGraalReflectionConfig
 
 dependencies {
   api project(':certifikit')
   api dep.okio
-  implementation 'info.picocli:picocli:4.4.0'
+  implementation 'info.picocli:picocli:4.5.0'
   implementation 'com.squareup.okhttp3:okhttp:4.8.0'
   implementation 'com.squareup.okhttp3:okhttp-tls:4.8.0'
 
-  annotationProcessor 'info.picocli:picocli-codegen:4.4.0'
-  generateConfig 'info.picocli:picocli-codegen:4.4.0'
+  kapt("info.picocli:picocli-codegen:4.5.0")
 
   compileOnly("org.graalvm.nativeimage:svm:${graal.graalVersion.get()}")
 
