@@ -1,5 +1,5 @@
 #!/bin/sh -e
 
-../gradlew -q --console plain installShadowDist
+../gradlew -q --console plain installDist
 
-java -jar ./build/install/certifikit-cli-shadow/lib/certifikit-cli-*-SNAPSHOT-all.jar "$@"
+./build/install/certifikit-cli/bin/certifikit-cli "$@"
