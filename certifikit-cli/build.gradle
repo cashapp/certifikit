@@ -3,7 +3,7 @@ import org.apache.tools.ant.taskdefs.condition.Os
 plugins {
   id 'application'
   id 'com.github.johnrengelman.shadow' version '6.0.0'
-  id 'com.palantir.graal' version '0.7.1'
+  id 'com.palantir.graal' version '0.7.1-13-gd190241'
 }
 
 shadowJar {
@@ -55,7 +55,7 @@ assemble.dependsOn installShadowDist
 graal {
   mainClass("app.cash.certifikit.cli.Main")
   outputName("cft")
-  graalVersion('20.1.0')
+  graalVersion('20.2.0')
   javaVersion('11')
 
   option("-H:ReflectionConfigurationFiles=${reflectionOutputFile}")
