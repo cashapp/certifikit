@@ -2,7 +2,7 @@ import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
   id 'application'
-  id 'com.palantir.graal' version '0.7.1'
+  id 'com.palantir.graal' version '0.7.1-13-gd190241'
   id "org.jetbrains.kotlin.kapt"
 }
 
@@ -20,7 +20,7 @@ jar {
 graal {
   mainClass(application.mainClassName)
   outputName("cft")
-  graalVersion('20.1.0')
+  graalVersion('20.2.0')
   javaVersion('11')
 
   option("--enable-https")
