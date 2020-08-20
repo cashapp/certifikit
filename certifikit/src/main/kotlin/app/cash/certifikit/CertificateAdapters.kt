@@ -15,6 +15,7 @@
  */
 package app.cash.certifikit
 
+import app.cash.certifikit.Adapters.BIT_STRING
 import app.cash.certifikit.attestation.AttestationAdapters
 import java.math.BigInteger
 import java.net.ProtocolException
@@ -209,6 +210,7 @@ object CertificateAdapters {
     when (typeHint) {
       ObjectIdentifiers.subjectAlternativeName -> subjectAlternativeName
       ObjectIdentifiers.basicConstraints -> basicConstraints
+      ObjectIdentifiers.keyUsage -> BIT_STRING
       AttestationAdapters.KEY_DESCRIPTION_OID -> AttestationAdapters.keyDescription
       else -> null
     }
