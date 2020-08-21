@@ -40,7 +40,7 @@ data class BitString(
     if (byteString.size == 0)
       return listOf()
 
-    // encoded from the front, with lowest value bits possibly ignored
+    // Bits are encoded from the front, with lowest value bits possibly ignored.
     val maxResultBit = byteString.size * 8 - 1 - this.unusedBitsCount
     val bitField = BigInteger(byteString.toByteArray())
 
