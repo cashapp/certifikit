@@ -56,6 +56,9 @@ fun Certificate.prettyPrintCertificate(
     keyUsage?.let {
       append("Key Usage: ${it.decodeKeyUsage().joinToString(", ")}\n")
     }
+    extKeyUsage?.let {
+      append("Ext Key Usage: ${it.joinToString(", ")}\n")
+    }
 
     append(
         "Valid: \t${
