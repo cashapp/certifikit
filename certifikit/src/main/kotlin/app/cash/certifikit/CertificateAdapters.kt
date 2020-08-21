@@ -469,6 +469,9 @@ object CertificateAdapters {
 
   /**
    * ```
+   *  ExtKeyUsageSyntax ::= SEQUENCE SIZE (1..MAX) OF KeyPurposeId
+   *
+   *  KeyPurposeId ::= OBJECT IDENTIFIER
    * ```
    */
   internal val extKeyUsage: BasicDerAdapter<List<String>> = OBJECT_IDENTIFIER.asSequenceOf()
