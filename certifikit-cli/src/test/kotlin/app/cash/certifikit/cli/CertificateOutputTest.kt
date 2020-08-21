@@ -75,7 +75,7 @@ class CertificateOutputTest {
       |SHA256:	43a60e5aecabd897cbbcf833150740e18ff0c3d90bde132354dc85a4869b3269
       |SAN: 	cash.app, www.cash.app
       |Key Usage: DigitalSignature, KeyEncipherment
-      |Ext Key Usage: 1.3.6.1.5.5.7.3.1, 1.3.6.1.5.5.7.3.2
+      |Ext Key Usage: serverAuth, clientAuth
       |Valid: 	2020-04-13T13:25:49Z..2021-04-12T13:55:49Z
       |CA: false
     """.trimMargin())
