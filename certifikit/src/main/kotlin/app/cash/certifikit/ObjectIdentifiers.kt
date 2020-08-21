@@ -25,4 +25,11 @@ object ObjectIdentifiers {
   const val basicConstraints = "2.5.29.19"
   const val commonName = "2.5.4.3"
   const val organizationalUnitName = "2.5.4.11"
+  const val keyUsage = "2.5.29.15"
+  const val subjectKeyIdentifier = "2.5.29.14"
+  const val cRLDistributionPoints = "2.5.29.31"
+  const val authorityKeyIdentifier = "2.5.29.35"
+  const val certificatePolicies = "2.5.29.32"
+  const val authorityInfoAccess = "1.3.6.1.5.5.7.1.1"
+  const val extKeyUsage = "2.5.29.37"
 }
