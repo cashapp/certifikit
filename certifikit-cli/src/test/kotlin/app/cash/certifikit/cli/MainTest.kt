@@ -15,18 +15,20 @@
  */
 package app.cash.certifikit.cli
 
+import org.junit.Test
 import picocli.CommandLine
+import java.io.File
 
 class MainTest {
-  @org.junit.Test fun version() {
+  @Test fun version() {
     CommandLine(Main()).execute("-V")
   }
 
-  @org.junit.Test fun certificate() {
+  @Test fun certificate() {
     fromArgs("src/test/resources/cert.pem").call()
   }
 
-  @org.junit.Test fun https() {
+  @Test fun https() {
     fromArgs("--host", "www.google.com").call()
   }
 

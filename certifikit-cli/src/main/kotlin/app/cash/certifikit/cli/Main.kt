@@ -86,7 +86,13 @@ class Main : Callable<Int> {
   }
 
   private fun showPemFile() {
-    val certificate = parsePemCertificate(File(file!!))
+    val certificate = if (file == "-") {
+      val stdInText = System.`in`.bufferedReader().readText()
+      stdInText.parsePemCertificate()
+    } else {
+      parsePemCertificate(File(file!!))
+    }
+
     println(certificate.prettyPrintCertificate())
   }
 
@@ -137,13 +143,7 @@ class Main : Callable<Int> {
     try {
       val pemText = file.readText()
 
-      val regex = """-----BEGIN CERTIFICATE-----(.*)-----END CERTIFICATE-----""".toRegex(RegexOption.DOT_MATCHES_ALL)
-      val matchResult = regex.find(pemText) ?: throw UsageException("Invalid format: $file")
-      val (pemBody) = matchResult.destructured
-
-      val data = pemBody.decodeBase64()!!
-
-      return CertificateAdapters.certificate.fromDer(data)
+      return pemText.parsePemCertificate(file.name)
     } catch (fnfe: FileNotFoundException) {
       throw UsageException("No such file: $file", fnfe)
     }
