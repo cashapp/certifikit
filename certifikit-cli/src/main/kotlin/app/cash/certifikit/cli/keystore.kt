@@ -2,6 +2,7 @@ package app.cash.certifikit.cli
 
 import java.io.File
 import java.security.KeyStore
+import javax.net.ssl.KeyManagerFactory.getDefaultAlgorithm
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
 
@@ -9,7 +10,10 @@ fun File.trustManager(): X509TrustManager {
     val factory = TrustManagerFactory.getInstance(
             TrustManagerFactory.getDefaultAlgorithm())
 
-    val keyStore = KeyStore.getInstance(this, null as? CharArray)
+    val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
+    this.inputStream().use {
+        keyStore.load(it, null)
+    }
     factory.init(keyStore)
 
     val trustManagers = factory.trustManagers!!
