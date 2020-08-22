@@ -52,6 +52,22 @@ data class Certificate(
           ?.value as String?
     }
 
+  val keyUsage: BitString?
+    get() {
+      return tbsCertificate.extensions
+          .firstOrNull { it.id == ObjectIdentifiers.keyUsage }
+          ?.value as BitString?
+    }
+
+  @Suppress("UNCHECKED_CAST")
+  val extKeyUsage: List<ExtKeyUsage>?
+    get() {
+      val list = tbsCertificate.extensions
+          .firstOrNull { it.id == ObjectIdentifiers.extKeyUsage }
+          ?.value as List<String>?
+      return list?.map { ExtKeyUsage(it) }
+    }
+
   @Suppress("UNCHECKED_CAST")
   val subjectAlternativeNames: List<Pair<Any, Any>>?
     get() = tbsCertificate.extensions.firstOrNull {

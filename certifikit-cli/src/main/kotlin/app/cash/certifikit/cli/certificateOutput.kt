@@ -17,6 +17,7 @@ package app.cash.certifikit.cli
 
 import app.cash.certifikit.Certificate
 import app.cash.certifikit.ObjectIdentifiers
+import app.cash.certifikit.decodeKeyUsage
 import java.security.cert.X509Certificate
 import java.time.Instant.ofEpochMilli
 import javax.net.ssl.X509TrustManager
@@ -50,6 +51,13 @@ fun Certificate.prettyPrintCertificate(
     append("SAN: \t${subjectAlternativeNameValue()?.joinToString(", ") ?: "<N/A>"}\n")
     if (organizationalUnitName != null) {
       append("OU: \t$organizationalUnitName\n")
+    }
+
+    keyUsage?.let {
+      append("Key Usage: ${it.decodeKeyUsage().joinToString(", ")}\n")
+    }
+    extKeyUsage?.let {
+      append("Ext Key Usage: ${it.joinToString(", ")}\n")
     }
 
     append(

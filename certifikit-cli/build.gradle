@@ -20,7 +20,7 @@ jar {
 graal {
   mainClass(application.mainClassName)
   outputName("cft")
-  graalVersion('20.1.0')
+  graalVersion('20.2.0')
   javaVersion('11')
 
   option("--enable-https")

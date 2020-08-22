@@ -305,7 +305,7 @@ internal class DerCertificatesTest {
                     Extension(
                         id = keyUsage,
                         critical = true,
-                        value = "03020106".decodeHex()
+                        value = BitString("06".decodeHex(), unusedBitsCount = 1)
                     ),
                     Extension(
                         id = basicConstraints,
@@ -570,12 +570,12 @@ internal class DerCertificatesTest {
                     Extension(
                         id = keyUsage,
                         critical = true,
-                        value = "030205a0".decodeHex()
+                        value = BitString("a0".decodeHex(), unusedBitsCount = 5)
                     ),
                     Extension(
                         id = extendedKeyUsage,
                         critical = false,
-                        value = "301406082b0601050507030106082b06010505070302".decodeHex()
+                        value = listOf("1.3.6.1.5.5.7.3.1", "1.3.6.1.5.5.7.3.2")
                     ),
                     Extension(
                         id = authorityInfoAccess,

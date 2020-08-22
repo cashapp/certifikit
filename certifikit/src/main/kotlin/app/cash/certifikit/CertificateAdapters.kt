@@ -15,6 +15,8 @@
  */
 package app.cash.certifikit
 
+import app.cash.certifikit.Adapters.BIT_STRING
+import app.cash.certifikit.Adapters.OBJECT_IDENTIFIER
 import app.cash.certifikit.attestation.AttestationAdapters
 import java.math.BigInteger
 import java.net.ProtocolException
@@ -209,6 +211,8 @@ object CertificateAdapters {
     when (typeHint) {
       ObjectIdentifiers.subjectAlternativeName -> subjectAlternativeName
       ObjectIdentifiers.basicConstraints -> basicConstraints
+      ObjectIdentifiers.keyUsage -> BIT_STRING
+      ObjectIdentifiers.extKeyUsage -> extKeyUsage
       AttestationAdapters.KEY_DESCRIPTION_OID -> AttestationAdapters.keyDescription
       else -> null
     }
@@ -462,4 +466,13 @@ object CertificateAdapters {
         )
       }
   )
+
+  /**
+   * ```
+   *  ExtKeyUsageSyntax ::= SEQUENCE SIZE (1..MAX) OF KeyPurposeId
+   *
+   *  KeyPurposeId ::= OBJECT IDENTIFIER
+   * ```
+   */
+  internal val extKeyUsage: BasicDerAdapter<List<String>> = OBJECT_IDENTIFIER.asSequenceOf()
 }
