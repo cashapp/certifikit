@@ -57,18 +57,28 @@ class Main : Callable<Int> {
   @Option(names = ["--output"], description = ["Output file or directory"])
   var output: File? = null
 
+  @Option(names = ["--complete"], description = ["Complete option"])
+  var complete: String? = null
+
   @Parameters(paramLabel = "file", description = ["Input File"], arity = "0..1")
   var file: String? = null
 
   override fun call(): Int {
     try {
-      if (host != null) {
-        queryHost()
-      } else if (file != null) {
-        showPemFile()
-      } else {
-        throw UsageException("No action to run")
-      }
+        when {
+            complete != null -> {
+                completeOption()
+            }
+            host != null -> {
+                queryHost()
+            }
+            file != null -> {
+                showPemFile()
+            }
+            else -> {
+                throw UsageException("No action to run")
+            }
+        }
       return 0
     } catch (ce: CertificationException) {
       System.err.println("Error: ${Ansi.AUTO.string(" @|yellow ${ce.message}|@")}")
@@ -90,7 +100,19 @@ class Main : Callable<Int> {
     println(certificate.prettyPrintCertificate())
   }
 
+  private fun completeOption() {
+      if (complete == "host") {
+          for (host in knownHosts()) {
+              println(host)
+          }
+      }
+  }
+
   private fun queryHost() {
+    // TODO move after successful query
+    // TODO add SANs complete wildcard hosts
+    addHostToCompletionFile(host!!)
+
     val x509certificates = fromHttps(host!!)
     prettyPrintChain(x509certificates)
 
@@ -103,7 +125,23 @@ class Main : Callable<Int> {
     }
   }
 
-  private fun outputCertificates(
+  private fun addHostToCompletionFile(host: String) {
+    val previousHosts = knownHosts()
+    val newHosts = previousHosts + host
+
+    val lineSeparator = System.getProperty("line.separator")
+    knownHostsFile.writeText(newHosts.joinToString(lineSeparator, postfix = lineSeparator))
+  }
+
+    private fun knownHosts(): Set<String> {
+        return if (knownHostsFile.isFile) {
+            knownHostsFile.readLines().filter { it.trim().isNotBlank() }.toSortedSet()
+        } else {
+            setOf<String>()
+        }
+    }
+
+    private fun outputCertificates(
     output: File,
     certificates: List<X509Certificate>
   ) {
@@ -157,6 +195,13 @@ class Main : Callable<Int> {
 
   companion object {
     internal const val NAME = "cft"
+
+    val confDir = File(System.getProperty("user.home"), ".cft").also {
+      if (!it.isDirectory) {
+        it.mkdirs()
+      }
+    }
+    val knownHostsFile = File(confDir, "knownhosts.txt")
 
     @JvmStatic
     fun main(args: Array<String>) {
