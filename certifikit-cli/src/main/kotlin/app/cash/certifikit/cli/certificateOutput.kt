@@ -31,8 +31,7 @@ fun X509Certificate.publicKeySha256(): ByteString =
       .sha256()
 
 fun Certificate.prettyPrintCertificate(
-  trustManager: X509TrustManager = Platform.get()
-      .platformTrustManager()
+  trustManager: X509TrustManager
 ): String {
   val sha256 = this.publicKeySha256()
 

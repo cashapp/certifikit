@@ -22,6 +22,7 @@ import app.cash.certifikit.cli.Main.Companion.NAME
 import app.cash.certifikit.cli.Main.VersionProvider
 import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
+import okhttp3.internal.platform.Platform
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -57,8 +58,15 @@ class Main : Callable<Int> {
   @Option(names = ["--output"], description = ["Output file or directory"])
   var output: File? = null
 
+  @Option(names = ["--keystore"], description = ["Keystore for local verification"])
+  var keyStoreFile: File? = null
+
   @Parameters(paramLabel = "file", description = ["Input File"], arity = "0..1")
   var file: String? = null
+
+  val keyStore by lazy {
+    keyStoreFile?.let { it.trustManager() } ?: Platform.get().platformTrustManager()
+  }
 
   override fun call(): Int {
     try {
@@ -87,7 +95,7 @@ class Main : Callable<Int> {
 
   private fun showPemFile() {
     val certificate = parsePemCertificate(File(file!!))
-    println(certificate.prettyPrintCertificate())
+    println(certificate.prettyPrintCertificate(keyStore))
   }
 
   private fun queryHost() {
@@ -129,7 +137,7 @@ class Main : Callable<Int> {
       }
 
       val certifikit = CertificateAdapters.certificate.fromDer(certificate.encoded.toByteString())
-      println(certifikit.prettyPrintCertificate())
+      println(certifikit.prettyPrintCertificate(keyStore))
     }
   }
 
