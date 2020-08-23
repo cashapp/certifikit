@@ -142,9 +142,9 @@ class Main : Callable<Int> {
     }
 
     private fun outputCertificates(
-    output: File,
-    certificates: List<X509Certificate>
-  ) {
+      output: File,
+      certificates: List<X509Certificate>
+    ) {
     when {
       output.isDirectory -> certificates.forEach {
         outputCertificate(File(output, "${it.publicKeySha256().hex()}.pem"), it)
