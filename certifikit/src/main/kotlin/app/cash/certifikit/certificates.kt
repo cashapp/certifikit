@@ -22,12 +22,12 @@ import java.security.Signature
 import java.security.SignatureException
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
-import okio.Buffer
-import okio.ByteString
 import java.time.Duration
 import java.time.Instant
 import java.time.Period
 import java.time.ZoneId
+import okio.Buffer
+import okio.ByteString
 
 data class Certificate(
   val tbsCertificate: TbsCertificate,
