@@ -17,7 +17,6 @@ package app.cash.certifikit.cli
 
 import org.junit.Test
 import picocli.CommandLine
-import java.io.File
 
 class MainTest {
   @Test fun version() {

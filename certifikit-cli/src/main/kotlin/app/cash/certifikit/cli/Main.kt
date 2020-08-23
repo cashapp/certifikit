@@ -28,7 +28,6 @@ import java.io.IOException
 import java.security.cert.X509Certificate
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
-import okio.ByteString.Companion.decodeBase64
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine
 import picocli.CommandLine.Command
