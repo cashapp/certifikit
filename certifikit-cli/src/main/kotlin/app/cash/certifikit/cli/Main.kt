@@ -109,12 +109,11 @@ class Main : Callable<Int> {
   }
 
   private fun queryHost() {
-    // TODO move after successful query
-    // TODO add SANs complete wildcard hosts
-    addHostToCompletionFile(host!!)
-
     val x509certificates = fromHttps(host!!)
     prettyPrintChain(x509certificates)
+
+    // TODO add SANs complete wildcard hosts
+    addHostToCompletionFile(host!!)
 
     if (output != null) {
       try {
