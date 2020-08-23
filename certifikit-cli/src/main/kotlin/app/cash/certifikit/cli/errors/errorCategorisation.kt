@@ -17,6 +17,7 @@ package app.cash.certifikit.cli.errors
 
 import app.cash.certifikit.cli.Main
 import java.io.IOException
+import java.security.InvalidAlgorithmParameterException
 import java.security.cert.CertificateExpiredException
 import javax.net.ssl.SSLHandshakeException
 
@@ -43,6 +44,9 @@ fun Main.classify(
     e is java.net.SocketTimeoutException -> CertificationException(
         "No response from server: $host", e
     )
+    // javax.net.ssl.SSLException: java.lang.RuntimeException: Unexpected error: java.security.InvalidAlgorithmParameterException: the trustAnchors parameter must be non-empty
+    e.findMatchingCause { it is InvalidAlgorithmParameterException } != null ->
+      CertificationException("No trusted CA certificates in keystore", e)
     // javax.net.ssl.SSLHandshakeException: Received fatal alert: handshake_failure
     e is SSLHandshakeException -> CertificationException(
         "SSL Handshake Failure: ${e.message} ${if (insecure) "" else ", try with --insecure"}", e

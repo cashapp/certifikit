@@ -64,7 +64,7 @@ class Main : Callable<Int> {
   @Parameters(paramLabel = "file", description = ["Input File"], arity = "0..1")
   var file: String? = null
 
-  val keyStore by lazy {
+  val trustManager by lazy {
     keyStoreFile?.let { it.trustManager() } ?: Platform.get().platformTrustManager()
   }
 
@@ -95,7 +95,7 @@ class Main : Callable<Int> {
 
   private fun showPemFile() {
     val certificate = parsePemCertificate(File(file!!))
-    println(certificate.prettyPrintCertificate(keyStore))
+    println(certificate.prettyPrintCertificate(trustManager))
   }
 
   private fun queryHost() {
@@ -131,13 +131,17 @@ class Main : Callable<Int> {
   }
 
   private fun prettyPrintChain(certificates: List<X509Certificate>) {
+    if (certificates.isEmpty()) {
+      System.err.println("Warn: ${Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
+    }
+
     certificates.forEachIndexed { i, certificate ->
       if (i > 0) {
         println()
       }
 
       val certifikit = CertificateAdapters.certificate.fromDer(certificate.encoded.toByteString())
-      println(certifikit.prettyPrintCertificate(keyStore))
+      println(certifikit.prettyPrintCertificate(trustManager))
     }
   }
 
