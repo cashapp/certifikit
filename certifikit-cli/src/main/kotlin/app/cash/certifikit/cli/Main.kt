@@ -65,20 +65,20 @@ class Main : Callable<Int> {
 
   override fun call(): Int {
     try {
-        when {
-            complete != null -> {
-                completeOption()
-            }
-            host != null -> {
-                queryHost()
-            }
-            file != null -> {
-                showPemFile()
-            }
-            else -> {
-                throw UsageException("No action to run")
-            }
+      when {
+        complete != null -> {
+          completeOption()
         }
+        host != null -> {
+          queryHost()
+        }
+        file != null -> {
+          showPemFile()
+        }
+        else -> {
+          throw UsageException("No action to run")
+        }
+      }
       return 0
     } catch (ce: CertificationException) {
       System.err.println("Error: ${Ansi.AUTO.string(" @|yellow ${ce.message}|@")}")
@@ -101,11 +101,11 @@ class Main : Callable<Int> {
   }
 
   private fun completeOption() {
-      if (complete == "host") {
-          for (host in knownHosts()) {
-              println(host)
-          }
+    if (complete == "host") {
+      for (host in knownHosts()) {
+        println(host)
       }
+    }
   }
 
   private fun queryHost() {
@@ -132,18 +132,18 @@ class Main : Callable<Int> {
     knownHostsFile.writeText(newHosts.joinToString(lineSeparator, postfix = lineSeparator))
   }
 
-    private fun knownHosts(): Set<String> {
-        return if (knownHostsFile.isFile) {
-            knownHostsFile.readLines().filter { it.trim().isNotBlank() }.toSortedSet()
-        } else {
-            setOf<String>()
-        }
+  private fun knownHosts(): Set<String> {
+    return if (knownHostsFile.isFile) {
+      knownHostsFile.readLines().filter { it.trim().isNotBlank() }.toSortedSet()
+    } else {
+      setOf<String>()
     }
+  }
 
-    private fun outputCertificates(
-      output: File,
-      certificates: List<X509Certificate>
-    ) {
+  private fun outputCertificates(
+    output: File,
+    certificates: List<X509Certificate>
+  ) {
     when {
       output.isDirectory -> certificates.forEach {
         outputCertificate(File(output, "${it.publicKeySha256().hex()}.pem"), it)
