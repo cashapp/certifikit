@@ -70,13 +70,13 @@ class CertificateOutputTest {
 
     val output = okHttpCertificate.prettyPrintCertificate()
 
-    assertThat(output).isEqualTo("""
-      |CN: 	cash.app
+    assertThat(output).matches("""
+      |CN: 	cash\.app
       |SHA256:	43a60e5aecabd897cbbcf833150740e18ff0c3d90bde132354dc85a4869b3269
-      |SAN: 	cash.app, www.cash.app
+      |SAN: 	cash\.app, www\.cash\.app
       |Key Usage: DigitalSignature, KeyEncipherment
       |Ext Key Usage: serverAuth, clientAuth
-      |Valid: 	2020-04-13T13:25:49Z..2021-04-12T13:55:49Z
+      |Valid: 	2020-04-13T13:25:49Z\.\.2021-04-12T13:55:49Z (.*)
       |CA: false
     """.trimMargin())
   }
