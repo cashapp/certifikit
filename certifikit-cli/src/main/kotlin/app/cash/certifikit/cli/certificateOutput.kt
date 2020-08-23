@@ -21,7 +21,6 @@ import app.cash.certifikit.decodeKeyUsage
 import java.security.cert.X509Certificate
 import java.time.Instant.ofEpochMilli
 import javax.net.ssl.X509TrustManager
-import okhttp3.internal.platform.Platform
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine.Help.Ansi

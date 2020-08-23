@@ -22,13 +22,13 @@ import app.cash.certifikit.cli.Main.Companion.NAME
 import app.cash.certifikit.cli.Main.VersionProvider
 import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
-import okhttp3.internal.platform.Platform
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.security.cert.X509Certificate
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
+import okhttp3.internal.platform.Platform
 import okio.ByteString.Companion.decodeBase64
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine
