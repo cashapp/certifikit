@@ -74,7 +74,7 @@ fun Main.fromHttps(host: String): List<X509Certificate> {
       .connectTimeout(2, SECONDS)
       .followRedirects(followRedirects)
       .eventListener(VerboseEventListener(verbose))
-      .connectionSpecs(listOf(MODERN_TLS)) // may be overriden later
+      .connectionSpecs(listOf(MODERN_TLS)) // The specs may be overriden later.
       .apply {
         if (insecure) {
           hostnameVerifier(HostnameVerifier { _, _ -> true })
