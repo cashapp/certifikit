@@ -28,6 +28,7 @@ import java.io.IOException
 import java.security.cert.X509Certificate
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
+import okhttp3.internal.platform.Platform
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -56,11 +57,18 @@ class Main : Callable<Int> {
   @Option(names = ["--output"], description = ["Output file or directory"])
   var output: File? = null
 
+  @Option(names = ["--keystore"], description = ["Keystore for local verification"])
+  var keyStoreFile: File? = null
+
   @Option(names = ["--complete"], description = ["Complete option"])
   var complete: String? = null
 
   @Parameters(paramLabel = "file", description = ["Input File"], arity = "0..1")
   var file: String? = null
+
+  val trustManager by lazy {
+    keyStoreFile?.let { it.trustManager() } ?: Platform.get().platformTrustManager()
+  }
 
   override fun call(): Int {
     try {
@@ -102,7 +110,7 @@ class Main : Callable<Int> {
       parsePemCertificate(File(file!!))
     }
 
-    println(certificate.prettyPrintCertificate())
+    println(certificate.prettyPrintCertificate(trustManager))
   }
 
   private fun completeOption() {
@@ -165,13 +173,17 @@ class Main : Callable<Int> {
   }
 
   private fun prettyPrintChain(certificates: List<X509Certificate>) {
+    if (certificates.isEmpty()) {
+      System.err.println("Warn: ${Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
+    }
+
     certificates.forEachIndexed { i, certificate ->
       if (i > 0) {
         println()
       }
 
       val certifikit = CertificateAdapters.certificate.fromDer(certificate.encoded.toByteString())
-      println(certifikit.prettyPrintCertificate())
+      println(certifikit.prettyPrintCertificate(trustManager))
     }
   }
 

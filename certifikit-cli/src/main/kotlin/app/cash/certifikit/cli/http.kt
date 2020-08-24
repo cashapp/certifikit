@@ -24,6 +24,7 @@ import java.net.Proxy
 import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit.SECONDS
 import javax.net.ssl.HostnameVerifier
+import javax.net.ssl.X509TrustManager
 import okhttp3.Call
 import okhttp3.CipherSuite
 import okhttp3.ConnectionSpec
@@ -72,17 +73,17 @@ fun Main.fromHttps(host: String): List<X509Certificate> {
   val client = OkHttpClient.Builder()
       .connectTimeout(2, SECONDS)
       .followRedirects(followRedirects)
+      .eventListener(VerboseEventListener(verbose))
+      .connectionSpecs(listOf(MODERN_TLS)) // The specs may be overriden later.
       .apply {
         if (insecure) {
           hostnameVerifier(HostnameVerifier { _, _ -> true })
 
           val handshakeCertificates = HandshakeCertificates.Builder()
-              .addPlatformTrustedCertificates()
+              .addTrustedCertificates(trustManager)
               .addInsecureHost(host)
               .build()
-          sslSocketFactory(
-              handshakeCertificates.sslSocketFactory(), handshakeCertificates.trustManager
-          )
+          sslSocketFactory(handshakeCertificates.sslSocketFactory(), handshakeCertificates.trustManager)
 
           val spec = ConnectionSpec.Builder(COMPATIBLE_TLS)
               .allEnabledCipherSuites()
@@ -90,10 +91,12 @@ fun Main.fromHttps(host: String): List<X509Certificate> {
               .build()
 
           connectionSpecs(listOf(spec))
-        } else {
-          connectionSpecs(listOf(MODERN_TLS))
+        } else if (keyStoreFile != null) {
+          val handshakeCertificates = HandshakeCertificates.Builder()
+              .addTrustedCertificates(trustManager)
+              .build()
+          sslSocketFactory(handshakeCertificates.sslSocketFactory(), handshakeCertificates.trustManager)
         }
-        eventListener(VerboseEventListener(verbose))
       }
       .build()
 
@@ -114,6 +117,16 @@ fun Main.fromHttps(host: String): List<X509Certificate> {
     it.handshake!!.peerCertificates
   }
       .map { it as X509Certificate }
+}
+
+private fun HandshakeCertificates.Builder.addTrustedCertificates(
+  trustManager: X509TrustManager
+): HandshakeCertificates.Builder {
+  return apply {
+    for (issuer in trustManager.acceptedIssuers) {
+      addTrustedCertificate(issuer)
+    }
+  }
 }
 
 class VerboseEventListener(val verbose: Boolean) : EventListener() {

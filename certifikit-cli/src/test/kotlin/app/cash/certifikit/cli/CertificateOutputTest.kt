@@ -16,6 +16,7 @@
 package app.cash.certifikit.cli
 
 import app.cash.certifikit.CertificateAdapters
+import okhttp3.internal.platform.Platform
 import okio.ByteString.Companion.decodeBase64
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
@@ -68,7 +69,7 @@ class CertificateOutputTest {
     val okHttpCertificate =
       CertificateAdapters.certificate.fromDer(certificateBase64.decodeBase64()!!)
 
-    val output = okHttpCertificate.prettyPrintCertificate()
+    val output = okHttpCertificate.prettyPrintCertificate(Platform.get().platformTrustManager())
 
     assertThat(output).matches("""
       |CN: 	cash\.app

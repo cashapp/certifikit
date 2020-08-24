@@ -27,6 +27,7 @@ _cft() {
     --verbose'[Verbose Output.]' \
     --insecure'[Insecure HTTPS Mode.]' \
     --redirect'[Follow redirect]' \
+    --keystore='[Provide KeyStore]: :_files'
     {-V,--version}'[Print version information and exit.]' \
     '*:File:_cft_files' \
     && ret=0
