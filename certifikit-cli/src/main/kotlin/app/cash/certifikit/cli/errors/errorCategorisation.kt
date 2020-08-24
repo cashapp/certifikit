@@ -17,6 +17,7 @@ package app.cash.certifikit.cli.errors
 
 import app.cash.certifikit.cli.Main
 import java.io.IOException
+import java.net.ConnectException
 import java.security.InvalidAlgorithmParameterException
 import java.security.cert.CertificateExpiredException
 import javax.net.ssl.SSLHandshakeException
@@ -51,6 +52,8 @@ fun Main.classify(
     e is SSLHandshakeException -> CertificationException(
         "SSL Handshake Failure: ${e.message} ${if (insecure) "" else ", try with --insecure"}", e
     )
+    // java.net.ConnectException: Failed to connect to localhost/[0:0:0:0:0:0:0:1]:443
+    e is ConnectException -> CertificationException(e.message ?: "Unable to connect to host", e)
     else -> e
   }
 }

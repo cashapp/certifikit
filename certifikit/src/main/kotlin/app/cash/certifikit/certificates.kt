@@ -22,6 +22,10 @@ import java.security.Signature
 import java.security.SignatureException
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
+import java.time.Duration
+import java.time.Instant
+import java.time.Period
+import java.time.ZoneId
 import okio.Buffer
 import okio.ByteString
 
@@ -167,6 +171,27 @@ data class Validity(
   val notBefore: Long,
   val notAfter: Long
 ) {
+  /**
+   * Returns the remaining Period, or null if the certificate is not within the valid period.
+   */
+  val periodLeft: Period?
+  get() {
+    val now = Instant.now()
+
+    return if (now.isBefore(Instant.ofEpochMilli(notBefore))) {
+      null
+    } else {
+      val notAfterInstant = Instant.ofEpochMilli(notAfter)
+      val left = Duration.between(now, notAfterInstant)
+
+      if (left.isNegative) {
+        null
+      } else {
+        Period.between(now.atZone(ZoneId.systemDefault()).toLocalDate(), notAfterInstant.atZone(ZoneId.systemDefault()).toLocalDate())
+      }
+    }
+  }
+
   // Avoid Long.hashCode(long) which isn't available on Android 5.
   override fun hashCode(): Int {
     var result = 0
