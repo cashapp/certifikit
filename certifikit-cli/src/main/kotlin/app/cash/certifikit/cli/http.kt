@@ -119,7 +119,9 @@ fun Main.fromHttps(host: String): List<X509Certificate> {
       .map { it as X509Certificate }
 }
 
-private fun HandshakeCertificates.Builder.addTrustedCertificates(trustManager: X509TrustManager): HandshakeCertificates.Builder {
+private fun HandshakeCertificates.Builder.addTrustedCertificates(
+  trustManager: X509TrustManager
+): HandshakeCertificates.Builder {
   return apply {
     for (issuer in trustManager.acceptedIssuers) {
       addTrustedCertificate(issuer)
