@@ -15,25 +15,14 @@
  */
 package app.cash.certifikit.cli
 
+import java.io.File
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
-import picocli.CommandLine
 
-class MainTest {
-  @Test fun version() {
-    CommandLine(Main()).execute("-V")
-  }
-
-  @Test fun certificate() {
-    fromArgs("src/test/resources/cert.pem").call()
-  }
-
-  @Test fun https() {
-    fromArgs("--host", "www.google.com").call()
-  }
-
-  companion object {
-    fun fromArgs(vararg args: String?): Main {
-      return CommandLine.populateCommand(Main(), *args)
-    }
+class TestCerts {
+  @Test
+  fun parseCert() {
+      val cert = File("src/test/resources/cert.pem").readText().parsePemCertificate()
+      assertThat(cert.signatureAlgorithm.algorithm).isEqualTo("1.2.840.113549.1.1.11")
   }
 }
