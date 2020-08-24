@@ -112,7 +112,7 @@ class Main : Callable<Int> {
     val x509certificates = fromHttps(host!!)
     prettyPrintChain(x509certificates)
 
-    // TODO add SANs complete wildcard hosts
+    // TODO We should add SANs and complete wildcard hosts.
     addHostToCompletionFile(host!!)
 
     if (output != null) {
