@@ -6,6 +6,7 @@ ext.dep = [
   "kotlinGradlePlugin": "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.0",
   "kotlinReflection": "org.jetbrains.kotlin:kotlin-reflect:1.4.0",
   "kotlinStdLib": "org.jetbrains.kotlin:kotlin-stdlib:1.4.0",
+  "ktlintVersion": "0.34.2",
   "mavenPublishGradlePlugin": "com.vanniktech:gradle-maven-publish-plugin:0.11.1",
   "okio": "com.squareup.okio:okio:2.7.0",
   "spotlessPlugin": "com.diffplug.spotless:spotless-plugin-gradle:5.1.2",

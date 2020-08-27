@@ -51,6 +51,13 @@ subprojects {
     }
   }
 
+  spotless {
+    kotlin {
+      target "**/*.kt"
+      ktlint(dep.ktlintVersion).userData(['indent_size': '2', 'continuation_indent_size': '2'])
+    }
+  }
+
   dokka {
     configuration {
       reportUndocumented = false
