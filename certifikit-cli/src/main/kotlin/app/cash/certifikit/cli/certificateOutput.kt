@@ -21,7 +21,6 @@ import app.cash.certifikit.decodeKeyUsage
 import java.security.cert.X509Certificate
 import java.time.Instant.ofEpochMilli
 import javax.net.ssl.X509TrustManager
-import okhttp3.internal.platform.Platform
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine.Help.Ansi
@@ -31,8 +30,7 @@ fun X509Certificate.publicKeySha256(): ByteString =
       .sha256()
 
 fun Certificate.prettyPrintCertificate(
-  trustManager: X509TrustManager = Platform.get()
-      .platformTrustManager()
+  trustManager: X509TrustManager
 ): String {
   val sha256 = this.publicKeySha256()
 
@@ -47,7 +45,7 @@ fun Certificate.prettyPrintCertificate(
     }
 
     append("CN: \t$commonName$trusted\n")
-    append("SHA256:\t${sha256.hex()}\n")
+    append("Pin:\tsha256/${sha256.hex()}\n")
     append("SAN: \t${subjectAlternativeNameValue()?.joinToString(", ") ?: "<N/A>"}\n")
     if (organizationalUnitName != null) {
       append("OU: \t$organizationalUnitName\n")
@@ -60,12 +58,20 @@ fun Certificate.prettyPrintCertificate(
       append("Ext Key Usage: ${it.joinToString(", ")}\n")
     }
 
+    val periodLeft = tbsCertificate.validity.periodLeft
+    val periodLeftString = when {
+      periodLeft == null -> Ansi.AUTO.string(" (@|red Not valid|@)")
+      periodLeft.years >= 1 -> " (${periodLeft.years} years)"
+      periodLeft.months >= 1 -> " (${periodLeft.months} months)"
+      periodLeft.days < 20 -> Ansi.AUTO.string(" (@|yellow $periodLeft days|@)")
+      else -> " (${periodLeft.days})"
+    }
     append(
         "Valid: \t${
           ofEpochMilli(tbsCertificate.validity.notBefore)
         }..${
           ofEpochMilli(tbsCertificate.validity.notAfter)
-        }"
+        }$periodLeftString"
     )
 
     basicConstraints?.apply {

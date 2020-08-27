@@ -28,7 +28,7 @@ import java.io.IOException
 import java.security.cert.X509Certificate
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
-import okio.ByteString.Companion.decodeBase64
+import okhttp3.internal.platform.Platform
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -57,17 +57,34 @@ class Main : Callable<Int> {
   @Option(names = ["--output"], description = ["Output file or directory"])
   var output: File? = null
 
+  @Option(names = ["--keystore"], description = ["Keystore for local verification"])
+  var keyStoreFile: File? = null
+
+  @Option(names = ["--complete"], description = ["Complete option"])
+  var complete: String? = null
+
   @Parameters(paramLabel = "file", description = ["Input File"], arity = "0..1")
   var file: String? = null
 
+  val trustManager by lazy {
+    keyStoreFile?.let { it.trustManager() } ?: Platform.get().platformTrustManager()
+  }
+
   override fun call(): Int {
     try {
-      if (host != null) {
-        queryHost()
-      } else if (file != null) {
-        showPemFile()
-      } else {
-        throw UsageException("No action to run")
+      when {
+        complete != null -> {
+          completeOption()
+        }
+        host != null -> {
+          queryHost()
+        }
+        file != null -> {
+          showPemFile()
+        }
+        else -> {
+          throw UsageException("No action to run")
+        }
       }
       return 0
     } catch (ce: CertificationException) {
@@ -86,13 +103,30 @@ class Main : Callable<Int> {
   }
 
   private fun showPemFile() {
-    val certificate = parsePemCertificate(File(file!!))
-    println(certificate.prettyPrintCertificate())
+    val certificate = if (file == "-") {
+      val stdInText = System.`in`.bufferedReader().readText()
+      stdInText.parsePemCertificate()
+    } else {
+      parsePemCertificate(File(file!!))
+    }
+
+    println(certificate.prettyPrintCertificate(trustManager))
+  }
+
+  private fun completeOption() {
+    if (complete == "host") {
+      for (host in knownHosts()) {
+        println(host)
+      }
+    }
   }
 
   private fun queryHost() {
     val x509certificates = fromHttps(host!!)
     prettyPrintChain(x509certificates)
+
+    // TODO We should add SANs and complete wildcard hosts.
+    addHostToCompletionFile(host!!)
 
     if (output != null) {
       try {
@@ -100,6 +134,22 @@ class Main : Callable<Int> {
       } catch (ioe: IOException) {
         throw UsageException("Unable to write to $output", ioe)
       }
+    }
+  }
+
+  private fun addHostToCompletionFile(host: String) {
+    val previousHosts = knownHosts()
+    val newHosts = previousHosts + host
+
+    val lineSeparator = System.getProperty("line.separator")
+    knownHostsFile.writeText(newHosts.joinToString(lineSeparator, postfix = lineSeparator))
+  }
+
+  private fun knownHosts(): Set<String> {
+    return if (knownHostsFile.isFile) {
+      knownHostsFile.readLines().filter { it.trim().isNotBlank() }.toSortedSet()
+    } else {
+      setOf<String>()
     }
   }
 
@@ -123,13 +173,17 @@ class Main : Callable<Int> {
   }
 
   private fun prettyPrintChain(certificates: List<X509Certificate>) {
+    if (certificates.isEmpty()) {
+      System.err.println("Warn: ${Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
+    }
+
     certificates.forEachIndexed { i, certificate ->
       if (i > 0) {
         println()
       }
 
       val certifikit = CertificateAdapters.certificate.fromDer(certificate.encoded.toByteString())
-      println(certifikit.prettyPrintCertificate())
+      println(certifikit.prettyPrintCertificate(trustManager))
     }
   }
 
@@ -137,13 +191,7 @@ class Main : Callable<Int> {
     try {
       val pemText = file.readText()
 
-      val regex = """-----BEGIN CERTIFICATE-----(.*)-----END CERTIFICATE-----""".toRegex(RegexOption.DOT_MATCHES_ALL)
-      val matchResult = regex.find(pemText) ?: throw UsageException("Invalid format: $file")
-      val (pemBody) = matchResult.destructured
-
-      val data = pemBody.decodeBase64()!!
-
-      return CertificateAdapters.certificate.fromDer(data)
+      return pemText.parsePemCertificate(file.name)
     } catch (fnfe: FileNotFoundException) {
       throw UsageException("No such file: $file", fnfe)
     }
@@ -157,6 +205,13 @@ class Main : Callable<Int> {
 
   companion object {
     internal const val NAME = "cft"
+
+    val confDir = File(System.getProperty("user.home"), ".cft").also {
+      if (!it.isDirectory) {
+        it.mkdirs()
+      }
+    }
+    val knownHostsFile = File(confDir, "knownhosts.txt")
 
     @JvmStatic
     fun main(args: Array<String>) {
