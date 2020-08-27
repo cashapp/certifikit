@@ -32,18 +32,11 @@ subprojects {
   apply plugin: 'java-library'
   apply plugin: 'org.jetbrains.kotlin.platform.jvm'
   apply plugin: 'org.jetbrains.dokka'
-  apply plugin: 'com.diffplug.gradle.spotless'
+  apply plugin: 'com.diffplug.spotless'
 
   compileJava {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
-  }
-
-  spotless {
-    kotlin {
-      target "**/*.kt"
-      ktlint(dep.ktlintVersion).userData(['indent_size': '2', 'continuation_indent_size': '2'])
-    }
   }
 
   compileKotlin {
@@ -58,7 +51,11 @@ subprojects {
     }
   }
 
-  test {
+  spotless {
+    kotlin {
+      target "**/*.kt"
+      ktlint(dep.ktlintVersion).userData(['indent_size': '2', 'continuation_indent_size': '2'])
+    }
   }
 
   dokka {
