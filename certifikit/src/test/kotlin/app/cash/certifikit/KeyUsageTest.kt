@@ -26,17 +26,24 @@ class KeyUsageTest {
   @Test
   fun testKnownValues() {
     assertThat(BitString("80".decodeHex(), unusedBitsCount = 7).decodeKeyUsage()).containsExactly(
-        DigitalSignature)
+      DigitalSignature
+    )
     assertThat(BitString("06".decodeHex(), unusedBitsCount = 1).decodeKeyUsage()).containsExactly(
-        KeyCertSign, CRLSign)
+      KeyCertSign,
+      CRLSign
+    )
     assertThat(BitString("86".decodeHex(), unusedBitsCount = 1).decodeKeyUsage()).containsExactly(
-        DigitalSignature, KeyCertSign, CRLSign)
+      DigitalSignature,
+      KeyCertSign,
+      CRLSign
+    )
   }
 
   @Test
   fun testEdgeValues() {
     assertThat(BitString("".decodeHex(), unusedBitsCount = 0).decodeKeyUsage()).isEmpty()
     assertThat(BitString("FF80".decodeHex(), unusedBitsCount = 7).decodeKeyUsage()).containsExactly(
-        *KeyUsage.values())
+      *KeyUsage.values()
+    )
   }
 }

@@ -15,6 +15,8 @@
  */
 package app.cash.certifikit
 
+import okio.Buffer
+import okio.ByteString
 import java.math.BigInteger
 import java.security.GeneralSecurityException
 import java.security.PublicKey
@@ -26,8 +28,6 @@ import java.time.Duration
 import java.time.Instant
 import java.time.Period
 import java.time.ZoneId
-import okio.Buffer
-import okio.ByteString
 
 data class Certificate(
   val tbsCertificate: TbsCertificate,
@@ -43,32 +43,32 @@ data class Certificate(
   val commonName: String?
     get() {
       return tbsCertificate.subject
-          .flatten()
-          .firstOrNull { it.type == ObjectIdentifiers.commonName }
-          ?.value as String?
+        .flatten()
+        .firstOrNull { it.type == ObjectIdentifiers.commonName }
+        ?.value as String?
     }
 
   val organizationalUnitName: String?
     get() {
       return tbsCertificate.subject
-          .flatten()
-          .firstOrNull { it.type == ObjectIdentifiers.organizationalUnitName }
-          ?.value as String?
+        .flatten()
+        .firstOrNull { it.type == ObjectIdentifiers.organizationalUnitName }
+        ?.value as String?
     }
 
   val keyUsage: BitString?
     get() {
       return tbsCertificate.extensions
-          .firstOrNull { it.id == ObjectIdentifiers.keyUsage }
-          ?.value as BitString?
+        .firstOrNull { it.id == ObjectIdentifiers.keyUsage }
+        ?.value as BitString?
     }
 
   @Suppress("UNCHECKED_CAST")
   val extKeyUsage: List<ExtKeyUsage>?
     get() {
       val list = tbsCertificate.extensions
-          .firstOrNull { it.id == ObjectIdentifiers.extKeyUsage }
-          ?.value as List<String>?
+        .firstOrNull { it.id == ObjectIdentifiers.extKeyUsage }
+        ?.value as List<String>?
       return list?.map { ExtKeyUsage(it) }
     }
 
@@ -175,22 +175,22 @@ data class Validity(
    * Returns the remaining Period, or null if the certificate is not within the valid period.
    */
   val periodLeft: Period?
-  get() {
-    val now = Instant.now()
+    get() {
+      val now = Instant.now()
 
-    return if (now.isBefore(Instant.ofEpochMilli(notBefore))) {
-      null
-    } else {
-      val notAfterInstant = Instant.ofEpochMilli(notAfter)
-      val left = Duration.between(now, notAfterInstant)
-
-      if (left.isNegative) {
+      return if (now.isBefore(Instant.ofEpochMilli(notBefore))) {
         null
       } else {
-        Period.between(now.atZone(ZoneId.systemDefault()).toLocalDate(), notAfterInstant.atZone(ZoneId.systemDefault()).toLocalDate())
+        val notAfterInstant = Instant.ofEpochMilli(notAfter)
+        val left = Duration.between(now, notAfterInstant)
+
+        if (left.isNegative) {
+          null
+        } else {
+          Period.between(now.atZone(ZoneId.systemDefault()).toLocalDate(), notAfterInstant.atZone(ZoneId.systemDefault()).toLocalDate())
+        }
       }
     }
-  }
 
   // Avoid Long.hashCode(long) which isn't available on Android 5.
   override fun hashCode(): Int {

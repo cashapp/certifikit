@@ -22,7 +22,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 
 class CertificateOutputTest {
-  val certificateBase64 = """
+  val certificateBase64 =
+    """
         |MIIHHTCCBgWgAwIBAgIRAL5oALmpH7l6AAAAAFTRMh0wDQYJKoZIhvcNAQELBQAw
         |gboxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1FbnRydXN0LCBJbmMuMSgwJgYDVQQL
         |Ex9TZWUgd3d3LmVudHJ1c3QubmV0L2xlZ2FsLXRlcm1zMTkwNwYDVQQLEzAoYykg
@@ -71,7 +72,8 @@ class CertificateOutputTest {
 
     val output = okHttpCertificate.prettyPrintCertificate(Platform.get().platformTrustManager())
 
-    assertThat(output).matches("""
+    assertThat(output).matches(
+      """
       |CN: 	cash\.app
       |Pin:	sha256/43a60e5aecabd897cbbcf833150740e18ff0c3d90bde132354dc85a4869b3269
       |SAN: 	cash\.app, www\.cash\.app
@@ -79,6 +81,7 @@ class CertificateOutputTest {
       |Ext Key Usage: serverAuth, clientAuth
       |Valid: 	2020-04-13T13:25:49Z\.\.2021-04-12T13:55:49Z (.*)
       |CA: false
-    """.trimMargin())
+    """.trimMargin()
+    )
   }
 }

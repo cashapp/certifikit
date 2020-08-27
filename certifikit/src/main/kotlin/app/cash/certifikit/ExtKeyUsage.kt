@@ -21,21 +21,21 @@ data class ExtKeyUsage(val objectIdentifier: String) {
   }
 
   val name: String?
-  get() {
-    return Known[objectIdentifier]
-  }
+    get() {
+      return Known[objectIdentifier]
+    }
 
   companion object {
     val Known = mapOf(
-        "1.3.6.1.5.5.7.3.1" to "serverAuth",
-        "1.3.6.1.5.5.7.3.2" to "clientAuth",
-        "1.3.6.1.5.5.7.3.3" to "codeSigning",
-        "1.3.6.1.5.5.7.3.4" to "emailProtection",
-        "1.3.6.1.5.5.7.3.8" to "timeStamping",
-        "1.3.6.1.5.5.7.3.9" to "ocspSigning",
-        "1.3.6.1.5.5.7.3.5" to "ipsecEndSystem",
-        "1.3.6.1.5.5.7.3.6" to "ipsecTunnel",
-        "1.3.6.1.5.5.7.3.7" to "ipsecUser"
+      "1.3.6.1.5.5.7.3.1" to "serverAuth",
+      "1.3.6.1.5.5.7.3.2" to "clientAuth",
+      "1.3.6.1.5.5.7.3.3" to "codeSigning",
+      "1.3.6.1.5.5.7.3.4" to "emailProtection",
+      "1.3.6.1.5.5.7.3.8" to "timeStamping",
+      "1.3.6.1.5.5.7.3.9" to "ocspSigning",
+      "1.3.6.1.5.5.7.3.5" to "ipsecEndSystem",
+      "1.3.6.1.5.5.7.3.6" to "ipsecTunnel",
+      "1.3.6.1.5.5.7.3.7" to "ipsecUser"
     )
   }
 }

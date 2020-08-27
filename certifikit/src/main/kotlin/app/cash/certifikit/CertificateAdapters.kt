@@ -18,9 +18,9 @@ package app.cash.certifikit
 import app.cash.certifikit.Adapters.BIT_STRING
 import app.cash.certifikit.Adapters.OBJECT_IDENTIFIER
 import app.cash.certifikit.attestation.AttestationAdapters
+import okio.ByteString
 import java.math.BigInteger
 import java.net.ProtocolException
-import okio.ByteString
 
 /**
  * ASN.1 adapters adapted from the specifications in [RFC 5280][rfc_5280].
@@ -50,15 +50,15 @@ object CertificateAdapters {
 
     override fun fromDer(reader: DerReader): Long {
       val peekHeader = reader.peekHeader()
-          ?: throw ProtocolException("expected time but was exhausted at $reader")
+        ?: throw ProtocolException("expected time but was exhausted at $reader")
 
       return when {
         peekHeader.tagClass == Adapters.UTC_TIME.tagClass &&
-            peekHeader.tag == Adapters.UTC_TIME.tag -> {
+          peekHeader.tag == Adapters.UTC_TIME.tag -> {
           Adapters.UTC_TIME.fromDer(reader)
         }
         peekHeader.tagClass == Adapters.GENERALIZED_TIME.tagClass &&
-            peekHeader.tag == Adapters.GENERALIZED_TIME.tag -> {
+          peekHeader.tag == Adapters.GENERALIZED_TIME.tag -> {
           Adapters.GENERALIZED_TIME.fromDer(reader)
         }
         else -> throw ProtocolException("expected time but was $peekHeader at $reader")
@@ -84,21 +84,21 @@ object CertificateAdapters {
    * ```
    */
   private val validity: BasicDerAdapter<Validity> = Adapters.sequence(
-      "Validity",
-      time,
-      time,
-      decompose = {
-        listOf(
-            it.notBefore,
-            it.notAfter
-        )
-      },
-      construct = {
-        Validity(
-            notBefore = it[0] as Long,
-            notAfter = it[1] as Long
-        )
-      }
+    "Validity",
+    time,
+    time,
+    decompose = {
+      listOf(
+        it.notBefore,
+        it.notAfter
+      )
+    },
+    construct = {
+      Validity(
+        notBefore = it[0] as Long,
+        notAfter = it[1] as Long
+      )
+    }
   )
 
   /** The type of the parameters depends on the algorithm that precedes it. */
@@ -123,21 +123,21 @@ object CertificateAdapters {
    * ```
    */
   internal val algorithmIdentifier: BasicDerAdapter<AlgorithmIdentifier> = Adapters.sequence(
-      "AlgorithmIdentifier",
-      Adapters.OBJECT_IDENTIFIER.asTypeHint(),
-      algorithmParameters,
-      decompose = {
-        listOf(
-            it.algorithm,
-            it.parameters
-        )
-      },
-      construct = {
-        AlgorithmIdentifier(
-            algorithm = it[0] as String,
-            parameters = it[1]
-        )
-      }
+    "AlgorithmIdentifier",
+    Adapters.OBJECT_IDENTIFIER.asTypeHint(),
+    algorithmParameters,
+    decompose = {
+      listOf(
+        it.algorithm,
+        it.parameters
+      )
+    },
+    construct = {
+      AlgorithmIdentifier(
+        algorithm = it[0] as String,
+        parameters = it[1]
+      )
+    }
   )
 
   /**
@@ -149,21 +149,21 @@ object CertificateAdapters {
    * ```
    */
   private val basicConstraints: BasicDerAdapter<BasicConstraints> = Adapters.sequence(
-      "BasicConstraints",
-      Adapters.BOOLEAN.optional(defaultValue = false),
-      Adapters.INTEGER_AS_LONG.optional(),
-      decompose = {
-        listOf(
-            it.ca,
-            it.maxIntermediateCas
-        )
-      },
-      construct = {
-        BasicConstraints(
-            ca = it[0] as Boolean,
-            maxIntermediateCas = it[1] as Long?
-        )
-      }
+    "BasicConstraints",
+    Adapters.BOOLEAN.optional(defaultValue = false),
+    Adapters.INTEGER_AS_LONG.optional(),
+    decompose = {
+      listOf(
+        it.ca,
+        it.maxIntermediateCas
+      )
+    },
+    construct = {
+      BasicConstraints(
+        ca = it[0] as Boolean,
+        maxIntermediateCas = it[1] as Long?
+      )
+    }
   )
 
   /**
@@ -188,9 +188,9 @@ object CertificateAdapters {
   internal val generalNameDnsName = Adapters.IA5_STRING.withTag(tag = 2L)
   internal val generalNameIpAddress = Adapters.OCTET_STRING.withTag(tag = 7L)
   internal val generalName: DerAdapter<Pair<DerAdapter<*>, Any?>> = Adapters.choice(
-      generalNameDnsName,
-      generalNameIpAddress,
-      Adapters.ANY_VALUE
+    generalNameDnsName,
+    generalNameIpAddress,
+    Adapters.ANY_VALUE
   )
 
   /**
@@ -217,9 +217,9 @@ object CertificateAdapters {
       else -> null
     }
   }.withExplicitBox(
-      tagClass = Adapters.OCTET_STRING.tagClass,
-      tag = Adapters.OCTET_STRING.tag,
-      forceConstructed = false
+    tagClass = Adapters.OCTET_STRING.tagClass,
+    tag = Adapters.OCTET_STRING.tag,
+    forceConstructed = false
   )
 
   /**
@@ -235,24 +235,24 @@ object CertificateAdapters {
    * ```
    */
   internal val extension: BasicDerAdapter<Extension> = Adapters.sequence(
-      "Extension",
-      Adapters.OBJECT_IDENTIFIER.asTypeHint(),
-      Adapters.BOOLEAN.optional(defaultValue = false),
-      extensionValue,
-      decompose = {
-        listOf(
-            it.id,
-            it.critical,
-            it.value
-        )
-      },
-      construct = {
-        Extension(
-            id = it[0] as String,
-            critical = it[1] as Boolean,
-            value = it[2]
-        )
-      }
+    "Extension",
+    Adapters.OBJECT_IDENTIFIER.asTypeHint(),
+    Adapters.BOOLEAN.optional(defaultValue = false),
+    extensionValue,
+    decompose = {
+      listOf(
+        it.id,
+        it.critical,
+        it.value
+      )
+    },
+    construct = {
+      Extension(
+        id = it[0] as String,
+        critical = it[1] as Boolean,
+        value = it[2]
+      )
+    }
   )
 
   /**
@@ -268,25 +268,25 @@ object CertificateAdapters {
    * ```
    */
   private val attributeTypeAndValue: BasicDerAdapter<AttributeTypeAndValue> = Adapters.sequence(
-      "AttributeTypeAndValue",
-      Adapters.OBJECT_IDENTIFIER,
-      Adapters.any(
-          String::class to Adapters.UTF8_STRING,
-          Nothing::class to Adapters.PRINTABLE_STRING,
-          AnyValue::class to Adapters.ANY_VALUE
-      ),
-      decompose = {
-        listOf(
-            it.type,
-            it.value
-        )
-      },
-      construct = {
-        AttributeTypeAndValue(
-            type = it[0] as String,
-            value = it[1]
-        )
-      }
+    "AttributeTypeAndValue",
+    Adapters.OBJECT_IDENTIFIER,
+    Adapters.any(
+      String::class to Adapters.UTF8_STRING,
+      Nothing::class to Adapters.PRINTABLE_STRING,
+      AnyValue::class to Adapters.ANY_VALUE
+    ),
+    decompose = {
+      listOf(
+        it.type,
+        it.value
+      )
+    },
+    construct = {
+      AttributeTypeAndValue(
+        type = it[0] as String,
+        value = it[1]
+      )
+    }
   )
 
   /**
@@ -308,7 +308,7 @@ object CertificateAdapters {
    * ```
    */
   internal val name: DerAdapter<Pair<DerAdapter<*>, Any?>> = Adapters.choice(
-      rdnSequence
+    rdnSequence
   )
 
   /**
@@ -320,21 +320,21 @@ object CertificateAdapters {
    * ```
    */
   val subjectPublicKeyInfo: BasicDerAdapter<SubjectPublicKeyInfo> = Adapters.sequence(
-      "SubjectPublicKeyInfo",
-      algorithmIdentifier,
-      Adapters.BIT_STRING,
-      decompose = {
-        listOf(
-            it.algorithm,
-            it.subjectPublicKey
-        )
-      },
-      construct = {
-        SubjectPublicKeyInfo(
-            algorithm = it[0] as AlgorithmIdentifier,
-            subjectPublicKey = it[1] as BitString
-        )
-      }
+    "SubjectPublicKeyInfo",
+    algorithmIdentifier,
+    Adapters.BIT_STRING,
+    decompose = {
+      listOf(
+        it.algorithm,
+        it.subjectPublicKey
+      )
+    },
+    construct = {
+      SubjectPublicKeyInfo(
+        algorithm = it[0] as AlgorithmIdentifier,
+        subjectPublicKey = it[1] as BitString
+      )
+    }
   )
 
   /**
@@ -354,45 +354,45 @@ object CertificateAdapters {
    * ```
    */
   val tbsCertificate: BasicDerAdapter<TbsCertificate> = Adapters.sequence(
-      "TBSCertificate",
-      Adapters.INTEGER_AS_LONG.withExplicitBox(tag = 0L).optional(defaultValue = 0), // v1 == 0
-      Adapters.INTEGER_AS_BIG_INTEGER,
-      algorithmIdentifier,
-      name,
-      validity,
-      name,
-      subjectPublicKeyInfo,
-      Adapters.BIT_STRING.withTag(tag = 1L).optional(),
-      Adapters.BIT_STRING.withTag(tag = 2L).optional(),
-      extension.asSequenceOf().withExplicitBox(tag = 3).optional(defaultValue = listOf()),
-      decompose = {
-        listOf(
-            it.version,
-            it.serialNumber,
-            it.signature,
-            rdnSequence to it.issuer,
-            it.validity,
-            rdnSequence to it.subject,
-            it.subjectPublicKeyInfo,
-            it.issuerUniqueID,
-            it.subjectUniqueID,
-            it.extensions
-        )
-      },
-      construct = {
-        TbsCertificate(
-            version = it[0] as Long,
-            serialNumber = it[1] as BigInteger,
-            signature = it[2] as AlgorithmIdentifier,
-            issuer = (it[3] as Pair<*, *>).second as List<List<AttributeTypeAndValue>>,
-            validity = it[4] as Validity,
-            subject = (it[5] as Pair<*, *>).second as List<List<AttributeTypeAndValue>>,
-            subjectPublicKeyInfo = it[6] as SubjectPublicKeyInfo,
-            issuerUniqueID = it[7] as BitString?,
-            subjectUniqueID = it[8] as BitString?,
-            extensions = it[9] as List<Extension>
-        )
-      }
+    "TBSCertificate",
+    Adapters.INTEGER_AS_LONG.withExplicitBox(tag = 0L).optional(defaultValue = 0), // v1 == 0
+    Adapters.INTEGER_AS_BIG_INTEGER,
+    algorithmIdentifier,
+    name,
+    validity,
+    name,
+    subjectPublicKeyInfo,
+    Adapters.BIT_STRING.withTag(tag = 1L).optional(),
+    Adapters.BIT_STRING.withTag(tag = 2L).optional(),
+    extension.asSequenceOf().withExplicitBox(tag = 3).optional(defaultValue = listOf()),
+    decompose = {
+      listOf(
+        it.version,
+        it.serialNumber,
+        it.signature,
+        rdnSequence to it.issuer,
+        it.validity,
+        rdnSequence to it.subject,
+        it.subjectPublicKeyInfo,
+        it.issuerUniqueID,
+        it.subjectUniqueID,
+        it.extensions
+      )
+    },
+    construct = {
+      TbsCertificate(
+        version = it[0] as Long,
+        serialNumber = it[1] as BigInteger,
+        signature = it[2] as AlgorithmIdentifier,
+        issuer = (it[3] as Pair<*, *>).second as List<List<AttributeTypeAndValue>>,
+        validity = it[4] as Validity,
+        subject = (it[5] as Pair<*, *>).second as List<List<AttributeTypeAndValue>>,
+        subjectPublicKeyInfo = it[6] as SubjectPublicKeyInfo,
+        issuerUniqueID = it[7] as BitString?,
+        subjectUniqueID = it[8] as BitString?,
+        extensions = it[9] as List<Extension>
+      )
+    }
   )
 
   /**
@@ -405,24 +405,24 @@ object CertificateAdapters {
    * ```
    */
   val certificate: BasicDerAdapter<Certificate> = Adapters.sequence(
-      "Certificate",
-      tbsCertificate,
-      algorithmIdentifier,
-      Adapters.BIT_STRING,
-      decompose = {
-        listOf(
-            it.tbsCertificate,
-            it.signatureAlgorithm,
-            it.signatureValue
-        )
-      },
-      construct = {
-        Certificate(
-            tbsCertificate = it[0] as TbsCertificate,
-            signatureAlgorithm = it[1] as AlgorithmIdentifier,
-            signatureValue = it[2] as BitString
-        )
-      }
+    "Certificate",
+    tbsCertificate,
+    algorithmIdentifier,
+    Adapters.BIT_STRING,
+    decompose = {
+      listOf(
+        it.tbsCertificate,
+        it.signatureAlgorithm,
+        it.signatureValue
+      )
+    },
+    construct = {
+      Certificate(
+        tbsCertificate = it[0] as TbsCertificate,
+        signatureAlgorithm = it[1] as AlgorithmIdentifier,
+        signatureValue = it[2] as BitString
+      )
+    }
   )
 
   /**
@@ -447,24 +447,24 @@ object CertificateAdapters {
    * ```
    */
   internal val privateKeyInfo: BasicDerAdapter<PrivateKeyInfo> = Adapters.sequence(
-      "PrivateKeyInfo",
-      Adapters.INTEGER_AS_LONG,
-      algorithmIdentifier,
-      Adapters.OCTET_STRING,
-      decompose = {
-        listOf(
-            it.version,
-            it.algorithmIdentifier,
-            it.privateKey
-        )
-      },
-      construct = {
-        PrivateKeyInfo(
-            version = it[0] as Long,
-            algorithmIdentifier = it[1] as AlgorithmIdentifier,
-            privateKey = it[2] as ByteString
-        )
-      }
+    "PrivateKeyInfo",
+    Adapters.INTEGER_AS_LONG,
+    algorithmIdentifier,
+    Adapters.OCTET_STRING,
+    decompose = {
+      listOf(
+        it.version,
+        it.algorithmIdentifier,
+        it.privateKey
+      )
+    },
+    construct = {
+      PrivateKeyInfo(
+        version = it[0] as Long,
+        algorithmIdentifier = it[1] as AlgorithmIdentifier,
+        privateKey = it[2] as ByteString
+      )
+    }
   )
 
   /**

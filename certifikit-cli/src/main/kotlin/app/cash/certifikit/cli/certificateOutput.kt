@@ -18,16 +18,16 @@ package app.cash.certifikit.cli
 import app.cash.certifikit.Certificate
 import app.cash.certifikit.ObjectIdentifiers
 import app.cash.certifikit.decodeKeyUsage
-import java.security.cert.X509Certificate
-import java.time.Instant.ofEpochMilli
-import javax.net.ssl.X509TrustManager
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine.Help.Ansi
+import java.security.cert.X509Certificate
+import java.time.Instant.ofEpochMilli
+import javax.net.ssl.X509TrustManager
 
 fun X509Certificate.publicKeySha256(): ByteString =
   publicKey.encoded.toByteString()
-      .sha256()
+    .sha256()
 
 fun Certificate.prettyPrintCertificate(
   trustManager: X509TrustManager
@@ -67,11 +67,11 @@ fun Certificate.prettyPrintCertificate(
       else -> " (${periodLeft.days})"
     }
     append(
-        "Valid: \t${
-          ofEpochMilli(tbsCertificate.validity.notBefore)
-        }..${
-          ofEpochMilli(tbsCertificate.validity.notAfter)
-        }$periodLeftString"
+      "Valid: \t${
+      ofEpochMilli(tbsCertificate.validity.notBefore)
+      }..${
+      ofEpochMilli(tbsCertificate.validity.notAfter)
+      }$periodLeftString"
     )
 
     basicConstraints?.apply {
@@ -85,13 +85,13 @@ private fun Certificate.subjectAlternativeNameValue() =
   tbsCertificate.extensions.firstOrNull {
     it.id == ObjectIdentifiers.subjectAlternativeName
   }
-      ?.let {
-        @Suppress("UNCHECKED_CAST")
-        it.value as List<Pair<Any, Any>>
-      }
-      ?.map {
-        it.second.toString()
-      }
+    ?.let {
+      @Suppress("UNCHECKED_CAST")
+      it.value as List<Pair<Any, Any>>
+    }
+    ?.map {
+      it.second.toString()
+    }
 
 /**
  * Returns the certificate encoded in [PEM format][rfc_7468].
