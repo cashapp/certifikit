@@ -15,7 +15,6 @@
  */
 package app.cash.certifikit.cli
 
-import app.cash.certifikit.Certificate
 import app.cash.certifikit.CertificateAdapters
 import app.cash.certifikit.Certifikit
 import app.cash.certifikit.cli.Main.Companion.NAME
@@ -23,9 +22,7 @@ import app.cash.certifikit.cli.Main.VersionProvider
 import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
 import java.io.File
-import java.io.FileNotFoundException
 import java.io.IOException
-import java.security.cert.X509Certificate
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
 import okhttp3.internal.platform.Platform
@@ -64,10 +61,10 @@ class Main : Callable<Int> {
   var complete: String? = null
 
   @Parameters(paramLabel = "file", description = ["Input File"], arity = "0..1")
-  var file: String? = null
+  var file: File? = null
 
   val trustManager by lazy {
-    keyStoreFile?.let { it.trustManager() } ?: Platform.get().platformTrustManager()
+    keyStoreFile?.trustManager() ?: Platform.get().platformTrustManager()
   }
 
   override fun call(): Int {
@@ -80,7 +77,7 @@ class Main : Callable<Int> {
           queryHost()
         }
         file != null -> {
-          showPemFile()
+          showPemFile(file!!)
         }
         else -> {
           throw UsageException("No action to run")
@@ -102,12 +99,12 @@ class Main : Callable<Int> {
     }
   }
 
-  private fun showPemFile() {
-    val certificate = if (file == "-") {
+  private fun showPemFile(file: File) {
+    val certificate = if (file.path == "-") {
       val stdInText = System.`in`.bufferedReader().readText()
       stdInText.parsePemCertificate()
     } else {
-      parsePemCertificate(File(file!!))
+      file.parsePemCertificate()
     }
 
     println(certificate.prettyPrintCertificate(trustManager))
@@ -123,18 +120,48 @@ class Main : Callable<Int> {
 
   private fun queryHost() {
     val x509certificates = fromHttps(host!!)
-    prettyPrintChain(x509certificates)
+
+    if (x509certificates.isEmpty()) {
+      System.err.println("Warn: ${Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
+    }
+
+    val output = output
+
+    x509certificates.forEachIndexed { i, certificate ->
+      if (i > 0) {
+        println()
+      }
+
+      if (output != null) {
+        val outputFile = when {
+          output.isDirectory -> File(output, "${certificate.publicKeySha256().hex()}.pem")
+          output.path == "-" -> output
+          i > 0 -> {
+            System.err.println(Ansi.AUTO.string("@|yellow Writing host certificate only, skipping (${certificate.subjectX500Principal.name})|@"))
+            null
+          }
+          else -> output
+        }
+
+        if (outputFile != null) {
+          if (outputFile.path == "-") {
+            println(certificate.certificatePem())
+          } else {
+            try {
+              certificate.writePem(outputFile)
+            } catch (ioe: IOException) {
+              throw UsageException("Unable to write to $output", ioe)
+            }
+          }
+        }
+      }
+
+      val certifikit = CertificateAdapters.certificate.fromDer(certificate.encoded.toByteString())
+      println(certifikit.prettyPrintCertificate(trustManager))
+    }
 
     // TODO We should add SANs and complete wildcard hosts.
     addHostToCompletionFile(host!!)
-
-    if (output != null) {
-      try {
-        outputCertificates(output!!, x509certificates)
-      } catch (ioe: IOException) {
-        throw UsageException("Unable to write to $output", ioe)
-      }
-    }
   }
 
   private fun addHostToCompletionFile(host: String) {
@@ -149,51 +176,7 @@ class Main : Callable<Int> {
     return if (knownHostsFile.isFile) {
       knownHostsFile.readLines().filter { it.trim().isNotBlank() }.toSortedSet()
     } else {
-      setOf<String>()
-    }
-  }
-
-  private fun outputCertificates(
-    output: File,
-    certificates: List<X509Certificate>
-  ) {
-    when {
-      output.isDirectory -> certificates.forEach {
-        outputCertificate(File(output, "${it.publicKeySha256().hex()}.pem"), it)
-      }
-      else -> outputCertificate(output, certificates.first())
-    }
-  }
-
-  private fun outputCertificate(
-    output: File,
-    certificate: X509Certificate
-  ) {
-    output.writeText(certificate.certificatePem())
-  }
-
-  private fun prettyPrintChain(certificates: List<X509Certificate>) {
-    if (certificates.isEmpty()) {
-      System.err.println("Warn: ${Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
-    }
-
-    certificates.forEachIndexed { i, certificate ->
-      if (i > 0) {
-        println()
-      }
-
-      val certifikit = CertificateAdapters.certificate.fromDer(certificate.encoded.toByteString())
-      println(certifikit.prettyPrintCertificate(trustManager))
-    }
-  }
-
-  private fun parsePemCertificate(file: File): Certificate {
-    try {
-      val pemText = file.readText()
-
-      return pemText.parsePemCertificate(file.name)
-    } catch (fnfe: FileNotFoundException) {
-      throw UsageException("No such file: $file", fnfe)
+      setOf()
     }
   }
 

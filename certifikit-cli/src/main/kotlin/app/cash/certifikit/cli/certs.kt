@@ -18,6 +18,9 @@ package app.cash.certifikit.cli
 import app.cash.certifikit.Certificate
 import app.cash.certifikit.CertificateAdapters
 import app.cash.certifikit.cli.errors.UsageException
+import java.io.File
+import java.io.FileNotFoundException
+import java.security.cert.X509Certificate
 import okio.ByteString.Companion.decodeBase64
 
 internal fun String.parsePemCertificate(fileName: String? = null): Certificate {
@@ -29,4 +32,20 @@ internal fun String.parsePemCertificate(fileName: String? = null): Certificate {
     val data = pemBody.decodeBase64()!!
 
     return CertificateAdapters.certificate.fromDer(data)
+}
+
+internal fun File.parsePemCertificate(): Certificate {
+    try {
+        val pemText = readText()
+
+        return pemText.parsePemCertificate(name)
+    } catch (fnfe: FileNotFoundException) {
+        throw UsageException("No such file: $this", fnfe)
+    }
+}
+
+internal fun X509Certificate.writePem(
+  output: File
+) {
+    output.writeText(certificatePem())
 }
