@@ -45,7 +45,10 @@ data class Certificate(
       return tbsCertificate.subject
           .flatten()
           .firstOrNull { it.type == ObjectIdentifiers.commonName }
-          ?.value as String?
+          ?.value?.let {
+            // This allows for legacy encodings like Teletex but left fugly.
+            it as? String ?: it.toString()
+          }
     }
 
   val organizationalUnitName: String?
