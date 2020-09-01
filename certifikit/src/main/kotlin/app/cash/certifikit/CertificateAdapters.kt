@@ -273,6 +273,7 @@ object CertificateAdapters {
       Adapters.any(
           String::class to Adapters.UTF8_STRING,
           Nothing::class to Adapters.PRINTABLE_STRING,
+          Void::class to Adapters.TELETEX,
           AnyValue::class to Adapters.ANY_VALUE
       ),
       decompose = {

@@ -960,8 +960,7 @@ internal class DerCertificatesTest {
         .decodeBase64()!!
 
     val decoded = CertificateAdapters.certificate.fromDer(certificateByteString)
-    // TODO: This seems wrong, agree before landing.
-    assertThat(decoded.commonName).isEqualTo("AnyValue(tagClass=0, tag=20, constructed=false, length=12, bytes=[text=*.badssl.com])")
+    assertThat(decoded.commonName).isEqualTo("*.badssl.com")
   }
 
   /** Converts public key bytes to SubjectPublicKeyInfo bytes. */
