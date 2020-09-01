@@ -57,7 +57,7 @@ internal class DerCertificatesTest {
   private val extendedKeyUsage = "2.5.29.37"
 
   fun X509Certificate.sha256Hash(): ByteString =
-    publicKey.encoded.toByteString().sha256()
+      publicKey.encoded.toByteString().sha256()
 
   @Test
   fun `decode simple certificate`() {
@@ -650,9 +650,9 @@ internal class DerCertificatesTest {
     assertThat(okHttpCertificate.commonName).isEqualTo("Jurassic Park")
     assertThat(okHttpCertificate.organizationalUnitName).isEqualTo("Gene Research")
     assertThat(okHttpCertificate.subjectAlternativeNames).isEqualTo(listOf(
-            CertificateAdapters.generalNameDnsName to "*.example.com",
-            CertificateAdapters.generalNameDnsName to "www.example.org"
-        )
+        CertificateAdapters.generalNameDnsName to "*.example.com",
+        CertificateAdapters.generalNameDnsName to "www.example.org"
+    )
     )
     assertThat(okHttpCertificate.tbsCertificate.validity).isEqualTo(Validity(-1000L, 2000L))
     assertThat(okHttpCertificate.tbsCertificate.serialNumber).isEqualTo(BigInteger("17"))
@@ -714,7 +714,8 @@ internal class DerCertificatesTest {
         .isEqualTo(BitString(publicKeyBytes, 0))
   }
 
-  @Test fun `time before 2050 uses UTC_TIME`() {
+  @Test
+  fun `time before 2050 uses UTC_TIME`() {
     val utcTimeDer = "170d3439313233313233353935395a".decodeHex()
 
     val decoded = CertificateAdapters.time.fromDer(utcTimeDer)
@@ -724,7 +725,8 @@ internal class DerCertificatesTest {
     assertThat(encoded).isEqualTo(utcTimeDer)
   }
 
-  @Test fun `time not before 2050 uses GENERALIZED_TIME`() {
+  @Test
+  fun `time not before 2050 uses GENERALIZED_TIME`() {
     val generalizedTimeDer = "180f32303530303130313030303030305a".decodeHex()
 
     val decoded = CertificateAdapters.time.fromDer(generalizedTimeDer)
@@ -738,14 +740,16 @@ internal class DerCertificatesTest {
    * Conforming applications MUST be able to process validity dates that are encoded in either
    * UTCTime or GeneralizedTime.
    */
-  @Test fun `can read GENERALIZED_TIME before 2050`() {
+  @Test
+  fun `can read GENERALIZED_TIME before 2050`() {
     val generalizedTimeDer = "180f32303439313233313233353935395a".decodeHex()
 
     val decoded = CertificateAdapters.time.fromDer(generalizedTimeDer)
     assertThat(decoded).isEqualTo(date("2049-12-31T23:59:59.000+0000").time)
   }
 
-  @Test fun `time before 1950 uses GENERALIZED_TIME`() {
+  @Test
+  fun `time before 1950 uses GENERALIZED_TIME`() {
     val generalizedTimeDer = "180f31393439313233313233353935395a".decodeHex()
 
     val decoded = CertificateAdapters.time.fromDer(generalizedTimeDer)
@@ -908,15 +912,55 @@ internal class DerCertificatesTest {
 
     val decoded = CertificateAdapters.certificate.fromDer(certificateByteString)
     assertThat(decoded.subjectAlternativeNames).isEqualTo(listOf(
-            Adapters.ANY_VALUE to AnyValue(
-                tagClass = DerHeader.TAG_CLASS_CONTEXT_SPECIFIC,
-                tag = 1L,
-                constructed = false,
-                length = 16,
-                bytes = "ca@trustwave.com".encodeUtf8()
-            )
+        Adapters.ANY_VALUE to AnyValue(
+            tagClass = DerHeader.TAG_CLASS_CONTEXT_SPECIFIC,
+            tag = 1L,
+            constructed = false,
+            length = 16,
+            bytes = "ca@trustwave.com".encodeUtf8()
         )
     )
+    )
+  }
+
+  /**
+   * Test for weird encoding of common name.
+   */
+  @Test
+  fun `teletex encoding`() {
+    val certificateByteString = ("MIIFSzCCBDOgAwIBAgIQSueVSfqavj8QDxekeOFpCTANBgkqhkiG9w0BAQsFADCB" +
+        "kDELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4G" +
+        "A1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExpbWl0ZWQxNjA0BgNV" +
+        "BAMTLUNPTU9ETyBSU0EgRG9tYWluIFZhbGlkYXRpb24gU2VjdXJlIFNlcnZlciBD" +
+        "QTAeFw0xNTA0MDkwMDAwMDBaFw0xNTA0MTIyMzU5NTlaMFkxITAfBgNVBAsTGERv" +
+        "bWFpbiBDb250cm9sIFZhbGlkYXRlZDEdMBsGA1UECxMUUG9zaXRpdmVTU0wgV2ls" +
+        "ZGNhcmQxFTATBgNVBAMUDCouYmFkc3NsLmNvbTCCASIwDQYJKoZIhvcNAQEBBQAD" +
+        "ggEPADCCAQoCggEBAMIE7PiM7gTCs9hQ1XBYzJMY61yoaEmwIrX5lZ6xKyx2PmzA" +
+        "S2BMTOqytMAPgLaw+XLJhgL5XEFdEyt/ccRLvOmULlA3pmccYYz2QULFRtMWhyef" +
+        "dOsKnRFSJiFzbIRMeVXk0WvoBj1IFVKtsyjbqv9u/2CVSndrOfEk0TG23U3AxPxT" +
+        "uW1CrbV8/q71FdIzSOciccfCFHpsKOo3St/qbLVytH5aohbcabFXRNsKEqveww9H" +
+        "dFxBIuGa+RuT5q0iBikusbpJHAwnnqP7i/dAcgCskgjZjFeEU4EFy+b+a1SYQCeF" +
+        "xxC7c3DvaRhBB0VVfPlkPz0sw6l865MaTIbRyoUCAwEAAaOCAdUwggHRMB8GA1Ud" +
+        "IwQYMBaAFJCvajqUWgvYkOoSVnPfQ7Q6KNrnMB0GA1UdDgQWBBSd7sF7gQs6R2lx" +
+        "GH0RN5O8pRs/+zAOBgNVHQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAdBgNVHSUE" +
+        "FjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwTwYDVR0gBEgwRjA6BgsrBgEEAbIxAQIC" +
+        "BzArMCkGCCsGAQUFBwIBFh1odHRwczovL3NlY3VyZS5jb21vZG8uY29tL0NQUzAI" +
+        "BgZngQwBAgEwVAYDVR0fBE0wSzBJoEegRYZDaHR0cDovL2NybC5jb21vZG9jYS5j" +
+        "b20vQ09NT0RPUlNBRG9tYWluVmFsaWRhdGlvblNlY3VyZVNlcnZlckNBLmNybDCB" +
+        "hQYIKwYBBQUHAQEEeTB3ME8GCCsGAQUFBzAChkNodHRwOi8vY3J0LmNvbW9kb2Nh" +
+        "LmNvbS9DT01PRE9SU0FEb21haW5WYWxpZGF0aW9uU2VjdXJlU2VydmVyQ0EuY3J0" +
+        "MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5jb21vZG9jYS5jb20wIwYDVR0RBBww" +
+        "GoIMKi5iYWRzc2wuY29tggpiYWRzc2wuY29tMA0GCSqGSIb3DQEBCwUAA4IBAQBq" +
+        "evHa/wMHcnjFZqFPRkMOXxQhjHUa6zbgH6QQFezaMyV8O7UKxwE4PSf9WNnM6i1p" +
+        "OXy+l+8L1gtY54x/v7NMHfO3kICmNnwUW+wHLQI+G1tjWxWrAPofOxkt3+IjEBEH" +
+        "fnJ/4r+3ABuYLyw/zoWaJ4wQIghBK4o+gk783SHGVnRwpDTysUCeK1iiWQ8dSO/r" +
+        "ET7BSp68ZVVtxqPv1dSWzfGuJ/ekVxQ8lEEFeouhN0fX9X3c+s5vMaKwjOrMEpsi" +
+        "8TRwz311SotoKQwe6Zaoz7ASH1wq7mcvf71z81oBIgxw+s1F73hczg36TuHvzmWf" +
+        "RwxPuzZEaFZcVlmtqoq8")
+        .decodeBase64()!!
+
+    val decoded = CertificateAdapters.certificate.fromDer(certificateByteString)
+    assertThat(decoded.commonName).isEqualTo("*.badssl.com")
   }
 
   /** Converts public key bytes to SubjectPublicKeyInfo bytes. */

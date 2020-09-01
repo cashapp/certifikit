@@ -99,6 +99,8 @@ internal object Adapters {
       }
   )
 
+  // For a complete list of String types see https://www.obj-sys.com/asn1tutorial/node128.html examples.
+
   val UTF8_STRING = BasicDerAdapter(
       name = "UTF8",
       tagClass = DerHeader.TAG_CLASS_UNIVERSAL,
@@ -121,6 +123,18 @@ internal object Adapters {
       name = "PRINTABLE STRING",
       tagClass = DerHeader.TAG_CLASS_UNIVERSAL,
       tag = 19L,
+      codec = object : BasicDerAdapter.Codec<String> {
+        override fun decode(reader: DerReader) = reader.readUtf8String()
+        override fun encode(writer: DerWriter, value: String) = writer.writeUtf8(value)
+      }
+  )
+
+  // http://cr.openjdk.java.net/~asmotrak/8028431/webrev.02/src/share/classes/sun/security/util/DerValue.java.html
+  // TODO(yschimke): constrain to teletex subset of ISO-8859-1.
+  val TELETEX = BasicDerAdapter(
+      name = "TELETEX",
+      tagClass = DerHeader.TAG_CLASS_UNIVERSAL,
+      tag = 20L,
       codec = object : BasicDerAdapter.Codec<String> {
         override fun decode(reader: DerReader) = reader.readUtf8String()
         override fun encode(writer: DerWriter, value: String) = writer.writeUtf8(value)
