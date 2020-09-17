@@ -24,8 +24,6 @@ import app.cash.certifikit.ObjectIdentifiers.sha256withEcdsa
 import app.cash.certifikit.ObjectIdentifiers.subjectAlternativeName
 import app.cash.certifikit.text.privateKeyPkcs1Pem
 import app.cash.certifikit.text.privateKeyPkcs8Pem
-import okio.ByteString
-import okio.ByteString.Companion.toByteString
 import java.math.BigInteger
 import java.net.InetAddress
 import java.security.KeyPair
@@ -38,6 +36,8 @@ import java.security.cert.X509Certificate
 import java.security.interfaces.RSAPrivateKey
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import okio.ByteString
+import okio.ByteString.Companion.toByteString
 
 /**
  * A certificate and its private key. These are some properties of certificates that are used with

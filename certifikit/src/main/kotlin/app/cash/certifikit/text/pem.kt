@@ -21,10 +21,6 @@ package app.cash.certifikit.text
 import app.cash.certifikit.AlgorithmIdentifier
 import app.cash.certifikit.CertificateAdapters
 import app.cash.certifikit.PrivateKeyInfo
-import okio.Buffer
-import okio.ByteString
-import okio.ByteString.Companion.decodeBase64
-import okio.ByteString.Companion.toByteString
 import java.security.GeneralSecurityException
 import java.security.KeyFactory
 import java.security.KeyPair
@@ -35,6 +31,10 @@ import java.security.interfaces.ECPublicKey
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import java.security.spec.PKCS8EncodedKeySpec
+import okio.Buffer
+import okio.ByteString
+import okio.ByteString.Companion.decodeBase64
+import okio.ByteString.Companion.toByteString
 
 /**
  * Decodes a multiline string that contains a [certificate][certificatePem] which is
