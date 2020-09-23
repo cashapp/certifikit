@@ -165,7 +165,7 @@ fun decode(certificateAndPrivateKeyPem: String): Pair<KeyPair, X509Certificate> 
       }
       "RSA PRIVATE KEY" -> {
         require(pkcs8Base64 == null && pkcs1Base64 == null) { "string includes multiple private keys" }
-        pkcs1Base64 = match.groups[2]!!.value // Include the contents only for PKCS8.
+        pkcs1Base64 = match.groups[2]!!.value // Include the contents only for PKCS1.
       }
       else -> {
         throw IllegalArgumentException("unexpected type: $label")
