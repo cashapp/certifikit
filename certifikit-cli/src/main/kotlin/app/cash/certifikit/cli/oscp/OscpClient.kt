@@ -15,18 +15,23 @@
  */
 package app.cash.certifikit.cli.oscp
 
-import app.cash.certifikit.Certificate
 import app.cash.certifikit.CertificateAdapters
+import app.cash.certifikit.ObjectIdentifiers
 import app.cash.certifikit.cli.execute
+import java.io.IOException
+import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
 import java.math.BigInteger
 import java.security.SecureRandom
+import java.security.cert.X509Certificate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okio.ByteString.Companion.toByteString
 import org.bouncycastle.asn1.DEROctetString
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers
 import org.bouncycastle.asn1.x509.Extension
@@ -37,6 +42,9 @@ import org.bouncycastle.cert.ocsp.CertificateID
 import org.bouncycastle.cert.ocsp.OCSPReq
 import org.bouncycastle.cert.ocsp.OCSPReqBuilder
 import org.bouncycastle.cert.ocsp.OCSPResp
+
+fun X509Certificate.toCertificate() =
+    CertificateAdapters.certificate.fromDer(encoded.toByteString())
 
 fun SecureRandom.nextBytes(count: Int) = ByteArray(count).apply {
   nextBytes(this)
@@ -51,11 +59,10 @@ class OscpClient(val httpClient: OkHttpClient) {
    * ATTENTION: The returned [OCSPReq] is not re-usable/cacheable! It contains a one-time nonce
    * and CA's will (should) reject subsequent requests that have the same nonce value.
    */
-  fun request(certificate: Certificate, issuer: Certificate): OCSPReq {
-    val serial: BigInteger = certificate.tbsCertificate.serialNumber
-    val issuerBytes = CertificateAdapters.certificate.toDer(issuer)
+  fun request(certificateX: X509Certificate, issuerX: X509Certificate): OCSPReq {
+    val serial: BigInteger = certificateX.serialNumber
     val certId =
-        CertificateID(Digester.sha1(), X509CertificateHolder(issuerBytes.toByteArray()), serial)
+        CertificateID(Digester.sha1(), X509CertificateHolder(issuerX.encoded), serial)
 
     val builder = OCSPReqBuilder()
     builder.addRequest(certId)
@@ -68,16 +75,31 @@ class OscpClient(val httpClient: OkHttpClient) {
     return builder.build()
   }
 
-  suspend fun submit(certificate: Certificate, issuerCertificate: Certificate): OcspResponse {
-    val request = request(certificate, issuerCertificate)
+  suspend fun submit(certificateX: X509Certificate, issuerCertificateX: X509Certificate): OcspResponse? {
+    val certificate = certificateX.toCertificate()
+
+    val accessLocation =
+        certificate.authorityInfoAccess?.find { it.accessMethod == ObjectIdentifiers.ocsp }?.accessLocation?.second
+            ?: return null
+
+    val url = accessLocation.toString().toHttpUrlOrNull() ?: throw IllegalArgumentException(
+        "Unable to parse OCSP url $accessLocation")
+
+    val request = request(certificateX, issuerCertificateX)
+
+    val secureUrl = url.newBuilder().scheme("https").build()
 
     val httpRequest = Request.Builder()
-        .url("https://ocsp.pki.goog/gts1o1core")
-//        .url("https://ocsp.pki.goog/gsr2")
+        .url(secureUrl)
         .header("accept", "application/ocsp-response")
         .post(request.encoded.toRequestBody(contentType = "application/ocsp-request".toMediaType()))
         .build()
-    val response = httpClient.execute(httpRequest)
+
+    val response = try {
+      httpClient.execute(httpRequest)
+    } catch (e: IOException) {
+      return OcspResponse(failure = e, url = secureUrl)
+    }
 
     val bytes = withContext(Dispatchers.IO) { response.body?.bytes() }
     val ocspResponse = OCSPResp(bytes)
@@ -86,8 +108,8 @@ class OscpClient(val httpClient: OkHttpClient) {
         Status.values().find { it.code == ocspResponse.status } ?: throw IllegalStateException(
             "Unknown response: " + ocspResponse.status)
 
-    val responseObject = ocspResponse.responseObject as? BasicOCSPResp
+    val responseObject = ocspResponse.responseObject as BasicOCSPResp
 
-    return OcspResponse(requestStatus, responseObject)
+    return OcspResponse(requestStatus, responseObject, url)
   }
 }

@@ -182,13 +182,8 @@ suspend fun OkHttpClient.execute(request: Request): Response {
   val response = call.await()
 
   if (!response.isSuccessful) {
-    val responseString = response.body?.readString()
-
-    val msg: String = if (responseString.isNullOrEmpty()) {
-      response.statusMessage()
-    } else {
-      responseString
-    }
+    val msg: String = response.message
+    response.close()
 
     throw ClientException(msg, response.code)
   }

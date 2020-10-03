@@ -15,19 +15,17 @@
  */
 package app.cash.certifikit.cli
 
-import app.cash.certifikit.CertificateAdapters
 import app.cash.certifikit.Certifikit
 import app.cash.certifikit.cli.Main.Companion.NAME
 import app.cash.certifikit.cli.Main.VersionProvider
 import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.cli.oscp.OscpClient
+import app.cash.certifikit.cli.oscp.toCertificate
 import java.io.File
 import java.io.IOException
-import java.security.cert.X509Certificate
 import java.util.concurrent.Callable
 import java.util.concurrent.TimeUnit
-import javax.net.ssl.HostnameVerifier
 import kotlin.system.exitProcess
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -36,7 +34,6 @@ import okhttp3.ConnectionSpec
 import okhttp3.OkHttpClient
 import okhttp3.internal.platform.Platform
 import okhttp3.tls.HandshakeCertificates
-import okio.ByteString.Companion.toByteString
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Help.Ansi
@@ -85,13 +82,14 @@ class Main : Callable<Int> {
         .connectionSpecs(listOf(ConnectionSpec.MODERN_TLS)) // The specs may be overriden later.
         .apply {
           if (insecure) {
-            hostnameVerifier(HostnameVerifier { _, _ -> true })
+            hostnameVerifier { _, _ -> true }
 
             val handshakeCertificates = HandshakeCertificates.Builder()
                 .addTrustedCertificates(trustManager)
                 .addInsecureHost(host!!)
                 .build()
-            sslSocketFactory(handshakeCertificates.sslSocketFactory(), handshakeCertificates.trustManager)
+            sslSocketFactory(handshakeCertificates.sslSocketFactory(),
+                handshakeCertificates.trustManager)
 
             val spec = ConnectionSpec.Builder(ConnectionSpec.COMPATIBLE_TLS)
                 .allEnabledCipherSuites()
@@ -103,7 +101,8 @@ class Main : Callable<Int> {
             val handshakeCertificates = HandshakeCertificates.Builder()
                 .addTrustedCertificates(trustManager)
                 .build()
-            sslSocketFactory(handshakeCertificates.sslSocketFactory(), handshakeCertificates.trustManager)
+            sslSocketFactory(handshakeCertificates.sslSocketFactory(),
+                handshakeCertificates.trustManager)
           }
         }
         .build()
@@ -168,14 +167,10 @@ class Main : Callable<Int> {
         System.err.println("Warn: ${Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
       }
 
-      val ocspResponse = if (insecure) {
-        null
-      } else {
-        val oscpClient = OscpClient(client)
+      val oscpClient = OscpClient(client)
 
-        async {
-          oscpClient.submit(x509certificates[0].toCertificate(), x509certificates[1].toCertificate())
-        }
+      val ocspResponse = async {
+        oscpClient.submit(x509certificates[0], x509certificates[1])
       }
 
       val output = output
@@ -216,21 +211,20 @@ class Main : Callable<Int> {
       // TODO We should add SANs and complete wildcard hosts.
       addHostToCompletionFile(host!!)
 
-      if (ocspResponse != null) {
-        println()
-        try {
-          val response = ocspResponse.await()
+      try {
+        val response = ocspResponse.await()
+
+        // null if no url to check also
+        if (response != null) {
+          println()
           println(response.prettyPrint())
-        } catch (e: Exception) {
-          System.err.println(Ansi.AUTO.string(
-              "@|yellow Failed checking OCSP status (${e.message})|@"))
         }
+      } catch (e: Exception) {
+        System.err.println(Ansi.AUTO.string(
+            "@|yellow Failed checking OCSP status (${e.message})|@"))
       }
     }
   }
-
-  fun X509Certificate.toCertificate() =
-      CertificateAdapters.certificate.fromDer(encoded.toByteString())
 
   private fun addHostToCompletionFile(host: String) {
     val previousHosts = knownHosts()

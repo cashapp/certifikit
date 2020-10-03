@@ -15,15 +15,37 @@
  */
 package app.cash.certifikit.cli.oscp
 
+import okhttp3.HttpUrl
 import org.bouncycastle.cert.ocsp.BasicOCSPResp
+import org.bouncycastle.cert.ocsp.CertificateStatus
 import picocli.CommandLine
 
-data class OcspResponse(val requestStatus: Status, val responseObject: BasicOCSPResp?) {
+data class OcspResponse(
+  val requestStatus: Status? = null,
+  val responseObject: BasicOCSPResp? = null,
+  val url: HttpUrl? = null,
+  val failure: Exception? = null
+) {
   fun prettyPrint(): String {
-    return when (requestStatus) {
-      Status.SUCCESSFUL -> "OCSP status: ${responseObject?.responses?.firstOrNull()?.certStatus}"
+    return when {
+      failure != null -> CommandLine.Help.Ansi.AUTO.string(
+          "@|yellow Failed checking OCSP status (${failure.message}) from $url|@")
+      requestStatus == Status.SUCCESSFUL -> goodStatus()
       else -> CommandLine.Help.Ansi.AUTO.string(
-          "@|yellow Failed checking OCSP status ($requestStatus)|@")
+          "@|yellow Failed checking OCSP status ($requestStatus) from $url|@")
+    }
+  }
+
+  private fun goodStatus(): String {
+    val firstResponse = responseObject?.responses?.firstOrNull()
+
+    return if (firstResponse == null) {
+      "OCSP status: unknown"
+    } else {
+      // null == GOOD
+      val good = firstResponse.certStatus == CertificateStatus.GOOD
+
+      "OCSP status: GOOD"
     }
   }
 }
