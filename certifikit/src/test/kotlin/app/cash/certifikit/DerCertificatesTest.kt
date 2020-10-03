@@ -582,7 +582,7 @@ internal class DerCertificatesTest {
                         critical = false,
                         value = listOf(
                             AccessDescription(ObjectIdentifiers.ocsp, Pair(generalNameUniformResourceIdentifier, "http://ocsp.entrust.net")),
-                            AccessDescription(ObjectIdentifiers.caIssuers, Pair(generalNameUniformResourceIdentifier, "http://aia.entrust.net/l1m-chain256.cer")),
+                            AccessDescription(ObjectIdentifiers.caIssuers, Pair(generalNameUniformResourceIdentifier, "http://aia.entrust.net/l1m-chain256.cer"))
                         )
                     ),
                     Extension(
