@@ -32,4 +32,6 @@ object ObjectIdentifiers {
   const val certificatePolicies = "2.5.29.32"
   const val authorityInfoAccess = "1.3.6.1.5.5.7.1.1"
   const val extKeyUsage = "2.5.29.37"
+  const val ocsp = "1.3.6.1.5.5.7.48.1"
+  const val caIssuers = "1.3.6.1.5.5.7.48.2"
 }
