@@ -21,6 +21,8 @@ import app.cash.certifikit.cli.Main.Companion.NAME
 import app.cash.certifikit.cli.Main.VersionProvider
 import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
+import app.cash.certifikit.cli.oscp.OscpClient
+import app.cash.certifikit.text.certificatePem
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.Callable
@@ -33,6 +35,7 @@ import picocli.CommandLine.Help.Ansi
 import picocli.CommandLine.IVersionProvider
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
+import java.security.cert.X509Certificate
 
 @Command(
     name = NAME, description = ["An ergonomic CLI for understanding certificates."],
@@ -125,6 +128,14 @@ class Main : Callable<Int> {
       System.err.println("Warn: ${Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
     }
 
+    val oscpClient = OscpClient()
+
+    val request =
+        oscpClient.request(x509certificates[0].toCertificate(), x509certificates[1].toCertificate())
+    val response = oscpClient.submit(request)
+
+    println(request)
+
     val output = output
 
     x509certificates.forEachIndexed { i, certificate ->
@@ -156,13 +167,15 @@ class Main : Callable<Int> {
         }
       }
 
-      val certifikit = CertificateAdapters.certificate.fromDer(certificate.encoded.toByteString())
-      println(certifikit.prettyPrintCertificate(trustManager))
+      println(certificate.toCertificate().prettyPrintCertificate(trustManager))
     }
 
     // TODO We should add SANs and complete wildcard hosts.
     addHostToCompletionFile(host!!)
   }
+
+  fun X509Certificate.toCertificate() =
+      CertificateAdapters.certificate.fromDer(encoded.toByteString())
 
   private fun addHostToCompletionFile(host: String) {
     val previousHosts = knownHosts()
@@ -197,7 +210,7 @@ class Main : Callable<Int> {
     val knownHostsFile = File(confDir, "knownhosts.txt")
 
     @JvmStatic
-    fun main(args: Array<String>) {
+    fun main(vararg args: String) {
       exitProcess(CommandLine(Main()).execute(*args))
     }
   }

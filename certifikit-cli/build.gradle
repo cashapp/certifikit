@@ -50,6 +50,11 @@ dependencies {
     exclude group: "org.graalvm.compiler"
   }
 
+
+  implementation "org.bouncycastle:bcprov-jdk15on:1.66"
+  implementation "org.bouncycastle:bcpkix-jdk15on:1.66"
+  implementation "org.bouncycastle:bctls-jdk15on:1.66"
+
   testImplementation dep.junit
   testImplementation dep.assertj
 }
