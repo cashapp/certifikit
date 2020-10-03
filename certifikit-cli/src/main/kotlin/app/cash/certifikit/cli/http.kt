@@ -17,6 +17,15 @@ package app.cash.certifikit.cli
 
 import app.cash.certifikit.Certifikit
 import app.cash.certifikit.cli.errors.classify
+import java.io.IOException
+import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.Proxy
+import java.security.cert.X509Certificate
+import java.util.concurrent.TimeUnit.SECONDS
+import javax.net.ssl.HostnameVerifier
+import javax.net.ssl.X509TrustManager
+import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.Call
@@ -39,15 +48,6 @@ import okhttp3.TlsVersion.TLS_1_2
 import okhttp3.TlsVersion.TLS_1_3
 import okhttp3.tls.HandshakeCertificates
 import picocli.CommandLine.Help.Ansi
-import java.io.IOException
-import java.net.InetAddress
-import java.net.InetSocketAddress
-import java.net.Proxy
-import java.security.cert.X509Certificate
-import java.util.concurrent.TimeUnit.SECONDS
-import javax.net.ssl.HostnameVerifier
-import javax.net.ssl.X509TrustManager
-import kotlin.coroutines.resumeWithException
 
 enum class Strength(val color: String) {
   Good("green"),
@@ -205,4 +205,3 @@ suspend fun Call.await(): Response {
     })
   }
 }
-

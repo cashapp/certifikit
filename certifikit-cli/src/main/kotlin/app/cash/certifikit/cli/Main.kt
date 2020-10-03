@@ -21,11 +21,11 @@ import app.cash.certifikit.cli.Main.Companion.NAME
 import app.cash.certifikit.cli.Main.VersionProvider
 import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
-import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
+import kotlinx.coroutines.runBlocking
 import okhttp3.internal.platform.Platform
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine
