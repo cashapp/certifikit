@@ -79,7 +79,7 @@ class Main : Callable<Int> {
         .connectTimeout(2, TimeUnit.SECONDS)
         .followRedirects(followRedirects)
         .eventListener(VerboseEventListener(verbose))
-        .connectionSpecs(listOf(ConnectionSpec.MODERN_TLS)) // The specs may be overriden later.
+        .connectionSpecs(listOf(ConnectionSpec.MODERN_TLS, ConnectionSpec.CLEARTEXT)) // The specs may be overriden later.
         .apply {
           if (insecure) {
             hostnameVerifier { _, _ -> true }
@@ -96,7 +96,7 @@ class Main : Callable<Int> {
                 .allEnabledTlsVersions()
                 .build()
 
-            connectionSpecs(listOf(spec))
+            connectionSpecs(listOf(spec, ConnectionSpec.CLEARTEXT))
           } else if (keyStoreFile != null) {
             val handshakeCertificates = HandshakeCertificates.Builder()
                 .addTrustedCertificates(trustManager)
