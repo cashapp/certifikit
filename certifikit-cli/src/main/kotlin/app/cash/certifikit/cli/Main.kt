@@ -22,12 +22,15 @@ import app.cash.certifikit.cli.Main.VersionProvider
 import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.cli.oscp.OscpClient
-import app.cash.certifikit.text.certificatePem
+import kotlinx.coroutines.runBlocking
+import okhttp3.ConnectionSpec
+import okhttp3.OkHttpClient
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
 import okhttp3.internal.platform.Platform
+import okhttp3.tls.HandshakeCertificates
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -36,6 +39,8 @@ import picocli.CommandLine.IVersionProvider
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.security.cert.X509Certificate
+import java.util.concurrent.TimeUnit
+import javax.net.ssl.HostnameVerifier
 
 @Command(
     name = NAME, description = ["An ergonomic CLI for understanding certificates."],
@@ -70,6 +75,38 @@ class Main : Callable<Int> {
     keyStoreFile?.trustManager() ?: Platform.get().platformTrustManager()
   }
 
+  val client by lazy {
+    OkHttpClient.Builder()
+        .connectTimeout(2, TimeUnit.SECONDS)
+        .followRedirects(followRedirects)
+        .eventListener(VerboseEventListener(verbose))
+        .connectionSpecs(listOf(ConnectionSpec.MODERN_TLS)) // The specs may be overriden later.
+        .apply {
+          if (insecure) {
+            hostnameVerifier(HostnameVerifier { _, _ -> true })
+
+            val handshakeCertificates = HandshakeCertificates.Builder()
+                .addTrustedCertificates(trustManager)
+                .addInsecureHost(host!!)
+                .build()
+            sslSocketFactory(handshakeCertificates.sslSocketFactory(), handshakeCertificates.trustManager)
+
+            val spec = ConnectionSpec.Builder(ConnectionSpec.COMPATIBLE_TLS)
+                .allEnabledCipherSuites()
+                .allEnabledTlsVersions()
+                .build()
+
+            connectionSpecs(listOf(spec))
+          } else if (keyStoreFile != null) {
+            val handshakeCertificates = HandshakeCertificates.Builder()
+                .addTrustedCertificates(trustManager)
+                .build()
+            sslSocketFactory(handshakeCertificates.sslSocketFactory(), handshakeCertificates.trustManager)
+          }
+        }
+        .build()
+  }
+
   override fun call(): Int {
     try {
       when {
@@ -77,7 +114,7 @@ class Main : Callable<Int> {
           completeOption()
         }
         host != null -> {
-          queryHost()
+          runBlocking { queryHost() }
         }
         file != null -> {
           showPemFile(file!!)
@@ -121,20 +158,21 @@ class Main : Callable<Int> {
     }
   }
 
-  private fun queryHost() {
+  private suspend fun queryHost() {
     val x509certificates = fromHttps(host!!)
 
     if (x509certificates.isEmpty()) {
       System.err.println("Warn: ${Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
     }
 
-    val oscpClient = OscpClient()
+    val oscpClient = OscpClient(this.client)
 
-    val request =
-        oscpClient.request(x509certificates[0].toCertificate(), x509certificates[1].toCertificate())
-    val response = oscpClient.submit(request)
-
+    val certificate1 = x509certificates[0].toCertificate()
+    val request = oscpClient.request(certificate1, x509certificates[1].toCertificate())
     println(request)
+
+    val response = oscpClient.submit(certificate1, request)
+    println(response)
 
     val output = output
 

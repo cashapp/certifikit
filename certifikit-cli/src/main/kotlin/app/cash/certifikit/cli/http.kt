@@ -16,7 +16,12 @@
 package app.cash.certifikit.cli
 
 import app.cash.certifikit.Certifikit
+import app.cash.certifikit.cli.errors.ClientException
 import app.cash.certifikit.cli.errors.classify
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.net.InetAddress
 import java.net.InetSocketAddress
@@ -26,6 +31,7 @@ import java.util.concurrent.TimeUnit.SECONDS
 import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.X509TrustManager
 import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.CipherSuite
 import okhttp3.ConnectionSpec
 import okhttp3.ConnectionSpec.Companion.COMPATIBLE_TLS
@@ -37,12 +43,15 @@ import okhttp3.OkHttp
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.Request
+import okhttp3.Response
+import okhttp3.ResponseBody
 import okhttp3.TlsVersion
 import okhttp3.TlsVersion.TLS_1_1
 import okhttp3.TlsVersion.TLS_1_2
 import okhttp3.TlsVersion.TLS_1_3
 import okhttp3.tls.HandshakeCertificates
 import picocli.CommandLine.Help.Ansi
+import kotlin.coroutines.resumeWithException
 
 enum class Strength(val color: String) {
   Good("green"), Weak("yellow"), Bad("red")
@@ -69,46 +78,12 @@ private val CipherSuite.strength: Strength
 
 val userAgent = "Certifikit/" + Certifikit.VERSION + " OkHttp/" + OkHttp.VERSION
 
-fun Main.fromHttps(host: String): List<X509Certificate> {
-  val client = OkHttpClient.Builder()
-      .connectTimeout(2, SECONDS)
-      .followRedirects(followRedirects)
-      .eventListener(VerboseEventListener(verbose))
-      .connectionSpecs(listOf(MODERN_TLS)) // The specs may be overriden later.
-      .apply {
-        if (insecure) {
-          hostnameVerifier(HostnameVerifier { _, _ -> true })
-
-          val handshakeCertificates = HandshakeCertificates.Builder()
-              .addTrustedCertificates(trustManager)
-              .addInsecureHost(host)
-              .build()
-          sslSocketFactory(handshakeCertificates.sslSocketFactory(), handshakeCertificates.trustManager)
-
-          val spec = ConnectionSpec.Builder(COMPATIBLE_TLS)
-              .allEnabledCipherSuites()
-              .allEnabledTlsVersions()
-              .build()
-
-          connectionSpecs(listOf(spec))
-        } else if (keyStoreFile != null) {
-          val handshakeCertificates = HandshakeCertificates.Builder()
-              .addTrustedCertificates(trustManager)
-              .build()
-          sslSocketFactory(handshakeCertificates.sslSocketFactory(), handshakeCertificates.trustManager)
-        }
-      }
-      .build()
-
-  val call = client.newCall(
-      Request.Builder()
-          .url("https://$host/")
-          .header("User-Agent", userAgent)
-          .build()
-  )
-
+suspend fun Main.fromHttps(host: String): List<X509Certificate> {
   val response = try {
-    call.execute()
+    client.newCall(Request.Builder()
+        .url("https://$host/")
+        .header("User-Agent", userAgent)
+        .build()).await()
   } catch (ioe: IOException) {
     throw this.classify(ioe)
   }
@@ -119,7 +94,7 @@ fun Main.fromHttps(host: String): List<X509Certificate> {
       .map { it as X509Certificate }
 }
 
-private fun HandshakeCertificates.Builder.addTrustedCertificates(
+fun HandshakeCertificates.Builder.addTrustedCertificates(
   trustManager: X509TrustManager
 ): HandshakeCertificates.Builder {
   return apply {
@@ -179,3 +154,49 @@ class VerboseEventListener(val verbose: Boolean) : EventListener() {
     }
   }
 }
+
+@OptIn(ExperimentalCoroutinesApi::class)
+suspend fun Call.await(): Response {
+  return suspendCancellableCoroutine { cont ->
+    cont.invokeOnCancellation {
+      cancel()
+    }
+    enqueue(object : Callback {
+      override fun onFailure(call: Call, e: IOException) {
+        if (!cont.isCompleted) {
+          cont.resumeWithException(e)
+        }
+      }
+
+      override fun onResponse(call: Call, response: Response) {
+        if (!cont.isCompleted) {
+          cont.resume(response, onCancellation = { response.close() })
+        }
+      }
+    })
+  }
+}
+
+suspend fun ResponseBody.readString() = withContext(Dispatchers.IO) { string() }
+
+suspend fun OkHttpClient.execute(request: Request): Response {
+  val call = this.newCall(request)
+
+  val response = call.await()
+
+  if (!response.isSuccessful) {
+    val responseString = response.body?.readString()
+
+    val msg: String = if (responseString.isNullOrEmpty()) {
+      response.statusMessage()
+    } else {
+      responseString
+    }
+
+    throw ClientException(msg, response.code)
+  }
+
+  return response
+}
+
+fun Response.statusMessage(): String = this.code.toString() + " " + this.message

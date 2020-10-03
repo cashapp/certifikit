@@ -17,6 +17,7 @@ package app.cash.certifikit.cli.oscp
 
 import app.cash.certifikit.Certificate
 import app.cash.certifikit.CertificateAdapters
+import app.cash.certifikit.cli.execute
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.bouncycastle.asn1.DEROctetString
@@ -60,10 +61,10 @@ class OscpClient(val httpClient: OkHttpClient) {
     return builder.build()
   }
 
-  fun submit(certificate: Certificate, request: OCSPReq): OCSPResp {
+  suspend fun submit(certificate: Certificate, request: OCSPReq): OCSPResp {
     val httpRequest = Request.Builder().url("").build()
-    val call = httpClient.newCall(httpRequest)
+    val response = httpClient.execute(httpRequest)
 
-    val response = call.execute()
+    TODO()
   }
 }
