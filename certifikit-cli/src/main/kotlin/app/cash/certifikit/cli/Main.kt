@@ -22,13 +22,18 @@ import app.cash.certifikit.cli.Main.VersionProvider
 import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.cli.oscp.OscpClient
+import java.io.File
+import java.io.IOException
+import java.security.cert.X509Certificate
+import java.util.concurrent.Callable
+import java.util.concurrent.TimeUnit
+import javax.net.ssl.HostnameVerifier
+import kotlin.system.exitProcess
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import okhttp3.ConnectionSpec
 import okhttp3.OkHttpClient
-import java.io.File
-import java.io.IOException
-import java.util.concurrent.Callable
-import kotlin.system.exitProcess
 import okhttp3.internal.platform.Platform
 import okhttp3.tls.HandshakeCertificates
 import okio.ByteString.Companion.toByteString
@@ -38,9 +43,6 @@ import picocli.CommandLine.Help.Ansi
 import picocli.CommandLine.IVersionProvider
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
-import java.security.cert.X509Certificate
-import java.util.concurrent.TimeUnit
-import javax.net.ssl.HostnameVerifier
 
 @Command(
     name = NAME, description = ["An ergonomic CLI for understanding certificates."],
@@ -159,57 +161,72 @@ class Main : Callable<Int> {
   }
 
   private suspend fun queryHost() {
-    val x509certificates = fromHttps(host!!)
+    coroutineScope {
+      val x509certificates = fromHttps(host!!)
 
-    if (x509certificates.isEmpty()) {
-      System.err.println("Warn: ${Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
-    }
-
-    val oscpClient = OscpClient(this.client)
-
-    val certificate1 = x509certificates[0].toCertificate()
-    val request = oscpClient.request(certificate1, x509certificates[1].toCertificate())
-    println(request)
-
-    val response = oscpClient.submit(certificate1, request)
-    println(response)
-
-    val output = output
-
-    x509certificates.forEachIndexed { i, certificate ->
-      if (i > 0) {
-        println()
+      if (x509certificates.isEmpty()) {
+        System.err.println("Warn: ${Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
       }
 
-      if (output != null) {
-        val outputFile = when {
-          output.isDirectory -> File(output, "${certificate.publicKeySha256().hex()}.pem")
-          output.path == "-" -> output
-          i > 0 -> {
-            System.err.println(Ansi.AUTO.string("@|yellow Writing host certificate only, skipping (${certificate.subjectX500Principal.name})|@"))
-            null
-          }
-          else -> output
+      val ocspResponse = if (insecure) {
+        null
+      } else {
+        val oscpClient = OscpClient(client)
+
+        async {
+          oscpClient.submit(x509certificates[0].toCertificate(), x509certificates[1].toCertificate())
+        }
+      }
+
+      val output = output
+
+      x509certificates.forEachIndexed { i, certificate ->
+        if (i > 0) {
+          println()
         }
 
-        if (outputFile != null) {
-          if (outputFile.path == "-") {
-            println(certificate.certificatePem())
-          } else {
-            try {
-              certificate.writePem(outputFile)
-            } catch (ioe: IOException) {
-              throw UsageException("Unable to write to $output", ioe)
+        if (output != null) {
+          val outputFile = when {
+            output.isDirectory -> File(output, "${certificate.publicKeySha256().hex()}.pem")
+            output.path == "-" -> output
+            i > 0 -> {
+              System.err.println(Ansi.AUTO.string(
+                  "@|yellow Writing host certificate only, skipping (${certificate.subjectX500Principal.name})|@"))
+              null
+            }
+            else -> output
+          }
+
+          if (outputFile != null) {
+            if (outputFile.path == "-") {
+              println(certificate.certificatePem())
+            } else {
+              try {
+                certificate.writePem(outputFile)
+              } catch (ioe: IOException) {
+                throw UsageException("Unable to write to $output", ioe)
+              }
             }
           }
         }
+
+        println(certificate.toCertificate().prettyPrintCertificate(trustManager))
       }
 
-      println(certificate.toCertificate().prettyPrintCertificate(trustManager))
-    }
+      // TODO We should add SANs and complete wildcard hosts.
+      addHostToCompletionFile(host!!)
 
-    // TODO We should add SANs and complete wildcard hosts.
-    addHostToCompletionFile(host!!)
+      if (ocspResponse != null) {
+        println()
+        try {
+          val response = ocspResponse.await()
+          println(response.prettyPrint())
+        } catch (e: Exception) {
+          System.err.println(Ansi.AUTO.string(
+              "@|yellow Failed checking OCSP status (${e.message})|@"))
+        }
+      }
+    }
   }
 
   fun X509Certificate.toCertificate() =

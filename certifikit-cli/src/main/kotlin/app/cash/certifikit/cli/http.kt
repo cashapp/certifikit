@@ -18,23 +18,20 @@ package app.cash.certifikit.cli
 import app.cash.certifikit.Certifikit
 import app.cash.certifikit.cli.errors.ClientException
 import app.cash.certifikit.cli.errors.classify
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.security.cert.X509Certificate
-import java.util.concurrent.TimeUnit.SECONDS
-import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.X509TrustManager
+import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.CipherSuite
-import okhttp3.ConnectionSpec
-import okhttp3.ConnectionSpec.Companion.COMPATIBLE_TLS
 import okhttp3.ConnectionSpec.Companion.MODERN_TLS
 import okhttp3.ConnectionSpec.Companion.RESTRICTED_TLS
 import okhttp3.EventListener
@@ -51,7 +48,6 @@ import okhttp3.TlsVersion.TLS_1_2
 import okhttp3.TlsVersion.TLS_1_3
 import okhttp3.tls.HandshakeCertificates
 import picocli.CommandLine.Help.Ansi
-import kotlin.coroutines.resumeWithException
 
 enum class Strength(val color: String) {
   Good("green"), Weak("yellow"), Bad("red")
@@ -83,6 +79,7 @@ suspend fun Main.fromHttps(host: String): List<X509Certificate> {
     client.newCall(Request.Builder()
         .url("https://$host/")
         .header("User-Agent", userAgent)
+        .head()
         .build()).await()
   } catch (ioe: IOException) {
     throw this.classify(ioe)

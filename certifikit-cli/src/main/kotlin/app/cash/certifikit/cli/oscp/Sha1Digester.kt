@@ -15,6 +15,7 @@
  */
 package app.cash.certifikit.cli.oscp
 
+import java.io.OutputStream
 import org.bouncycastle.asn1.ASN1ObjectIdentifier
 import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier
@@ -23,7 +24,6 @@ import org.bouncycastle.crypto.digests.SHA1Digest
 import org.bouncycastle.crypto.digests.SHA256Digest
 import org.bouncycastle.crypto.io.DigestOutputStream
 import org.bouncycastle.operator.DigestCalculator
-import java.io.OutputStream
 
 /**
  * BC's [OCSPReqBuilder] needs a [DigestCalculator] but BC doesn't

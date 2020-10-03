@@ -18,25 +18,32 @@ package app.cash.certifikit.cli.oscp
 import app.cash.certifikit.Certificate
 import app.cash.certifikit.CertificateAdapters
 import app.cash.certifikit.cli.execute
+import java.lang.IllegalStateException
+import java.math.BigInteger
+import java.security.SecureRandom
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.bouncycastle.asn1.DEROctetString
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers
 import org.bouncycastle.asn1.x509.Extension
 import org.bouncycastle.asn1.x509.Extensions
 import org.bouncycastle.cert.X509CertificateHolder
+import org.bouncycastle.cert.ocsp.BasicOCSPResp
 import org.bouncycastle.cert.ocsp.CertificateID
 import org.bouncycastle.cert.ocsp.OCSPReq
 import org.bouncycastle.cert.ocsp.OCSPReqBuilder
 import org.bouncycastle.cert.ocsp.OCSPResp
-import java.math.BigInteger
-import java.security.SecureRandom
 
 fun SecureRandom.nextBytes(count: Int) = ByteArray(count).apply {
   nextBytes(this)
 }
 
 // https://github.com/netty/netty/blob/bd8cea644a07890f5bada18ddff0a849b58cd861/example/src/main/java/io/netty/example/ocsp/OcspRequestBuilder.java
+// https://raymii.org/s/articles/OpenSSL_Manually_Verify_a_certificate_against_an_OCSP.html
 class OscpClient(val httpClient: OkHttpClient) {
   val random = SecureRandom()
 
@@ -61,10 +68,26 @@ class OscpClient(val httpClient: OkHttpClient) {
     return builder.build()
   }
 
-  suspend fun submit(certificate: Certificate, request: OCSPReq): OCSPResp {
-    val httpRequest = Request.Builder().url("").build()
+  suspend fun submit(certificate: Certificate, issuerCertificate: Certificate): OcspResponse {
+    val request = request(certificate, issuerCertificate)
+
+    val httpRequest = Request.Builder()
+        .url("https://ocsp.pki.goog/gts1o1core")
+//        .url("https://ocsp.pki.goog/gsr2")
+        .header("accept", "application/ocsp-response")
+        .post(request.encoded.toRequestBody(contentType = "application/ocsp-request".toMediaType()))
+        .build()
     val response = httpClient.execute(httpRequest)
 
-    TODO()
+    val bytes = withContext(Dispatchers.IO) { response.body?.bytes() }
+    val ocspResponse = OCSPResp(bytes)
+
+    val requestStatus =
+        Status.values().find { it.code == ocspResponse.status } ?: throw IllegalStateException(
+            "Unknown response: " + ocspResponse.status)
+
+    val responseObject = ocspResponse.responseObject as? BasicOCSPResp
+
+    return OcspResponse(requestStatus, responseObject)
   }
 }
