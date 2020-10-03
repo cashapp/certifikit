@@ -111,7 +111,11 @@ suspend fun Main.fromHttps(host: String): List<X509Certificate> {
 
   val response = try {
     client.newCall(
-        Request.Builder().url("https://$host/").header("User-Agent", userAgent).build())
+        Request.Builder()
+            .url("https://$host/")
+            .header("User-Agent", userAgent)
+            .head()
+            .build())
         .await()
   } catch (ioe: IOException) {
     throw this.classify(ioe)
