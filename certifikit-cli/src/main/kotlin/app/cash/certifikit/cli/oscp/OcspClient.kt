@@ -25,6 +25,7 @@ import java.lang.IllegalStateException
 import java.math.BigInteger
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
+import java.util.logging.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -54,6 +55,12 @@ fun SecureRandom.nextBytes(count: Int) = ByteArray(count).apply {
 // https://github.com/netty/netty/blob/bd8cea644a07890f5bada18ddff0a849b58cd861/example/src/main/java/io/netty/example/ocsp/OcspRequestBuilder.java
 // https://raymii.org/s/articles/OpenSSL_Manually_Verify_a_certificate_against_an_OCSP.html
 class OcspClient(httpClient: OkHttpClient, val secure: Boolean = false) {
+  init {
+    if (secure) {
+      Logger.getLogger("app.cash.certifikit.cli.oscp").warning("secure clients not recommended")
+    }
+  }
+
   val httpClient = httpClient.newBuilder().followRedirects(false).build()
 
   val random = SecureRandom()

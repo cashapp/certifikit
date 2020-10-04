@@ -15,7 +15,7 @@ suspend fun main() {
     val hosts = File("certifikit-cli/src/test/resources/top50.csv").readLines()
 
     val client = OkHttpClient.Builder().callTimeout(2, TimeUnit.SECONDS).build()
-    val ocspClient = OcspClient(client, secure = false)
+    val ocspClient = OcspClient(client, secure = true)
 
     val requests = hosts.map { host ->
       Pair(host, async { ocspClient.submit(host) })
@@ -25,9 +25,9 @@ suspend fun main() {
       val response = pendingResponse.await()
 
       if (response.status != OcspResponse.Status.GOOD) {
-        println("$host\t${response.prettyPrint()}")
+        println("$host: ${response.prettyPrint()}")
       } else {
-        println("$host")
+        println("$host: GOOD from ${response.url?.host}")
       }
     }
   }
