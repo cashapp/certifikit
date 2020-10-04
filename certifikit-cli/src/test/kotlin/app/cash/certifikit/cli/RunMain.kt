@@ -1,5 +1,5 @@
 package app.cash.certifikit.cli
 
 fun main() {
-  Main.main("--host", "twitter.com")
+  Main.main("--host", "revoked.badssl.com")
 }

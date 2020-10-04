@@ -15,24 +15,41 @@
  */
 package app.cash.certifikit.cli.oscp
 
+import java.lang.IllegalStateException
 import okhttp3.HttpUrl
 import org.bouncycastle.cert.ocsp.BasicOCSPResp
 import org.bouncycastle.cert.ocsp.CertificateStatus
+import org.bouncycastle.cert.ocsp.RevokedStatus
 import picocli.CommandLine
 
-data class OcspResponse(
-  val requestStatus: Status? = null,
+class OcspResponse(
+  val requestStatus: app.cash.certifikit.cli.oscp.Status? = null,
   val responseObject: BasicOCSPResp? = null,
   val url: HttpUrl? = null,
   val failure: Exception? = null
 ) {
+  val responseStatus = responseObject?.responses?.firstOrNull()
+
+  enum class Status {
+    GOOD, REVOKED, UNKNOWN, FAILED;
+  }
+
+  val status: Status
+    get() = when {
+      requestStatus != app.cash.certifikit.cli.oscp.Status.SUCCESSFUL -> Status.FAILED
+      failure != null -> Status.FAILED
+      responseStatus?.certStatus == CertificateStatus.GOOD -> Status.GOOD
+      responseStatus?.certStatus is RevokedStatus -> Status.REVOKED
+      else -> Status.UNKNOWN
+    }
+
   fun prettyPrint(): String {
     return when {
       failure != null -> CommandLine.Help.Ansi.AUTO.string(
           "@|yellow Failed checking OCSP status (${failure.message}) from $url|@")
-      requestStatus == Status.SUCCESSFUL -> goodStatus()
+      status == Status.GOOD -> goodStatus()
       else -> CommandLine.Help.Ansi.AUTO.string(
-          "@|yellow Failed checking OCSP status ($requestStatus) from $url|@")
+          "@|yellow Failed checking OCSP status ($status) from $url|@")
     }
   }
 
@@ -47,5 +64,9 @@ data class OcspResponse(
 
       "OCSP status: GOOD"
     }
+  }
+
+  companion object {
+    fun failure(reason: String) = OcspResponse(failure = IllegalStateException(reason))
   }
 }

@@ -17,6 +17,7 @@ package app.cash.certifikit.cli.oscp
 
 import app.cash.certifikit.CertificateAdapters
 import app.cash.certifikit.ObjectIdentifiers
+import app.cash.certifikit.cli.await
 import app.cash.certifikit.cli.execute
 import java.io.IOException
 import java.lang.IllegalArgumentException
@@ -52,7 +53,9 @@ fun SecureRandom.nextBytes(count: Int) = ByteArray(count).apply {
 
 // https://github.com/netty/netty/blob/bd8cea644a07890f5bada18ddff0a849b58cd861/example/src/main/java/io/netty/example/ocsp/OcspRequestBuilder.java
 // https://raymii.org/s/articles/OpenSSL_Manually_Verify_a_certificate_against_an_OCSP.html
-class OscpClient(val httpClient: OkHttpClient) {
+class OcspClient(httpClient: OkHttpClient, val secure: Boolean = false) {
+  val httpClient = httpClient.newBuilder().followRedirects(false).build()
+
   val random = SecureRandom()
 
   /**
@@ -87,10 +90,14 @@ class OscpClient(val httpClient: OkHttpClient) {
 
     val request = request(certificateX, issuerCertificateX)
 
-    val secureUrl = url.newBuilder().scheme("https").build()
+    val requestUrl = if (secure) {
+      url.newBuilder().scheme("https").build()
+    } else {
+      url
+    }
 
     val httpRequest = Request.Builder()
-        .url(secureUrl)
+        .url(requestUrl)
         .header("accept", "application/ocsp-response")
         .post(request.encoded.toRequestBody(contentType = "application/ocsp-request".toMediaType()))
         .build()
@@ -98,7 +105,7 @@ class OscpClient(val httpClient: OkHttpClient) {
     val response = try {
       httpClient.execute(httpRequest)
     } catch (e: IOException) {
-      return OcspResponse(failure = e, url = secureUrl)
+      return OcspResponse(failure = e, url = requestUrl)
     }
 
     val bytes = withContext(Dispatchers.IO) { response.body?.bytes() }
@@ -110,6 +117,24 @@ class OscpClient(val httpClient: OkHttpClient) {
 
     val responseObject = ocspResponse.responseObject as BasicOCSPResp
 
-    return OcspResponse(requestStatus, responseObject, url)
+    val result = OcspResponse(requestStatus, responseObject, url)
+
+    return result
+  }
+
+  suspend fun submit(host: String): OcspResponse {
+    val hostResponse = try {
+      httpClient.newCall(Request.Builder().url("https://$host/").head().build()).await()
+    } catch (ioe: IOException) {
+      return OcspResponse(failure = ioe)
+    }
+
+    val certificates = hostResponse.handshake?.peerCertificates?.map { it as X509Certificate }.orEmpty()
+
+    if (certificates.size < 2) {
+      return OcspResponse.failure("Invalid peer certificates: ${certificates.map { it.subjectDN }}")
+    }
+
+    return submit(certificates[0], certificates[1]) ?: OcspResponse.failure("No ocsp info")
   }
 }

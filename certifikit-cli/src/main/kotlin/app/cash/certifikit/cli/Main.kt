@@ -20,7 +20,7 @@ import app.cash.certifikit.cli.Main.Companion.NAME
 import app.cash.certifikit.cli.Main.VersionProvider
 import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
-import app.cash.certifikit.cli.oscp.OscpClient
+import app.cash.certifikit.cli.oscp.OcspClient
 import app.cash.certifikit.cli.oscp.toCertificate
 import java.io.File
 import java.io.IOException
@@ -167,7 +167,7 @@ class Main : Callable<Int> {
         System.err.println("Warn: ${Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
       }
 
-      val oscpClient = OscpClient(client)
+      val oscpClient = OcspClient(client, secure = false)
 
       val ocspResponse = async {
         oscpClient.submit(x509certificates[0], x509certificates[1])
