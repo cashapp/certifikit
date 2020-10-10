@@ -17,6 +17,9 @@ package app.cash.certifikit.cli
 
 import app.cash.certifikit.Certifikit
 import app.cash.certifikit.cli.errors.classify
+import com.babylon.certificatetransparency.CTLogger
+import com.babylon.certificatetransparency.VerificationResult
+import com.babylon.certificatetransparency.certificateTransparencyInterceptor
 import java.io.IOException
 import java.net.InetAddress
 import java.net.InetSocketAddress
@@ -69,12 +72,11 @@ private val CipherSuite.strength: Strength
 
 val userAgent = "Certifikit/" + Certifikit.VERSION + " OkHttp/" + OkHttp.VERSION
 
-data class SiteResponse(val peerCertificates: List<X509Certificate>, val headers: Headers) {
-  val strictTransportSecurity: String?
-    get() = headers["strict-transport-security"]
-}
+data class SiteResponse(val peerCertificates: List<X509Certificate>, val headers: Headers, val ctResult: VerificationResult?)
 
 fun Main.fromHttps(host: String): SiteResponse {
+  var ctResult: VerificationResult? = null
+
   val client = OkHttpClient.Builder()
       .connectTimeout(2, SECONDS)
       .followRedirects(followRedirects)
@@ -103,6 +105,15 @@ fun Main.fromHttps(host: String): SiteResponse {
           sslSocketFactory(handshakeCertificates.sslSocketFactory(), handshakeCertificates.trustManager)
         }
       }
+      .addNetworkInterceptor(certificateTransparencyInterceptor {
+        includeHost("*.*")
+        logger = object : CTLogger {
+          override fun log(host: String, result: VerificationResult) {
+            ctResult = result
+          }
+        }
+        failOnError = false
+      })
       .build()
 
   val call = client.newCall(
@@ -120,7 +131,7 @@ fun Main.fromHttps(host: String): SiteResponse {
 
   return response.use {
     val peerCertificates = it.handshake!!.peerCertificates.map { it as X509Certificate }
-    SiteResponse(peerCertificates = peerCertificates, headers = response.headers)
+    SiteResponse(peerCertificates = peerCertificates, headers = response.headers, ctResult = ctResult)
   }
 }
 

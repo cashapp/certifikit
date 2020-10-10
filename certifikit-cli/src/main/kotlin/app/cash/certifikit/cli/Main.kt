@@ -160,9 +160,9 @@ class Main : Callable<Int> {
       println(certifikit.prettyPrintCertificate(trustManager))
     }
 
-    if (siteResponse.strictTransportSecurity != null) {
+    if (siteResponse.ctResult != null) {
       println()
-      println("Strict Transport Security: ${siteResponse.strictTransportSecurity}")
+      println("Certificate Transparency: " + siteResponse.ctResult)
     }
 
     // TODO We should add SANs and complete wildcard hosts.

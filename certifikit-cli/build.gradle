@@ -40,6 +40,7 @@ dependencies {
   implementation 'info.picocli:picocli:4.5.1'
   implementation 'com.squareup.okhttp3:okhttp:4.10.0-RC1'
   implementation 'com.squareup.okhttp3:okhttp-tls:4.10.0-RC1'
+  implementation 'com.babylon.certificatetransparency:certificatetransparency:0.3.0'
 
   kapt "info.picocli:picocli-codegen:4.5.1"
 
