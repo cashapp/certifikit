@@ -6,6 +6,12 @@ plugins {
   id "org.jetbrains.kotlin.kapt"
 }
 
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(11)
+  }
+}
+
 application {
   mainClassName = 'app.cash.certifikit.cli.Main'
 }
@@ -37,11 +43,11 @@ graal {
 dependencies {
   api project(':certifikit')
   api dep.okio
-  implementation 'info.picocli:picocli:4.5.1'
+  implementation 'info.picocli:picocli:4.5.2'
   implementation 'com.squareup.okhttp3:okhttp:4.10.0-RC1'
   implementation 'com.squareup.okhttp3:okhttp-tls:4.10.0-RC1'
 
-  kapt "info.picocli:picocli-codegen:4.5.1"
+  kapt "info.picocli:picocli-codegen:4.5.2"
 
   testImplementation dep.junit
   testImplementation dep.assertj

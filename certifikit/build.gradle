@@ -1,3 +1,9 @@
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(11)
+  }
+}
+
 jar {
   manifest {
     attributes('Automatic-Module-Name': 'certifikit')
