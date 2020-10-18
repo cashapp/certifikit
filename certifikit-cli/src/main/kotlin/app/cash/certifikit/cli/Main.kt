@@ -119,15 +119,15 @@ class Main : Callable<Int> {
   }
 
   private fun queryHost() {
-    val siteResponse = fromHttps(host!!)
+    val x509certificates = fromHttps(host!!)
 
-    if (siteResponse.peerCertificates.isEmpty()) {
+    if (x509certificates.isEmpty()) {
       System.err.println("Warn: ${Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
     }
 
     val output = output
 
-    siteResponse.peerCertificates.forEachIndexed { i, certificate ->
+    x509certificates.forEachIndexed { i, certificate ->
       if (i > 0) {
         println()
       }
@@ -158,11 +158,6 @@ class Main : Callable<Int> {
 
       val certifikit = CertificateAdapters.certificate.fromDer(certificate.encoded.toByteString())
       println(certifikit.prettyPrintCertificate(trustManager))
-    }
-
-    if (siteResponse.strictTransportSecurity != null) {
-      println()
-      println("Strict Transport Security: ${siteResponse.strictTransportSecurity}")
     }
 
     // TODO We should add SANs and complete wildcard hosts.
@@ -202,7 +197,7 @@ class Main : Callable<Int> {
     val knownHostsFile = File(confDir, "knownhosts.txt")
 
     @JvmStatic
-    fun main(vararg args: String) {
+    fun main(args: Array<String>) {
       exitProcess(CommandLine(Main()).execute(*args))
     }
   }
