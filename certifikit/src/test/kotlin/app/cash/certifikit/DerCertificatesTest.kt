@@ -15,6 +15,7 @@
  */
 package app.cash.certifikit
 
+import app.cash.certifikit.CertificateAdapters.generalNameUniformResourceIdentifier
 import app.cash.certifikit.ObjectIdentifiers.basicConstraints
 import app.cash.certifikit.ObjectIdentifiers.commonName
 import app.cash.certifikit.ObjectIdentifiers.organizationalUnitName
@@ -318,8 +319,7 @@ internal class DerCertificatesTest {
                     Extension(
                         id = authorityInfoAccess,
                         critical = false,
-                        value = ("3025302306082b060105050730018617687474703a2f2f6f6373702e656" +
-                            "e74727573742e6e6574").decodeHex()
+                        value = listOf(AccessDescription(ObjectIdentifiers.ocsp, Pair(generalNameUniformResourceIdentifier, "http://ocsp.entrust.net")))
                     ),
                     Extension(
                         id = crlDistributionPoints,
@@ -580,9 +580,10 @@ internal class DerCertificatesTest {
                     Extension(
                         id = authorityInfoAccess,
                         critical = false,
-                        value = ("305a302306082b060105050730018617687474703a2f2f6f6373702e656" +
-                            "e74727573742e6e6574303306082b060105050730028627687474703a2f2f6169612" +
-                            "e656e74727573742e6e65742f6c316d2d636861696e3235362e636572").decodeHex()
+                        value = listOf(
+                            AccessDescription(ObjectIdentifiers.ocsp, Pair(generalNameUniformResourceIdentifier, "http://ocsp.entrust.net")),
+                            AccessDescription(ObjectIdentifiers.caIssuers, Pair(generalNameUniformResourceIdentifier, "http://aia.entrust.net/l1m-chain256.cer"))
+                        )
                     ),
                     Extension(
                         id = crlDistributionPoints,

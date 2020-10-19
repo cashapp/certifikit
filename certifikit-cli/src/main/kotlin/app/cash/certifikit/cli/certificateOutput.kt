@@ -58,6 +58,13 @@ fun Certificate.prettyPrintCertificate(
       append("Ext Key Usage: ${it.joinToString(", ")}\n")
     }
 
+    authorityInfoAccess?.let {
+      append("Authority Info Access:\n")
+      it.forEach { accessDescription ->
+        append("\t${accessDescription.name}: ${accessDescription.accessLocation.second}\n")
+      }
+    }
+
     val periodLeft = tbsCertificate.validity.periodLeft
     val periodLeftString = when {
       periodLeft == null -> Ansi.AUTO.string(" (@|red Not valid|@)")
