@@ -45,23 +45,16 @@ graal {
 dependencies {
   api project(':certifikit')
   api dep.okio
-  implementation 'info.picocli:picocli:4.5.0'
-  implementation 'com.squareup.okhttp3:okhttp:4.9.0'
-  implementation 'com.squareup.okhttp3:okhttp-tls:4.9.0'
+  implementation 'info.picocli:picocli:4.5.1'
+  implementation 'com.squareup.okhttp3:okhttp:4.10.0-RC1'
+  implementation 'com.squareup.okhttp3:okhttp-tls:4.10.0-RC1'
 
   implementation("org.jetbrains.kotlin:kotlin-reflect:1.4.10")
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.10")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.9")
 
-  kapt "info.picocli:picocli-codegen:4.5.0"
-  compileOnly("org.graalvm.nativeimage:svm:20.2.0") {
-    // https://youtrack.jetbrains.com/issue/KT-29513
-    exclude group: "org.graalvm.nativeimage"
-    exclude group: "org.graalvm.truffle"
-    exclude group: "org.graalvm.sdk"
-    exclude group: "org.graalvm.compiler"
-  }
+  kapt "info.picocli:picocli-codegen:4.5.1"
 
   testImplementation dep.junit
   testImplementation dep.assertj
