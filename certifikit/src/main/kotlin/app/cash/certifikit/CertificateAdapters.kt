@@ -186,9 +186,11 @@ object CertificateAdapters {
    * The first property of the pair is the adapter that was used, the second property is the value.
    */
   internal val generalNameDnsName = Adapters.IA5_STRING.withTag(tag = 2L)
+  internal val generalNameUniformResourceIdentifier = Adapters.IA5_STRING.withTag(tag = 6L)
   internal val generalNameIpAddress = Adapters.OCTET_STRING.withTag(tag = 7L)
   internal val generalName: DerAdapter<Pair<DerAdapter<*>, Any?>> = Adapters.choice(
       generalNameDnsName,
+      generalNameUniformResourceIdentifier,
       generalNameIpAddress,
       Adapters.ANY_VALUE
   )
@@ -213,6 +215,7 @@ object CertificateAdapters {
       ObjectIdentifiers.basicConstraints -> basicConstraints
       ObjectIdentifiers.keyUsage -> BIT_STRING
       ObjectIdentifiers.extKeyUsage -> extKeyUsage
+      ObjectIdentifiers.authorityInfoAccess -> authorityInfoAccess
       AttestationAdapters.KEY_DESCRIPTION_OID -> AttestationAdapters.keyDescription
       else -> null
     }
@@ -476,4 +479,35 @@ object CertificateAdapters {
    * ```
    */
   internal val extKeyUsage: BasicDerAdapter<List<String>> = OBJECT_IDENTIFIER.asSequenceOf()
+
+  /**
+   * ```
+   *  AuthorityInfoAccessSyntax  ::=  SEQUENCE SIZE (1..MAX) OF AccessDescription
+   *
+   *  AccessDescription  ::=  SEQUENCE {
+   *  accessMethod          OBJECT IDENTIFIER,
+   *  accessLocation        GeneralName  }
+   *
+   *  id-ad OBJECT IDENTIFIER  ::=  { id-pkix 48 }
+   *
+   *  id-ad-caIssuers OBJECT IDENTIFIER  ::=  { id-ad 2 }
+   * ```
+   */
+  internal val authorityInfoAccess: BasicDerAdapter<List<AccessDescription>> = Adapters.sequence(
+      "AccessDescription",
+      Adapters.OBJECT_IDENTIFIER.asTypeHint(),
+      generalName,
+      decompose = {
+        listOf(
+            it.accessMethod,
+            it.accessLocation
+        )
+      },
+      construct = {
+        AccessDescription(
+            accessMethod = it[0] as String,
+            accessLocation = it[1] as Pair<Any, Any>
+        )
+      }
+  ).asSequenceOf()
 }
