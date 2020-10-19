@@ -25,6 +25,7 @@ import java.io.File
 import java.io.IOException
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
+import kotlinx.coroutines.runBlocking
 import okhttp3.internal.platform.Platform
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine
@@ -74,7 +75,7 @@ class Main : Callable<Int> {
           completeOption()
         }
         host != null -> {
-          queryHost()
+          runBlocking { queryHost() }
         }
         file != null -> {
           showPemFile(file!!)
@@ -118,7 +119,7 @@ class Main : Callable<Int> {
     }
   }
 
-  private fun queryHost() {
+  private suspend fun queryHost() {
     val x509certificates = fromHttps(host!!)
 
     if (x509certificates.isEmpty()) {
@@ -197,7 +198,7 @@ class Main : Callable<Int> {
     val knownHostsFile = File(confDir, "knownhosts.txt")
 
     @JvmStatic
-    fun main(args: Array<String>) {
+    fun main(vararg args: String) {
       exitProcess(CommandLine(Main()).execute(*args))
     }
   }
