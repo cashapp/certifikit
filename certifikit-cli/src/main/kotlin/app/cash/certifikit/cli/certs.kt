@@ -18,6 +18,7 @@ package app.cash.certifikit.cli
 import app.cash.certifikit.Certificate
 import app.cash.certifikit.CertificateAdapters
 import app.cash.certifikit.cli.errors.UsageException
+import app.cash.certifikit.text.certificatePem
 import java.io.File
 import java.io.FileNotFoundException
 import java.security.cert.X509Certificate
