@@ -77,6 +77,9 @@ class CertificateOutputTest {
       |SAN: 	cash\.app, www\.cash\.app
       |Key Usage: DigitalSignature, KeyEncipherment
       |Ext Key Usage: serverAuth, clientAuth
+      |Authority Info Access:
+      |	ocsp: http://ocsp.entrust.net
+      |	caIssuers: http://aia.entrust.net/l1m-chain256.cer
       |Valid: 	2020-04-13T13:25:49Z\.\.2021-04-12T13:55:49Z (.*)
       |CA: false
     """.trimMargin())

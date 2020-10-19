@@ -63,6 +63,14 @@ data class Certificate(
           ?.value as BitString?
     }
 
+  val authorityInfoAccess: List<AccessDescription>?
+    get() {
+      val value = tbsCertificate.extensions
+          .firstOrNull { it.id == ObjectIdentifiers.authorityInfoAccess }
+          ?.value
+      return value as List<AccessDescription>?
+    }
+
   @Suppress("UNCHECKED_CAST")
   val extKeyUsage: List<ExtKeyUsage>?
     get() {
@@ -233,4 +241,16 @@ data class PrivateKeyInfo(
     result = 31 * result + privateKey.hashCode()
     return result
   }
+}
+
+data class AccessDescription(
+  val accessMethod: String,
+  val accessLocation: Pair<Any, Any>
+) {
+  val name: String
+    get() = when (accessMethod) {
+      ObjectIdentifiers.ocsp -> "ocsp"
+      ObjectIdentifiers.caIssuers -> "caIssuers"
+      else -> accessMethod
+    }
 }
