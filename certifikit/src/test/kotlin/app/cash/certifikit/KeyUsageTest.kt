@@ -20,7 +20,7 @@ import app.cash.certifikit.KeyUsage.DigitalSignature
 import app.cash.certifikit.KeyUsage.KeyCertSign
 import okio.ByteString.Companion.decodeHex
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class KeyUsageTest {
   @Test

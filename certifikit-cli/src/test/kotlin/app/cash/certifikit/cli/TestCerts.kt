@@ -17,7 +17,7 @@ package app.cash.certifikit.cli
 
 import java.io.File
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class TestCerts {
   @Test

@@ -62,6 +62,7 @@ dependencies {
 
   kapt "info.picocli:picocli-codegen:4.5.2"
 
-  testImplementation dep.junit
+  testImplementation dep.junit5Api
+  testImplementation dep.junit5JupiterEngine
   testImplementation dep.assertj
 }

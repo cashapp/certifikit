@@ -79,6 +79,10 @@ subprojects { project ->
   apply plugin: 'maven-publish'
   apply plugin: 'signing'
 
+  test {
+    useJUnitPlatform()
+  }
+
   publishing {
     java {
       withJavadocJar()
