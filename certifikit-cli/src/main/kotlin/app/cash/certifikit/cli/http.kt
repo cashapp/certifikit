@@ -23,7 +23,6 @@ import java.net.InetSocketAddress
 import java.net.Proxy
 import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit.SECONDS
-import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.X509TrustManager
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -37,6 +36,7 @@ import okhttp3.ConnectionSpec.Companion.MODERN_TLS
 import okhttp3.ConnectionSpec.Companion.RESTRICTED_TLS
 import okhttp3.EventListener
 import okhttp3.Handshake
+import okhttp3.Headers
 import okhttp3.OkHttp
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
@@ -76,7 +76,12 @@ private val CipherSuite.strength: Strength
 
 val userAgent = "Certifikit/" + Certifikit.VERSION + " OkHttp/" + OkHttp.VERSION
 
-suspend fun Main.fromHttps(host: String): List<X509Certificate> {
+data class SiteResponse(val peerCertificates: List<X509Certificate>, val headers: Headers) {
+  val strictTransportSecurity: String?
+    get() = headers["strict-transport-security"]
+}
+
+suspend fun Main.fromHttps(host: String): SiteResponse {
   val client = OkHttpClient.Builder()
       .connectTimeout(2, SECONDS)
       .followRedirects(followRedirects)
@@ -84,7 +89,7 @@ suspend fun Main.fromHttps(host: String): List<X509Certificate> {
       .connectionSpecs(listOf(MODERN_TLS)) // The specs may be overriden later.
       .apply {
         if (insecure) {
-          hostnameVerifier(HostnameVerifier { _, _ -> true })
+          hostnameVerifier { _, _ -> true }
 
           val handshakeCertificates = HandshakeCertificates.Builder()
               .addTrustedCertificates(trustManager)
@@ -122,9 +127,9 @@ suspend fun Main.fromHttps(host: String): List<X509Certificate> {
   }
 
   return response.use {
-    it.handshake!!.peerCertificates
+    val peerCertificates = it.handshake!!.peerCertificates.map { it as X509Certificate }
+    SiteResponse(peerCertificates = peerCertificates, headers = response.headers)
   }
-      .map { it as X509Certificate }
 }
 
 private fun HandshakeCertificates.Builder.addTrustedCertificates(
