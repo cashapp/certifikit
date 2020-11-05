@@ -839,7 +839,7 @@ internal class DerCertificatesTest {
     val okHttpCertificate = CertificateAdapters.certificate
         .fromDer(certificateByteString)
     println(okHttpCertificate)
-    assertThat(okHttpCertificate.checkSignature(root.keyPair.public)).isTrue()
+    assertThat(okHttpCertificate.checkSignature(root.keyPair.public)).isTrue
 
     // Invalid signature.
     val okHttpCertificateWithBadSignature = okHttpCertificate.copy(
@@ -847,10 +847,10 @@ internal class DerCertificatesTest {
             byteString = okHttpCertificate.signatureValue.byteString.offByOneBit()
         )
     )
-    assertThat(okHttpCertificateWithBadSignature.checkSignature(root.keyPair.public)).isFalse()
+    assertThat(okHttpCertificateWithBadSignature.checkSignature(root.keyPair.public)).isFalse
 
     // Wrong public key.
-    assertThat(okHttpCertificate.checkSignature(certificate.keyPair.public)).isFalse()
+    assertThat(okHttpCertificate.checkSignature(certificate.keyPair.public)).isFalse
   }
 
   @Test
@@ -869,7 +869,7 @@ internal class DerCertificatesTest {
     // Valid signature.
     val okHttpCertificate = CertificateAdapters.certificate
         .fromDer(certificateByteString)
-    assertThat(okHttpCertificate.checkSignature(root.keyPair.public)).isTrue()
+    assertThat(okHttpCertificate.checkSignature(root.keyPair.public)).isTrue
 
     // Invalid signature.
     val okHttpCertificateWithBadSignature = okHttpCertificate.copy(
@@ -877,10 +877,10 @@ internal class DerCertificatesTest {
             byteString = okHttpCertificate.signatureValue.byteString.offByOneBit()
         )
     )
-    assertThat(okHttpCertificateWithBadSignature.checkSignature(root.keyPair.public)).isFalse()
+    assertThat(okHttpCertificateWithBadSignature.checkSignature(root.keyPair.public)).isFalse
 
     // Wrong public key.
-    assertThat(okHttpCertificate.checkSignature(certificate.keyPair.public)).isFalse()
+    assertThat(okHttpCertificate.checkSignature(certificate.keyPair.public)).isFalse
   }
 
   /**

@@ -48,11 +48,11 @@ internal class DerTest {
     derReader.read("test") { header ->
       assertThat(header.tagClass).isEqualTo(DerHeader.TAG_CLASS_UNIVERSAL)
       assertThat(header.tag).isEqualTo(30)
-      assertThat(header.constructed).isFalse()
+      assertThat(header.constructed).isFalse
       assertThat(header.length).isEqualTo(201)
     }
 
-    assertThat(derReader.hasNext()).isFalse()
+    assertThat(derReader.hasNext()).isFalse
   }
 
   @Test fun `decode length encoded with leading zero byte`() {
@@ -179,7 +179,7 @@ internal class DerTest {
       assertThat(derReader.readBitString()).isEqualTo(BitString("0A3B5F291CD0".decodeHex(), 4))
     }
 
-    assertThat(derReader.hasNext()).isFalse()
+    assertThat(derReader.hasNext()).isFalse
   }
 
   @Test fun `encode primitive bit string`() {
@@ -201,12 +201,12 @@ internal class DerTest {
 
     derReader.read("test") { header ->
       assertThat(header.tag).isEqualTo(26L)
-      assertThat(header.constructed).isFalse()
+      assertThat(header.constructed).isFalse
       assertThat(header.tagClass).isEqualTo(DerHeader.TAG_CLASS_UNIVERSAL)
       assertThat(derReader.readOctetString()).isEqualTo("Jones".encodeUtf8())
     }
 
-    assertThat(derReader.hasNext()).isFalse()
+    assertThat(derReader.hasNext()).isFalse
   }
 
   @Test fun `encode primitive string`() {
@@ -234,7 +234,7 @@ internal class DerTest {
       assertThat(derReader.readOctetString()).isEqualTo("Jones".encodeUtf8())
     }
 
-    assertThat(derReader.hasNext()).isFalse()
+    assertThat(derReader.hasNext()).isFalse
   }
 
   @Test fun `encode implicit prefixed type`() {
@@ -271,10 +271,10 @@ internal class DerTest {
         assertThat(derReader.readOctetString()).isEqualTo("Jones".encodeUtf8())
       }
 
-      assertThat(derReader.hasNext()).isFalse()
+      assertThat(derReader.hasNext()).isFalse
     }
 
-    assertThat(derReader.hasNext()).isFalse()
+    assertThat(derReader.hasNext()).isFalse
   }
 
   @Test fun `encode tagged implicit prefixed type`() {
@@ -315,10 +315,10 @@ internal class DerTest {
         assertThat(derReader.readOctetString()).isEqualTo("Jones".encodeUtf8())
       }
 
-      assertThat(derReader.hasNext()).isFalse()
+      assertThat(derReader.hasNext()).isFalse
     }
 
-    assertThat(derReader.hasNext()).isFalse()
+    assertThat(derReader.hasNext()).isFalse
   }
 
   @Test fun `encode implicit tagged implicit prefixed type`() {
@@ -354,7 +354,7 @@ internal class DerTest {
       assertThat(derReader.readOctetString()).isEqualTo("Jones".encodeUtf8())
     }
 
-    assertThat(derReader.hasNext()).isFalse()
+    assertThat(derReader.hasNext()).isFalse
   }
 
   @Test fun `encode implicit implicit prefixed type`() {
@@ -388,7 +388,7 @@ internal class DerTest {
       assertThat(derReader.readObjectIdentifier()).isEqualTo("2.999.3")
     }
 
-    assertThat(derReader.hasNext()).isFalse()
+    assertThat(derReader.hasNext()).isFalse
   }
 
   @Test fun `encode object identifier without adapter`() {
@@ -419,7 +419,7 @@ internal class DerTest {
       assertThat(derReader.readRelativeObjectIdentifier()).isEqualTo("8571.3.2")
     }
 
-    assertThat(derReader.hasNext()).isFalse()
+    assertThat(derReader.hasNext()).isFalse
   }
 
   @Test fun `encode relative object identifier`() {
@@ -458,13 +458,13 @@ internal class DerTest {
 
       derReader.read("test") { header3 ->
         assertThat(header3.tag).isEqualTo(1L)
-        assertThat(derReader.readBoolean()).isTrue()
+        assertThat(derReader.readBoolean()).isTrue
       }
 
-      assertThat(derReader.hasNext()).isFalse()
+      assertThat(derReader.hasNext()).isFalse
     }
 
-    assertThat(derReader.hasNext()).isFalse()
+    assertThat(derReader.hasNext()).isFalse
   }
 
   @Test fun `encode raw sequence`() {
