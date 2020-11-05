@@ -81,8 +81,7 @@ data class SiteResponse(val peerCertificates: List<X509Certificate>, val headers
     get() = headers["strict-transport-security"]
 }
 
-fun Main.fromHttps(host: String): SiteResponse {
-suspend fun Main.fromHttps(host: String): List<X509Certificate> {
+suspend fun Main.fromHttps(host: String): SiteResponse {
   val client = OkHttpClient.Builder()
       .connectTimeout(2, SECONDS)
       .followRedirects(followRedirects)
