@@ -22,10 +22,10 @@ import app.cash.certifikit.ObjectIdentifiers.organizationalUnitName
 import app.cash.certifikit.ObjectIdentifiers.sha256WithRSAEncryption
 import app.cash.certifikit.ObjectIdentifiers.sha256withEcdsa
 import app.cash.certifikit.ObjectIdentifiers.subjectAlternativeName
+import app.cash.certifikit.text.privateKeyPkcs1Pem
+import app.cash.certifikit.text.privateKeyPkcs8Pem
 import java.math.BigInteger
 import java.net.InetAddress
-import java.security.GeneralSecurityException
-import java.security.KeyFactory
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.PrivateKey
@@ -33,14 +33,10 @@ import java.security.PublicKey
 import java.security.SecureRandom
 import java.security.Signature
 import java.security.cert.X509Certificate
-import java.security.interfaces.ECPublicKey
 import java.security.interfaces.RSAPrivateKey
-import java.security.interfaces.RSAPublicKey
-import java.security.spec.PKCS8EncodedKeySpec
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import okio.ByteString
-import okio.ByteString.Companion.decodeBase64
 import okio.ByteString.Companion.toByteString
 
 /**
@@ -134,11 +130,7 @@ class HeldCertificate(
    * [rfc_7468]: https://tools.ietf.org/html/rfc7468
    */
   fun privateKeyPkcs8Pem(): String {
-    return buildString {
-      append("-----BEGIN PRIVATE KEY-----\n")
-      encodeBase64Lines(keyPair.private.encoded.toByteString())
-      append("-----END PRIVATE KEY-----\n")
-    }
+    return keyPair.private.privateKeyPkcs8Pem()
   }
 
   /**
@@ -147,19 +139,7 @@ class HeldCertificate(
    * [rfc_8017]: https://tools.ietf.org/html/rfc8017
    * [rfc_7468]: https://tools.ietf.org/html/rfc7468
    */
-  fun privateKeyPkcs1Pem(): String {
-    check(keyPair.private is RSAPrivateKey) { "PKCS1 only supports RSA keys" }
-    return buildString {
-      append("-----BEGIN RSA PRIVATE KEY-----\n")
-      encodeBase64Lines(pkcs1Bytes())
-      append("-----END RSA PRIVATE KEY-----\n")
-    }
-  }
-
-  private fun pkcs1Bytes(): ByteString {
-    val decoded = CertificateAdapters.privateKeyInfo.fromDer(keyPair.private.encoded.toByteString())
-    return decoded.privateKey
-  }
+  fun privateKeyPkcs1Pem(): String = keyPair.private.privateKeyPkcs1Pem()
 
   /** Build a held certificate with reasonable defaults. */
   class Builder {
@@ -445,95 +425,6 @@ class HeldCertificate(
 
       private val VERIFY_AS_IP_ADDRESS =
         "([0-9a-fA-F]*:[0-9a-fA-F:.]*)|([\\d.]+)".toRegex()
-    }
-  }
-
-  companion object {
-    private val PEM_REGEX = Regex("""-----BEGIN ([!-,.-~ ]*)-----([^-]*)-----END \1-----""")
-
-    /**
-     * Decodes a multiline string that contains both a [certificate][certificatePem] and a
-     * [private key][privateKeyPkcs8Pem], both [PEM-encoded][rfc_7468]. A typical input string looks
-     * like this:
-     *
-     * ```
-     * -----BEGIN CERTIFICATE-----
-     * MIIBYTCCAQegAwIBAgIBKjAKBggqhkjOPQQDAjApMRQwEgYDVQQLEwtlbmdpbmVl
-     * cmluZzERMA8GA1UEAxMIY2FzaC5hcHAwHhcNNzAwMTAxMDAwMDA1WhcNNzAwMTAx
-     * MDAwMDEwWjApMRQwEgYDVQQLEwtlbmdpbmVlcmluZzERMA8GA1UEAxMIY2FzaC5h
-     * cHAwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASda8ChkQXxGELnrV/oBnIAx3dD
-     * ocUOJfdz4pOJTP6dVQB9U3UBiW5uSX/MoOD0LL5zG3bVyL3Y6pDwKuYvfLNhoyAw
-     * HjAcBgNVHREBAf8EEjAQhwQBAQEBgghjYXNoLmFwcDAKBggqhkjOPQQDAgNIADBF
-     * AiAyHHg1N6YDDQiY920+cnI5XSZwEGhAtb9PYWO8bLmkcQIhAI2CfEZf3V/obmdT
-     * yyaoEufLKVXhrTQhRfodTeigi4RX
-     * -----END CERTIFICATE-----
-     * -----BEGIN PRIVATE KEY-----
-     * MEECAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEJzAlAgEBBCA7ODT0xhGSNn4ESj6J
-     * lu/GJQZoU9lDrCPeUcQ28tzOWw==
-     * -----END PRIVATE KEY-----
-     * ```
-     *
-     * The string should contain exactly one certificate and one private key in [PKCS #8][rfc_5208]
-     * format. It should not contain any other PEM-encoded blocks, but it may contain other text
-     * which will be ignored.
-     *
-     * Encode a held certificate into this format by concatenating the results of
-     * [certificatePem()][certificatePem] and [privateKeyPkcs8Pem()][privateKeyPkcs8Pem].
-     *
-     * [rfc_7468]: https://tools.ietf.org/html/rfc7468
-     * [rfc_5208]: https://tools.ietf.org/html/rfc5208
-     */
-    @JvmStatic
-    fun decode(certificateAndPrivateKeyPem: String): HeldCertificate {
-      var certificatePem: String? = null
-      var pkcs8Base64: String? = null
-      for (match in PEM_REGEX.findAll(certificateAndPrivateKeyPem)) {
-        when (val label = match.groups[1]!!.value) {
-          "CERTIFICATE" -> {
-            require(certificatePem == null) { "string includes multiple certificates" }
-            certificatePem = match.groups[0]!!.value // Keep --BEGIN-- and --END-- for certificates.
-          }
-          "PRIVATE KEY" -> {
-            require(pkcs8Base64 == null) { "string includes multiple private keys" }
-            pkcs8Base64 = match.groups[2]!!.value // Include the contents only for PKCS8.
-          }
-          else -> {
-            throw IllegalArgumentException("unexpected type: $label")
-          }
-        }
-      }
-      require(certificatePem != null) { "string does not include a certificate" }
-      require(pkcs8Base64 != null) { "string does not include a private key" }
-
-      return decode(certificatePem, pkcs8Base64)
-    }
-
-    private fun decode(certificatePem: String, pkcs8Base64Text: String): HeldCertificate {
-      val certificate = certificatePem.decodeCertificatePem()
-
-      val pkcs8Bytes = pkcs8Base64Text.decodeBase64()
-          ?: throw IllegalArgumentException("failed to decode private key")
-
-      // The private key doesn't tell us its type but it's okay because the certificate knows!
-      val keyType = when (certificate.publicKey) {
-        is ECPublicKey -> "EC"
-        is RSAPublicKey -> "RSA"
-        else -> throw IllegalArgumentException("unexpected key type: ${certificate.publicKey}")
-      }
-
-      val privateKey = decodePkcs8(pkcs8Bytes, keyType)
-
-      val keyPair = KeyPair(certificate.publicKey, privateKey)
-      return HeldCertificate(keyPair, certificate)
-    }
-
-    private fun decodePkcs8(data: ByteString, keyAlgorithm: String): PrivateKey {
-      try {
-        val keyFactory = KeyFactory.getInstance(keyAlgorithm)
-        return keyFactory.generatePrivate(PKCS8EncodedKeySpec(data.toByteArray()))
-      } catch (e: GeneralSecurityException) {
-        throw IllegalArgumentException("failed to decode private key", e)
-      }
     }
   }
 }

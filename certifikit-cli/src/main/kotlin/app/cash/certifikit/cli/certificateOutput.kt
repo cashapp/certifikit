@@ -58,6 +58,13 @@ fun Certificate.prettyPrintCertificate(
       append("Ext Key Usage: ${it.joinToString(", ")}\n")
     }
 
+    authorityInfoAccess?.let {
+      append("Authority Info Access:\n")
+      it.forEach { accessDescription ->
+        append("\t${accessDescription.name}: ${accessDescription.accessLocation.second}\n")
+      }
+    }
+
     val periodLeft = tbsCertificate.validity.periodLeft
     val periodLeftString = when {
       periodLeft == null -> Ansi.AUTO.string(" (@|red Not valid|@)")
@@ -81,8 +88,8 @@ fun Certificate.prettyPrintCertificate(
   }
 }
 
-private fun Certificate.subjectAlternativeNameValue() =
-  tbsCertificate.extensions.firstOrNull {
+private fun Certificate.subjectAlternativeNameValue(): List<String>? {
+  return tbsCertificate.extensions.firstOrNull {
     it.id == ObjectIdentifiers.subjectAlternativeName
   }
       ?.let {
@@ -92,23 +99,4 @@ private fun Certificate.subjectAlternativeNameValue() =
       ?.map {
         it.second.toString()
       }
-
-/**
- * Returns the certificate encoded in [PEM format][rfc_7468].
- *
- * [rfc_7468]: https://tools.ietf.org/html/rfc7468
- */
-fun X509Certificate.certificatePem(): String {
-  return buildString {
-    append("-----BEGIN CERTIFICATE-----\n")
-    encodeBase64Lines(encoded.toByteString())
-    append("-----END CERTIFICATE-----\n")
-  }
-}
-
-fun StringBuilder.encodeBase64Lines(data: ByteString) {
-  val base64 = data.base64()
-  for (i in 0 until base64.length step 64) {
-    append(base64, i, minOf(i + 64, base64.length)).append('\n')
-  }
 }

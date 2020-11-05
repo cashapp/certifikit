@@ -21,10 +21,12 @@ import app.cash.certifikit.cli.Main.Companion.NAME
 import app.cash.certifikit.cli.Main.VersionProvider
 import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
+import app.cash.certifikit.text.certificatePem
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
+import kotlinx.coroutines.runBlocking
 import okhttp3.internal.platform.Platform
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine
@@ -74,7 +76,7 @@ class Main : Callable<Int> {
           completeOption()
         }
         host != null -> {
-          queryHost()
+          runBlocking { queryHost() }
         }
         file != null -> {
           showPemFile(file!!)
@@ -118,7 +120,7 @@ class Main : Callable<Int> {
     }
   }
 
-  private fun queryHost() {
+  private suspend fun queryHost() {
     val siteResponse = fromHttps(host!!)
 
     if (siteResponse.peerCertificates.isEmpty()) {

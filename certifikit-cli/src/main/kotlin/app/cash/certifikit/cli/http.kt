@@ -24,7 +24,11 @@ import java.net.Proxy
 import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit.SECONDS
 import javax.net.ssl.X509TrustManager
+import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.CipherSuite
 import okhttp3.ConnectionSpec
 import okhttp3.ConnectionSpec.Companion.COMPATIBLE_TLS
@@ -37,6 +41,7 @@ import okhttp3.OkHttp
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.Request
+import okhttp3.Response
 import okhttp3.TlsVersion
 import okhttp3.TlsVersion.TLS_1_1
 import okhttp3.TlsVersion.TLS_1_2
@@ -45,7 +50,9 @@ import okhttp3.tls.HandshakeCertificates
 import picocli.CommandLine.Help.Ansi
 
 enum class Strength(val color: String) {
-  Good("green"), Weak("yellow"), Bad("red")
+  Good("green"),
+  Weak("yellow"),
+  Bad("red")
 }
 
 private val TlsVersion.strength: Strength
@@ -75,6 +82,7 @@ data class SiteResponse(val peerCertificates: List<X509Certificate>, val headers
 }
 
 fun Main.fromHttps(host: String): SiteResponse {
+suspend fun Main.fromHttps(host: String): List<X509Certificate> {
   val client = OkHttpClient.Builder()
       .connectTimeout(2, SECONDS)
       .followRedirects(followRedirects)
@@ -88,7 +96,8 @@ fun Main.fromHttps(host: String): SiteResponse {
               .addTrustedCertificates(trustManager)
               .addInsecureHost(host)
               .build()
-          sslSocketFactory(handshakeCertificates.sslSocketFactory(), handshakeCertificates.trustManager)
+          sslSocketFactory(handshakeCertificates.sslSocketFactory(),
+              handshakeCertificates.trustManager)
 
           val spec = ConnectionSpec.Builder(COMPATIBLE_TLS)
               .allEnabledCipherSuites()
@@ -100,20 +109,20 @@ fun Main.fromHttps(host: String): SiteResponse {
           val handshakeCertificates = HandshakeCertificates.Builder()
               .addTrustedCertificates(trustManager)
               .build()
-          sslSocketFactory(handshakeCertificates.sslSocketFactory(), handshakeCertificates.trustManager)
+          sslSocketFactory(handshakeCertificates.sslSocketFactory(),
+              handshakeCertificates.trustManager)
         }
       }
       .build()
 
-  val call = client.newCall(
-      Request.Builder()
-          .url("https://$host/")
-          .header("User-Agent", userAgent)
-          .build()
-  )
-
   val response = try {
-    call.execute()
+    client.newCall(
+        Request.Builder()
+            .url("https://$host/")
+            .header("User-Agent", userAgent)
+            .head()
+            .build())
+        .await()
   } catch (ioe: IOException) {
     throw this.classify(ioe)
   }
@@ -182,5 +191,27 @@ class VerboseEventListener(val verbose: Boolean) : EventListener() {
         out.println()
       }
     }
+  }
+}
+
+@OptIn(ExperimentalCoroutinesApi::class)
+suspend fun Call.await(): Response {
+  return suspendCancellableCoroutine { cont ->
+    cont.invokeOnCancellation {
+      cancel()
+    }
+    enqueue(object : Callback {
+      override fun onFailure(call: Call, e: IOException) {
+        if (!cont.isCompleted) {
+          cont.resumeWithException(e)
+        }
+      }
+
+      override fun onResponse(call: Call, response: Response) {
+        if (!cont.isCompleted) {
+          cont.resume(response, onCancellation = { response.close() })
+        }
+      }
+    })
   }
 }
