@@ -86,38 +86,6 @@ data class SiteResponse(val peerCertificates: List<X509Certificate>, val headers
 }
 
 suspend fun Main.fromHttps(host: String): SiteResponse {
-  val client = OkHttpClient.Builder()
-      .connectTimeout(2, SECONDS)
-      .followRedirects(followRedirects)
-      .eventListener(VerboseEventListener(verbose))
-      .connectionSpecs(listOf(MODERN_TLS)) // The specs may be overriden later.
-      .apply {
-        if (insecure) {
-          hostnameVerifier { _, _ -> true }
-
-          val handshakeCertificates = HandshakeCertificates.Builder()
-              .addTrustedCertificates(trustManager)
-              .addInsecureHost(host)
-              .build()
-          sslSocketFactory(handshakeCertificates.sslSocketFactory(),
-              handshakeCertificates.trustManager)
-
-          val spec = ConnectionSpec.Builder(COMPATIBLE_TLS)
-              .allEnabledCipherSuites()
-              .allEnabledTlsVersions()
-              .build()
-
-          connectionSpecs(listOf(spec))
-        } else if (keyStoreFile != null) {
-          val handshakeCertificates = HandshakeCertificates.Builder()
-              .addTrustedCertificates(trustManager)
-              .build()
-          sslSocketFactory(handshakeCertificates.sslSocketFactory(),
-              handshakeCertificates.trustManager)
-        }
-      }
-      .build()
-
   val response = try {
     client.newCall(
         Request.Builder()

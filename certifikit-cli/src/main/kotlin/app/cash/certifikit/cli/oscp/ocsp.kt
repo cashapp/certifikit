@@ -32,7 +32,6 @@ fun CoroutineScope.ocsp(
 
   val ocspResponse = async {
     if (peerCertificate != null && signingCertificate != null) {
-
       oscpClient.submit(peerCertificate, signingCertificate)
     } else {
       OcspResponse.failure("no trusted certificates")

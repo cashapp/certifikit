@@ -23,13 +23,7 @@ import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.cli.oscp.ocsp
 import app.cash.certifikit.cli.oscp.toCertificate
 import app.cash.certifikit.text.certificatePem
-import java.io.File
-import java.io.IOException
-import java.util.concurrent.Callable
-import java.util.concurrent.TimeUnit
-import kotlin.system.exitProcess
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.runBlocking
 import okhttp3.ConnectionSpec
 import okhttp3.OkHttpClient
@@ -41,6 +35,11 @@ import picocli.CommandLine.Help.Ansi
 import picocli.CommandLine.IVersionProvider
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
+import java.io.File
+import java.io.IOException
+import java.util.concurrent.Callable
+import java.util.concurrent.TimeUnit
+import kotlin.system.exitProcess
 
 @Command(
     name = NAME, description = ["An ergonomic CLI for understanding certificates."],
