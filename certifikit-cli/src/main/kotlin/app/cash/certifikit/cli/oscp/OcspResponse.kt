@@ -62,7 +62,11 @@ class OcspResponse(
       // null == GOOD
       val good = firstResponse.certStatus == CertificateStatus.GOOD
 
-      "OCSP status: GOOD"
+      if (good) {
+        "OCSP status: GOOD"
+      } else {
+        "OCSP status: " + firstResponse.certStatus
+      }
     }
   }
 

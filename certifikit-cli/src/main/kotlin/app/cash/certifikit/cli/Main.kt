@@ -20,7 +20,7 @@ import app.cash.certifikit.cli.Main.Companion.NAME
 import app.cash.certifikit.cli.Main.VersionProvider
 import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
-import app.cash.certifikit.cli.oscp.OcspClient
+import app.cash.certifikit.cli.oscp.ocsp
 import app.cash.certifikit.cli.oscp.toCertificate
 import app.cash.certifikit.text.certificatePem
 import java.io.File
@@ -28,12 +28,11 @@ import java.io.IOException
 import java.util.concurrent.Callable
 import java.util.concurrent.TimeUnit
 import kotlin.system.exitProcess
-import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.runBlocking
 import okhttp3.ConnectionSpec
 import okhttp3.OkHttpClient
-import kotlinx.coroutines.runBlocking
 import okhttp3.internal.platform.Platform
 import okhttp3.tls.HandshakeCertificates
 import picocli.CommandLine
@@ -81,7 +80,8 @@ class Main : Callable<Int> {
         .connectTimeout(2, TimeUnit.SECONDS)
         .followRedirects(followRedirects)
         .eventListener(VerboseEventListener(verbose))
-        .connectionSpecs(listOf(ConnectionSpec.MODERN_TLS, ConnectionSpec.CLEARTEXT)) // The specs may be overriden later.
+        .connectionSpecs(listOf(ConnectionSpec.MODERN_TLS,
+            ConnectionSpec.CLEARTEXT)) // The specs may be overriden later.
         .apply {
           if (insecure) {
             hostnameVerifier { _, _ -> true }
@@ -169,11 +169,7 @@ class Main : Callable<Int> {
         System.err.println("Warn: ${Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
       }
 
-      val oscpClient = OcspClient(client, secure = false)
-
-      val ocspResponse = async {
-        oscpClient.submit(x509certificates[0], x509certificates[1])
-      }
+      val ocspResponse = ocsp(client, siteResponse)
 
       val output = output
 
@@ -211,9 +207,9 @@ class Main : Callable<Int> {
       }
 
       if (siteResponse.strictTransportSecurity != null) {
-      println()
-      println("Strict Transport Security: ${siteResponse.strictTransportSecurity}")
-    }// TODO We should add SANs and complete wildcard hosts.
+        println()
+        println("Strict Transport Security: ${siteResponse.strictTransportSecurity}")
+      } // TODO We should add SANs and complete wildcard hosts.
       addHostToCompletionFile(host!!)
 
       try {

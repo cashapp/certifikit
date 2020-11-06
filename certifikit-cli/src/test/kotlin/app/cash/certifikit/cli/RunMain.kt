@@ -16,5 +16,5 @@
 package app.cash.certifikit.cli
 
 fun main() {
-  Main.main("--host", "twitter.com")
+  Main.main("--insecure", "--host", "badssl.com")
 }

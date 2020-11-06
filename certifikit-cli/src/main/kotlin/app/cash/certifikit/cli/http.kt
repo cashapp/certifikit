@@ -30,12 +30,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.resumeWithException
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.CipherSuite
+import okhttp3.ConnectionSpec
+import okhttp3.ConnectionSpec.Companion.COMPATIBLE_TLS
 import okhttp3.ConnectionSpec.Companion.MODERN_TLS
 import okhttp3.ConnectionSpec.Companion.RESTRICTED_TLS
 import okhttp3.EventListener
@@ -47,7 +46,6 @@ import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody
-import okhttp3.Response
 import okhttp3.TlsVersion
 import okhttp3.TlsVersion.TLS_1_1
 import okhttp3.TlsVersion.TLS_1_2
@@ -133,7 +131,7 @@ suspend fun Main.fromHttps(host: String): SiteResponse {
   }
 
   return response.use {
-    val peerCertificates = it.handshake!!.peerCertificates.map { it as X509Certificate }
+    val peerCertificates = response.handshake!!.peerCertificates.map { it as X509Certificate }
     SiteResponse(peerCertificates = peerCertificates, headers = response.headers)
   }
 }
@@ -148,7 +146,7 @@ fun HandshakeCertificates.Builder.addTrustedCertificates(
   }
 }
 
-class VerboseEventListener(val verbose: Boolean) : EventListener() {
+class VerboseEventListener(private val verbose: Boolean) : EventListener() {
   override fun dnsEnd(
     call: Call,
     domainName: String,
