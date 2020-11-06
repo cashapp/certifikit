@@ -1,3 +1,9 @@
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(11)
+  }
+}
+
 jar {
   manifest {
     attributes('Automatic-Module-Name': 'certifikit')
@@ -7,7 +13,8 @@ jar {
 dependencies {
   api dep.okio
 
-  testImplementation dep.junit
+  testImplementation dep.junit5Api
+  testImplementation dep.junit5JupiterEngine
   testImplementation dep.assertj
 }
 

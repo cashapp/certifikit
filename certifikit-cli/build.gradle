@@ -6,6 +6,12 @@ plugins {
   id "org.jetbrains.kotlin.kapt"
 }
 
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(11)
+  }
+}
+
 application {
   mainClassName = 'app.cash.certifikit.cli.Main'
 }
@@ -45,18 +51,9 @@ graal {
 dependencies {
   api project(':certifikit')
   api dep.okio
-  implementation 'info.picocli:picocli:4.5.0'
-  implementation 'com.squareup.okhttp3:okhttp:4.9.0'
-  implementation 'com.squareup.okhttp3:okhttp-tls:4.9.0'
-
-  kapt "info.picocli:picocli-codegen:4.5.0"
-  compileOnly("org.graalvm.nativeimage:svm:20.2.0") {
-    // https://youtrack.jetbrains.com/issue/KT-29513
-    exclude group: "org.graalvm.nativeimage"
-    exclude group: "org.graalvm.truffle"
-    exclude group: "org.graalvm.sdk"
-    exclude group: "org.graalvm.compiler"
-  }
+  implementation 'info.picocli:picocli:4.5.2'
+  implementation 'com.squareup.okhttp3:okhttp:4.10.0-RC1'
+  implementation 'com.squareup.okhttp3:okhttp-tls:4.10.0-RC1'
 
   implementation("org.jetbrains.kotlin:kotlin-reflect:1.4.10")
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.10")
@@ -67,6 +64,9 @@ dependencies {
   implementation "org.bouncycastle:bcpkix-jdk15on:1.66"
   implementation "org.bouncycastle:bctls-jdk15on:1.66"
 
-  testImplementation dep.junit
+  kapt "info.picocli:picocli-codegen:4.5.2"
+
+  testImplementation dep.junit5Api
+  testImplementation dep.junit5JupiterEngine
   testImplementation dep.assertj
 }

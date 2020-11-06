@@ -22,6 +22,7 @@ import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.cli.oscp.OcspClient
 import app.cash.certifikit.cli.oscp.toCertificate
+import app.cash.certifikit.text.certificatePem
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.Callable
@@ -32,6 +33,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import okhttp3.ConnectionSpec
 import okhttp3.OkHttpClient
+import kotlinx.coroutines.runBlocking
 import okhttp3.internal.platform.Platform
 import okhttp3.tls.HandshakeCertificates
 import picocli.CommandLine
@@ -161,9 +163,9 @@ class Main : Callable<Int> {
 
   private suspend fun queryHost() {
     coroutineScope {
-      val x509certificates = fromHttps(host!!)
+      val siteResponse = fromHttps(host!!)
 
-      if (x509certificates.isEmpty()) {
+      if (siteResponse.peerCertificates.isEmpty()) {
         System.err.println("Warn: ${Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
       }
 
@@ -175,7 +177,7 @@ class Main : Callable<Int> {
 
       val output = output
 
-      x509certificates.forEachIndexed { i, certificate ->
+      siteResponse.peerCertificates.forEachIndexed { i, certificate ->
         if (i > 0) {
           println()
         }
@@ -208,7 +210,10 @@ class Main : Callable<Int> {
         println(certificate.toCertificate().prettyPrintCertificate(trustManager))
       }
 
-      // TODO We should add SANs and complete wildcard hosts.
+      if (siteResponse.strictTransportSecurity != null) {
+      println()
+      println("Strict Transport Security: ${siteResponse.strictTransportSecurity}")
+    }// TODO We should add SANs and complete wildcard hosts.
       addHostToCompletionFile(host!!)
 
       try {

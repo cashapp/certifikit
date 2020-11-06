@@ -13,19 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.certifikit.cli.graal
+package app.cash.certifikit.text
 
-import com.oracle.svm.core.annotate.Substitute
-import com.oracle.svm.core.annotate.TargetClass
-import okhttp3.internal.platform.Jdk9Platform
-import okhttp3.internal.platform.Platform
+import java.io.File
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
 
-@TargetClass(Platform.Companion::class)
-class TargetPlatform {
-  @Substitute
-  /**
-   * Replace Platform logic that handles classpath variability (bad for graal)
-   * with a fixed implementation based on known setup.
-   */
-  fun findPlatform(): Platform = Jdk9Platform.buildIfSupported()!!
+class PemTest {
+  @Test
+  fun parseHeldCertificate() {
+    val (pkcs8pair, cert1) = decode(File("src/test/resources/pkcs8pair.pem").readText())
+    val (pkcs1pair, cert2) = decode(File("src/test/resources/pkcs1pair.pem").readText())
+
+    assertThat(cert1).isEqualTo(cert2)
+    assertThat(pkcs1pair.private).isEqualTo(pkcs8pair.private)
+    assertThat(pkcs1pair.public).isEqualTo(pkcs8pair.public)
+  }
 }
