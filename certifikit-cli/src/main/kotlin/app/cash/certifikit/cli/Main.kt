@@ -26,14 +26,10 @@ import app.cash.certifikit.text.certificatePem
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.Callable
-import java.util.concurrent.TimeUnit
 import kotlin.system.exitProcess
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
-import okhttp3.ConnectionSpec
-import okhttp3.OkHttpClient
 import okhttp3.internal.platform.Platform
-import okhttp3.tls.HandshakeCertificates
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Help.Ansi
@@ -75,38 +71,7 @@ class Main : Callable<Int> {
   }
 
   val client by lazy {
-    OkHttpClient.Builder()
-        .connectTimeout(2, TimeUnit.SECONDS)
-        .followRedirects(followRedirects)
-        .eventListener(VerboseEventListener(verbose))
-        .connectionSpecs(listOf(ConnectionSpec.MODERN_TLS,
-            ConnectionSpec.CLEARTEXT)) // The specs may be overriden later.
-        .apply {
-          if (insecure) {
-            hostnameVerifier { _, _ -> true }
-
-            val handshakeCertificates = HandshakeCertificates.Builder()
-                .addTrustedCertificates(trustManager)
-                .addInsecureHost(host!!)
-                .build()
-            sslSocketFactory(handshakeCertificates.sslSocketFactory(),
-                handshakeCertificates.trustManager)
-
-            val spec = ConnectionSpec.Builder(ConnectionSpec.COMPATIBLE_TLS)
-                .allEnabledCipherSuites()
-                .allEnabledTlsVersions()
-                .build()
-
-            connectionSpecs(listOf(spec, ConnectionSpec.CLEARTEXT))
-          } else if (keyStoreFile != null) {
-            val handshakeCertificates = HandshakeCertificates.Builder()
-                .addTrustedCertificates(trustManager)
-                .build()
-            sslSocketFactory(handshakeCertificates.sslSocketFactory(),
-                handshakeCertificates.trustManager)
-          }
-        }
-        .build()
+    buildClient()
   }
 
   override fun call(): Int {
