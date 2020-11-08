@@ -179,7 +179,7 @@ class Main : Callable<Int> {
       try {
         val response = ocspResponse.await()
 
-        // null if no url to check also
+        // null if no url to check.
         if (response != null) {
           println()
           println(response.prettyPrint())

@@ -59,7 +59,7 @@ class OcspResponse(
     return if (firstResponse == null) {
       "OCSP status: unknown"
     } else {
-      // null == GOOD
+      // CertificateStatus.GOOD == null
       val good = firstResponse.certStatus == CertificateStatus.GOOD
 
       if (good) {
