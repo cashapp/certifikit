@@ -13,8 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.certifikit.cli
+package app.cash.certifikit.cli.oscp
 
-fun main() {
-  Main.main("--host", "google.com")
+enum class Status(val code: Int) {
+  // https://tools.ietf.org/html/rfc6960#section-2.3
+  SUCCESSFUL(0),
+  MALFORMED_REQUEST(1),
+  INTERNAL_ERROR(2),
+  TRY_LATER(3),
+  SIG_REQUIRED(5),
+  UNAUTHORIZED(6);
 }

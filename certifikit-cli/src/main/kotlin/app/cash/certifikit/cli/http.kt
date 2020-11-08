@@ -16,22 +16,22 @@
 package app.cash.certifikit.cli
 
 import app.cash.certifikit.Certifikit
+import app.cash.certifikit.cli.errors.ClientException
 import app.cash.certifikit.cli.errors.classify
 import java.io.IOException
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.security.cert.X509Certificate
-import java.util.concurrent.TimeUnit.SECONDS
 import javax.net.ssl.X509TrustManager
 import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.CipherSuite
-import okhttp3.ConnectionSpec
-import okhttp3.ConnectionSpec.Companion.COMPATIBLE_TLS
 import okhttp3.ConnectionSpec.Companion.MODERN_TLS
 import okhttp3.ConnectionSpec.Companion.RESTRICTED_TLS
 import okhttp3.EventListener
@@ -42,6 +42,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
+import okhttp3.ResponseBody
 import okhttp3.TlsVersion
 import okhttp3.TlsVersion.TLS_1_1
 import okhttp3.TlsVersion.TLS_1_2
@@ -82,38 +83,6 @@ data class SiteResponse(val peerCertificates: List<X509Certificate>, val headers
 }
 
 suspend fun Main.fromHttps(host: String): SiteResponse {
-  val client = OkHttpClient.Builder()
-      .connectTimeout(2, SECONDS)
-      .followRedirects(followRedirects)
-      .eventListener(VerboseEventListener(verbose))
-      .connectionSpecs(listOf(MODERN_TLS)) // The specs may be overriden later.
-      .apply {
-        if (insecure) {
-          hostnameVerifier { _, _ -> true }
-
-          val handshakeCertificates = HandshakeCertificates.Builder()
-              .addTrustedCertificates(trustManager)
-              .addInsecureHost(host)
-              .build()
-          sslSocketFactory(handshakeCertificates.sslSocketFactory(),
-              handshakeCertificates.trustManager)
-
-          val spec = ConnectionSpec.Builder(COMPATIBLE_TLS)
-              .allEnabledCipherSuites()
-              .allEnabledTlsVersions()
-              .build()
-
-          connectionSpecs(listOf(spec))
-        } else if (keyStoreFile != null) {
-          val handshakeCertificates = HandshakeCertificates.Builder()
-              .addTrustedCertificates(trustManager)
-              .build()
-          sslSocketFactory(handshakeCertificates.sslSocketFactory(),
-              handshakeCertificates.trustManager)
-        }
-      }
-      .build()
-
   val response = try {
     client.newCall(
         Request.Builder()
@@ -127,12 +96,12 @@ suspend fun Main.fromHttps(host: String): SiteResponse {
   }
 
   return response.use {
-    val peerCertificates = it.handshake!!.peerCertificates.map { it as X509Certificate }
+    val peerCertificates = response.handshake!!.peerCertificates.map { it as X509Certificate }
     SiteResponse(peerCertificates = peerCertificates, headers = response.headers)
   }
 }
 
-private fun HandshakeCertificates.Builder.addTrustedCertificates(
+fun HandshakeCertificates.Builder.addTrustedCertificates(
   trustManager: X509TrustManager
 ): HandshakeCertificates.Builder {
   return apply {
@@ -142,7 +111,7 @@ private fun HandshakeCertificates.Builder.addTrustedCertificates(
   }
 }
 
-class VerboseEventListener(val verbose: Boolean) : EventListener() {
+class VerboseEventListener(private val verbose: Boolean) : EventListener() {
   override fun dnsEnd(
     call: Call,
     domainName: String,
@@ -214,3 +183,22 @@ suspend fun Call.await(): Response {
     })
   }
 }
+
+suspend fun ResponseBody.readString() = withContext(Dispatchers.IO) { string() }
+
+suspend fun OkHttpClient.execute(request: Request): Response {
+  val call = this.newCall(request)
+
+  val response = call.await()
+
+  if (!response.isSuccessful) {
+    val msg: String = response.message
+    response.close()
+
+    throw ClientException(msg, response.code)
+  }
+
+  return response
+}
+
+fun Response.statusMessage(): String = this.code.toString() + " " + this.message

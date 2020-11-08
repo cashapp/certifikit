@@ -15,20 +15,21 @@
  */
 package app.cash.certifikit.cli
 
-import app.cash.certifikit.CertificateAdapters
 import app.cash.certifikit.Certifikit
 import app.cash.certifikit.cli.Main.Companion.NAME
 import app.cash.certifikit.cli.Main.VersionProvider
 import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
+import app.cash.certifikit.cli.oscp.ocsp
+import app.cash.certifikit.cli.oscp.toCertificate
 import app.cash.certifikit.text.certificatePem
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import okhttp3.internal.platform.Platform
-import okio.ByteString.Companion.toByteString
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Help.Ansi
@@ -67,6 +68,10 @@ class Main : Callable<Int> {
 
   val trustManager by lazy {
     keyStoreFile?.trustManager() ?: Platform.get().platformTrustManager()
+  }
+
+  val client by lazy {
+    buildClient()
   }
 
   override fun call(): Int {
@@ -121,54 +126,69 @@ class Main : Callable<Int> {
   }
 
   private suspend fun queryHost() {
-    val siteResponse = fromHttps(host!!)
+    coroutineScope {
+      val siteResponse = fromHttps(host!!)
 
-    if (siteResponse.peerCertificates.isEmpty()) {
-      System.err.println("Warn: ${Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
-    }
-
-    val output = output
-
-    siteResponse.peerCertificates.forEachIndexed { i, certificate ->
-      if (i > 0) {
-        println()
+      if (siteResponse.peerCertificates.isEmpty()) {
+        System.err.println("Warn: ${Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
       }
 
-      if (output != null) {
-        val outputFile = when {
-          output.isDirectory -> File(output, "${certificate.publicKeySha256().hex()}.pem")
-          output.path == "-" -> output
-          i > 0 -> {
-            System.err.println(Ansi.AUTO.string("@|yellow Writing host certificate only, skipping (${certificate.subjectX500Principal.name})|@"))
-            null
-          }
-          else -> output
+      val ocspResponse = ocsp(client, siteResponse)
+
+      val output = output
+
+      siteResponse.peerCertificates.forEachIndexed { i, certificate ->
+        if (i > 0) {
+          println()
         }
 
-        if (outputFile != null) {
-          if (outputFile.path == "-") {
-            println(certificate.certificatePem())
-          } else {
-            try {
-              certificate.writePem(outputFile)
-            } catch (ioe: IOException) {
-              throw UsageException("Unable to write to $output", ioe)
+        if (output != null) {
+          val outputFile = when {
+            output.isDirectory -> File(output, "${certificate.publicKeySha256().hex()}.pem")
+            output.path == "-" -> output
+            i > 0 -> {
+              System.err.println(Ansi.AUTO.string(
+                  "@|yellow Writing host certificate only, skipping (${certificate.subjectX500Principal.name})|@"))
+              null
+            }
+            else -> output
+          }
+
+          if (outputFile != null) {
+            if (outputFile.path == "-") {
+              println(certificate.certificatePem())
+            } else {
+              try {
+                certificate.writePem(outputFile)
+              } catch (ioe: IOException) {
+                throw UsageException("Unable to write to $output", ioe)
+              }
             }
           }
         }
+
+        println(certificate.toCertificate().prettyPrintCertificate(trustManager))
       }
 
-      val certifikit = CertificateAdapters.certificate.fromDer(certificate.encoded.toByteString())
-      println(certifikit.prettyPrintCertificate(trustManager))
-    }
+      if (siteResponse.strictTransportSecurity != null) {
+        println()
+        println("Strict Transport Security: ${siteResponse.strictTransportSecurity}")
+      } // TODO We should add SANs and complete wildcard hosts.
+      addHostToCompletionFile(host!!)
 
-    if (siteResponse.strictTransportSecurity != null) {
-      println()
-      println("Strict Transport Security: ${siteResponse.strictTransportSecurity}")
-    }
+      try {
+        val response = ocspResponse.await()
 
-    // TODO We should add SANs and complete wildcard hosts.
-    addHostToCompletionFile(host!!)
+        // null if no url to check.
+        if (response != null) {
+          println()
+          println(response.prettyPrint())
+        }
+      } catch (e: Exception) {
+        System.err.println(Ansi.AUTO.string(
+            "@|yellow Failed checking OCSP status (${e.message})|@"))
+      }
+    }
   }
 
   private fun addHostToCompletionFile(host: String) {
