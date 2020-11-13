@@ -9,7 +9,7 @@ See the [project website](https://cashapp.github.io/certifikit) for documentatio
 Get Certifikit
 --------------
 
-With Gradle:
+With Gradle: 
 
 ```groovy
 implementation "app.cash.certifikit:certifikit:0.2.0"
