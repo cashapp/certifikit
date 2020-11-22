@@ -73,6 +73,7 @@ class CertificateOutputTest {
 
     assertThat(output).matches("""
       |CN: 	cash\.app
+      |Serial:	00be6800b9a91fb97a0000000054d1321d
       |Pin:	sha256/43a60e5aecabd897cbbcf833150740e18ff0c3d90bde132354dc85a4869b3269
       |SAN: 	cash\.app, www\.cash\.app
       |Key Usage: DigitalSignature, KeyEncipherment

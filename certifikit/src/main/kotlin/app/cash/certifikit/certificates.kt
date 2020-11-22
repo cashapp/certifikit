@@ -40,6 +40,13 @@ data class Certificate(
   fun publicKeySha256(): ByteString =
     CertificateAdapters.subjectPublicKeyInfo.toDer(tbsCertificate.subjectPublicKeyInfo).sha256()
 
+  val serialNumberString: String
+    get() {
+      return tbsCertificate.serialNumber.run {
+        "${if (testBit(bitLength() - 1)) "00" else ""}${toString(16)}"
+      }
+    }
+
   val commonName: String?
     get() {
       return tbsCertificate.subject
