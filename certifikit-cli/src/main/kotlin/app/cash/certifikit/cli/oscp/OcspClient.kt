@@ -122,7 +122,7 @@ class OcspClient(httpClient: OkHttpClient, val secure: Boolean = false) {
         Status.values().find { it.code == ocspResponse.status } ?: throw IllegalStateException(
             "Unknown response: " + ocspResponse.status)
 
-    val responseObject = ocspResponse.responseObject as BasicOCSPResp
+    val responseObject = ocspResponse.responseObject as BasicOCSPResp?
 
     val result = OcspResponse(requestStatus, responseObject, url)
 
