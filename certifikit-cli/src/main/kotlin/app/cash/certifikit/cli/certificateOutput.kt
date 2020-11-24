@@ -45,6 +45,7 @@ fun Certificate.prettyPrintCertificate(
     }
 
     append("CN: \t$commonName$trusted\n")
+    append("Serial:\t${serialNumberString}\n")
     append("Pin:\tsha256/${sha256.hex()}\n")
     append("SAN: \t${subjectAlternativeNameValue()?.joinToString(", ") ?: "<N/A>"}\n")
     if (organizationalUnitName != null) {
