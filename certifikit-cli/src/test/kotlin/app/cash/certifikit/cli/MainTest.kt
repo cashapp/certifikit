@@ -15,11 +15,11 @@
  */
 package app.cash.certifikit.cli
 
+import java.io.File
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.jupiter.api.Test
 import picocli.CommandLine
-import java.io.File
 
 class MainTest {
   @Test fun version() {

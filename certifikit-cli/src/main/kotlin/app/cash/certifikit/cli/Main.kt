@@ -31,9 +31,7 @@ import java.util.concurrent.Callable
 import kotlin.system.exitProcess
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.Response
 import okhttp3.internal.platform.Platform
 import picocli.CommandLine
 import picocli.CommandLine.Command
