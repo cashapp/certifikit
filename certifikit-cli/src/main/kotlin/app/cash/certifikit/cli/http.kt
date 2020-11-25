@@ -17,6 +17,7 @@ package app.cash.certifikit.cli
 
 import app.cash.certifikit.Certifikit
 import app.cash.certifikit.cli.errors.ClientException
+import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.cli.errors.classify
 import java.io.IOException
 import java.net.InetAddress
@@ -199,6 +200,15 @@ suspend fun OkHttpClient.execute(request: Request): Response {
   }
 
   return response
+}
+
+fun String.request(): Request = Request.Builder().url(this).build()
+
+@Suppress("BlockingMethodInNonBlockingContext")
+suspend fun Response.bodyString(): String {
+  return withContext(Dispatchers.IO) {
+    body?.string() ?: throw UsageException("No response body")
+  }
 }
 
 fun Response.statusMessage(): String = this.code.toString() + " " + this.message
