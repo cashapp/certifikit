@@ -15,10 +15,12 @@
  */
 package app.cash.certifikit.cli
 
+import app.cash.certifikit.Certificate
 import app.cash.certifikit.Certifikit
 import app.cash.certifikit.cli.Main.Companion.NAME
 import app.cash.certifikit.cli.Main.VersionProvider
 import app.cash.certifikit.cli.errors.CertificationException
+import app.cash.certifikit.cli.errors.ClientException
 import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.cli.oscp.ocsp
 import app.cash.certifikit.cli.oscp.toCertificate
@@ -29,6 +31,7 @@ import java.util.concurrent.Callable
 import kotlin.system.exitProcess
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.internal.platform.Platform
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -64,7 +67,7 @@ class Main : Callable<Int> {
   var complete: String? = null
 
   @Parameters(paramLabel = "file", description = ["Input File"], arity = "0..1")
-  var file: File? = null
+  var file: String? = null
 
   val trustManager by lazy {
     keyStoreFile?.trustManager() ?: Platform.get().platformTrustManager()
@@ -84,7 +87,7 @@ class Main : Callable<Int> {
           runBlocking { queryHost() }
         }
         file != null -> {
-          showPemFile(file!!)
+          runBlocking { showPemFile(file!!) }
         }
         else -> {
           throw UsageException("No action to run")
@@ -106,15 +109,32 @@ class Main : Callable<Int> {
     }
   }
 
-  private fun showPemFile(file: File) {
-    val certificate = if (file.path == "-") {
+  private suspend fun showPemFile(filename: String) {
+    val certificate = if (filename == "-") {
       val stdInText = System.`in`.bufferedReader().readText()
       stdInText.parsePemCertificate()
+    } else if (filename.startsWith("https://") || filename.startsWith("http://")) {
+      fetchPemUrl(filename)
     } else {
-      file.parsePemCertificate()
+      File(filename).parsePemCertificate()
     }
 
     println(certificate.prettyPrintCertificate(trustManager))
+  }
+
+  private suspend fun fetchPemUrl(url: String): Certificate {
+    try {
+      return client.execute(url.request()).use {
+        if (it.body?.contentType() != "application/x-pem-file".toMediaType()) {
+          throw UsageException(
+            "Response returned: " + it.body?.contentType() + " expecting application/x-pem-file."
+          )
+        }
+        it.bodyString().parsePemCertificate()
+      }
+    } catch (ce: ClientException) {
+      throw UsageException("Request Failed: " + ce.message)
+    }
   }
 
   private fun completeOption() {

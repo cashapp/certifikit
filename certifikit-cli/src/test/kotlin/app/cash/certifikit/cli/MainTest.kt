@@ -15,6 +15,9 @@
  */
 package app.cash.certifikit.cli
 
+import java.io.File
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
 import org.junit.jupiter.api.Test
 import picocli.CommandLine
 
@@ -29,6 +32,24 @@ class MainTest {
 
   @Test fun https() {
     fromArgs("--host", "www.google.com").call()
+  }
+
+  @Test fun testFetch() {
+    MockWebServer().use { server ->
+      server.enqueue(MockResponse().setBody(File("src/test/resources/cert.pem").readText()))
+      server.start()
+
+      fromArgs(server.url("/cert.pem").toString()).call()
+    }
+  }
+
+  @Test fun testFetch404() {
+    MockWebServer().use { server ->
+      server.enqueue(MockResponse().setResponseCode(404))
+      server.start()
+
+      fromArgs(server.url("/cert.pem").toString()).call()
+    }
   }
 
   companion object {
