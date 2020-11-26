@@ -18,6 +18,7 @@ package app.cash.certifikit.cli
 import java.io.File
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import picocli.CommandLine
 
@@ -30,6 +31,7 @@ class MainTest {
     fromArgs("src/test/resources/cert.pem").call()
   }
 
+  @Tag("Remote")
   @Test fun https() {
     fromArgs("--host", "www.google.com").call()
   }

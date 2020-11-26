@@ -15,12 +15,10 @@
  */
 package app.cash.certifikit.cli
 
-import app.cash.certifikit.Certificate
 import app.cash.certifikit.Certifikit
 import app.cash.certifikit.cli.Main.Companion.NAME
 import app.cash.certifikit.cli.Main.VersionProvider
 import app.cash.certifikit.cli.errors.CertificationException
-import app.cash.certifikit.cli.errors.ClientException
 import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.cli.oscp.ocsp
 import app.cash.certifikit.cli.oscp.toCertificate
@@ -31,7 +29,6 @@ import java.util.concurrent.Callable
 import kotlin.system.exitProcess
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.internal.platform.Platform
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -110,30 +107,30 @@ class Main : Callable<Int> {
   }
 
   private suspend fun showPemFile(filename: String) {
-    val certificate = if (filename == "-") {
+    val certificates = if (filename == "-") {
       val stdInText = System.`in`.bufferedReader().readText()
-      stdInText.parsePemCertificate()
+      listOf(stdInText.parsePemCertificate())
     } else if (filename.startsWith("https://") || filename.startsWith("http://")) {
-      fetchPemUrl(filename)
+      fetchCertificates(filename)
     } else {
-      File(filename).parsePemCertificate()
+      listOf(File(filename).parsePemCertificate())
     }
 
-    println(certificate.prettyPrintCertificate(trustManager))
-  }
+    certificates.forEachIndexed { index, certificate ->
+      if (index != 0) println()
 
-  private suspend fun fetchPemUrl(url: String): Certificate {
-    try {
-      return client.execute(url.request()).use {
-        if (it.body?.contentType() != "application/x-pem-file".toMediaType()) {
-          throw UsageException(
-            "Response returned: " + it.body?.contentType() + " expecting application/x-pem-file."
-          )
-        }
-        it.bodyString().parsePemCertificate()
+      println(certificate.prettyPrintCertificate(trustManager))
+    }
+
+    val additionalCertificatesUrl =
+      certificates.singleOrNull()?.caIssuers
+
+    if (additionalCertificatesUrl != null) {
+      val chain = fetchCertificates(additionalCertificatesUrl, fullChain = true)
+      chain.forEach { certificate ->
+        println()
+        println(certificate.prettyPrintCertificate(trustManager))
       }
-    } catch (ce: ClientException) {
-      throw UsageException("Request Failed: " + ce.message)
     }
   }
 
