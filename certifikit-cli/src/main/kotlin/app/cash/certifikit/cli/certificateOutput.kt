@@ -15,15 +15,14 @@
  */
 package app.cash.certifikit.cli
 
-import app.cash.certifikit.Certificate
-import app.cash.certifikit.ObjectIdentifiers
-import app.cash.certifikit.decodeKeyUsage
+import app.cash.certifikit.*
 import java.security.cert.X509Certificate
 import java.time.Instant.ofEpochMilli
 import javax.net.ssl.X509TrustManager
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine.Help.Ansi
+import java.net.InetAddress
 
 fun X509Certificate.publicKeySha256(): ByteString =
   publicKey.encoded.toByteString()
@@ -95,9 +94,15 @@ private fun Certificate.subjectAlternativeNameValue(): List<String>? {
   }
       ?.let {
         @Suppress("UNCHECKED_CAST")
-        it.value as List<Pair<Any, Any>>
+        it.value as List<Pair<DerAdapter<*>, Any>>
       }
       ?.map {
-        it.second.toString()
+        if (it.second is String) {
+          it.second as String
+        } else if (it.first is BasicDerAdapter && (it.first as BasicDerAdapter<*>).tag == 7L) {
+          InetAddress.getByAddress((it.second as ByteString).toByteArray()).toString()
+        } else {
+          it.second.toString()
+        }
       }
 }
