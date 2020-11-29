@@ -21,7 +21,7 @@ import okio.ByteString
 /**
  * Encode and decode a model object like a [Long] or [Certificate] as DER bytes.
  */
-interface DerAdapter<T> {
+internal interface DerAdapter<T> {
   /** Returns true if this adapter can read [header] in a choice. */
   fun matches(header: DerHeader): Boolean
 

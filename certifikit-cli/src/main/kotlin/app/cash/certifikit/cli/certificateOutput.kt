@@ -94,12 +94,12 @@ private fun Certificate.subjectAlternativeNameValue(): List<String>? {
   }
       ?.let {
         @Suppress("UNCHECKED_CAST")
-        it.value as List<Pair<DerAdapter<*>, Any>>
+        it.value as List<Pair<Any, Any>>
       }
       ?.map {
         if (it.second is String) {
           it.second as String
-        } else if (it.first is BasicDerAdapter && (it.first as BasicDerAdapter<*>).tag == 7L) {
+        } else if (it.first is BasicDerAdapter<*> && (it.first as BasicDerAdapter<*>).tag == 7L) {
           InetAddress.getByAddress((it.second as ByteString).toByteArray()).toString()
         } else {
           it.second.toString()
