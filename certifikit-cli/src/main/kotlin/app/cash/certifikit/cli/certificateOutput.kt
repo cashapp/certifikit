@@ -15,14 +15,17 @@
  */
 package app.cash.certifikit.cli
 
-import app.cash.certifikit.*
+import app.cash.certifikit.BasicDerAdapter
+import app.cash.certifikit.Certificate
+import app.cash.certifikit.ObjectIdentifiers
+import app.cash.certifikit.decodeKeyUsage
+import java.net.InetAddress
 import java.security.cert.X509Certificate
 import java.time.Instant.ofEpochMilli
 import javax.net.ssl.X509TrustManager
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine.Help.Ansi
-import java.net.InetAddress
 
 fun X509Certificate.publicKeySha256(): ByteString =
   publicKey.encoded.toByteString()
