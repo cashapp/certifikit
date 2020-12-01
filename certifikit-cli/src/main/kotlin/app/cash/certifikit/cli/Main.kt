@@ -20,14 +20,6 @@ import app.cash.certifikit.cli.Main.Companion.NAME
 import app.cash.certifikit.cli.Main.VersionProvider
 import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
-import app.cash.certifikit.cli.oscp.ocsp
-import app.cash.certifikit.cli.oscp.toCertificate
-import app.cash.certifikit.text.certificatePem
-import java.io.File
-import java.io.IOException
-import java.util.concurrent.Callable
-import kotlin.system.exitProcess
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import okhttp3.internal.platform.Platform
 import picocli.CommandLine
@@ -36,10 +28,13 @@ import picocli.CommandLine.Help.Ansi
 import picocli.CommandLine.IVersionProvider
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
+import java.io.File
+import java.util.concurrent.Callable
+import kotlin.system.exitProcess
 
 @Command(
-    name = NAME, description = ["An ergonomic CLI for understanding certificates."],
-    mixinStandardHelpOptions = true, versionProvider = VersionProvider::class
+  name = NAME, description = ["An ergonomic CLI for understanding certificates."],
+  mixinStandardHelpOptions = true, versionProvider = VersionProvider::class
 )
 class Main : Callable<Int> {
   @Option(names = ["--host"], description = ["From HTTPS Handshake"])
@@ -81,7 +76,7 @@ class Main : Callable<Int> {
           completeOption()
         }
         host != null -> {
-          runBlocking { queryHost() }
+          runBlocking { queryHost(host!!) }
         }
         file != null -> {
           runBlocking { showPemFile(file!!) }
@@ -142,73 +137,7 @@ class Main : Callable<Int> {
     }
   }
 
-  private suspend fun queryHost() {
-    coroutineScope {
-      val siteResponse = fromHttps(host!!)
-
-      if (siteResponse.peerCertificates.isEmpty()) {
-        System.err.println("Warn: ${Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
-      }
-
-      val ocspResponse = ocsp(client, siteResponse)
-
-      val output = output
-
-      siteResponse.peerCertificates.forEachIndexed { i, certificate ->
-        if (i > 0) {
-          println()
-        }
-
-        if (output != null) {
-          val outputFile = when {
-            output.isDirectory -> File(output, "${certificate.publicKeySha256().hex()}.pem")
-            output.path == "-" -> output
-            i > 0 -> {
-              System.err.println(Ansi.AUTO.string(
-                  "@|yellow Writing host certificate only, skipping (${certificate.subjectX500Principal.name})|@"))
-              null
-            }
-            else -> output
-          }
-
-          if (outputFile != null) {
-            if (outputFile.path == "-") {
-              println(certificate.certificatePem())
-            } else {
-              try {
-                certificate.writePem(outputFile)
-              } catch (ioe: IOException) {
-                throw UsageException("Unable to write to $output", ioe)
-              }
-            }
-          }
-        }
-
-        println(certificate.toCertificate().prettyPrintCertificate(trustManager))
-      }
-
-      if (siteResponse.strictTransportSecurity != null) {
-        println()
-        println("Strict Transport Security: ${siteResponse.strictTransportSecurity}")
-      } // TODO We should add SANs and complete wildcard hosts.
-      addHostToCompletionFile(host!!)
-
-      try {
-        val response = ocspResponse.await()
-
-        // null if no url to check.
-        if (response != null) {
-          println()
-          println(response.prettyPrint())
-        }
-      } catch (e: Exception) {
-        System.err.println(Ansi.AUTO.string(
-            "@|yellow Failed checking OCSP status (${e.message})|@"))
-      }
-    }
-  }
-
-  private fun addHostToCompletionFile(host: String) {
+  internal fun addHostToCompletionFile(host: String) {
     val previousHosts = knownHosts()
     val newHosts = previousHosts + host
 
