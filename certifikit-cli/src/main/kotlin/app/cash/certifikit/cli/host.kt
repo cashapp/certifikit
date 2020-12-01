@@ -20,26 +20,34 @@ import app.cash.certifikit.cli.oscp.OcspResponse
 import app.cash.certifikit.cli.oscp.ocsp
 import app.cash.certifikit.cli.oscp.toCertificate
 import app.cash.certifikit.text.certificatePem
+import java.io.File
+import java.io.IOException
+import java.net.InetAddress
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import picocli.CommandLine
-import java.io.File
-import java.io.IOException
 
 suspend fun Main.queryHost(host: String) {
   coroutineScope {
     val addresses = dnsLookup(host)
 
-    val siteResponses = addresses.map {
-      it to async {
-        fromHttps(host, it)
+    val siteResponses = if (allHosts) {
+      supervisorScope {
+        addresses.map {
+          it to async {
+            fromHttps(host, it)
+          }
+        }
       }
+    } else {
+      null
     }
 
-    val siteResponse = siteResponses.first().second.await()
+    val siteResponse = fromHttps(host)
 
     if (siteResponse.peerCertificates.isEmpty()) {
       System.err.println("Warn: ${CommandLine.Help.Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
@@ -93,12 +101,24 @@ suspend fun Main.queryHost(host: String) {
 
     showOcspResponse(ocspResponse)
 
-    if (siteResponses.size > 1) {
-      siteResponses.forEach { siteResponse ->
-        println(siteResponse.first)
-      }
+    if (siteResponses != null) {
+      showDnsAlternatives(siteResponses)
     }
   }
+}
+
+private suspend fun showDnsAlternatives(siteResponses: List<Pair<InetAddress, Deferred<SiteResponse>>>) {
+    println()
+    siteResponses.forEach { siteResponse ->
+      val address = siteResponse.first
+
+      try {
+        val response = siteResponse.second.await()
+        println("$address: ${response.peerCertificates.firstOrNull()?.subjectX500Principal?.name}")
+      } catch (e: Exception) {
+        println("$address: $e")
+      }
+    }
 }
 
 @Suppress("BlockingMethodInNonBlockingContext")

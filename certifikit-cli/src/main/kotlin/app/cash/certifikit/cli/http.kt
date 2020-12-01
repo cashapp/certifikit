@@ -84,9 +84,14 @@ data class SiteResponse(val peerCertificates: List<X509Certificate>, val headers
     get() = headers["strict-transport-security"]
 }
 
-suspend fun Main.fromHttps(host: String, inetAddress: InetAddress): SiteResponse {
+suspend fun Main.fromHttps(host: String, inetAddress: InetAddress? = null): SiteResponse {
   val response = try {
-    client.newBuilder().dns(FixedDns(client.dns, host, inetAddress)).build().newCall(
+    val client = if (inetAddress != null) {
+      client.newBuilder().dns(FixedDns(client.dns, host, inetAddress)).build()
+    } else {
+      client
+    }
+    client.newCall(
         Request.Builder()
             .url("https://$host/")
             .header("User-Agent", userAgent)

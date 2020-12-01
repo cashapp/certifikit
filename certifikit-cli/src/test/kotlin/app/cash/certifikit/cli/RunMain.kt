@@ -16,5 +16,5 @@
 package app.cash.certifikit.cli
 
 fun main() {
-  Main.main("https://letsencrypt.org/certs/isrgrootx1.pem")
+  Main.main("--all", "--host", "api.twitter.com")
 }
