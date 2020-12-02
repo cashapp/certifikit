@@ -35,6 +35,7 @@ import okhttp3.Callback
 import okhttp3.CipherSuite
 import okhttp3.ConnectionSpec.Companion.MODERN_TLS
 import okhttp3.ConnectionSpec.Companion.RESTRICTED_TLS
+import okhttp3.Dns
 import okhttp3.EventListener
 import okhttp3.Handshake
 import okhttp3.Headers
@@ -76,15 +77,20 @@ private val CipherSuite.strength: Strength
     }
   }
 
-val userAgent = "Certifikit/" + Certifikit.VERSION + " OkHttp/" + OkHttp.VERSION
+const val userAgent = "Certifikit/${Certifikit.VERSION} OkHttp/${OkHttp.VERSION}"
 
 data class SiteResponse(val peerCertificates: List<X509Certificate>, val headers: Headers) {
   val strictTransportSecurity: String?
     get() = headers["strict-transport-security"]
 }
 
-suspend fun Main.fromHttps(host: String): SiteResponse {
+suspend fun Main.fromHttps(host: String, inetAddress: InetAddress? = null): SiteResponse {
   val response = try {
+    val client = if (inetAddress != null) {
+      client.newBuilder().dns(FixedDns(client.dns, host, inetAddress)).build()
+    } else {
+      client
+    }
     client.newCall(
         Request.Builder()
             .url("https://$host/")
@@ -99,6 +105,20 @@ suspend fun Main.fromHttps(host: String): SiteResponse {
   return response.use {
     val peerCertificates = response.handshake!!.peerCertificates.map { it as X509Certificate }
     SiteResponse(peerCertificates = peerCertificates, headers = response.headers)
+  }
+}
+
+class FixedDns(
+  private val delegate: Dns,
+  private val host: String,
+  private val inetAddress: InetAddress
+) : Dns {
+  override fun lookup(hostname: String): List<InetAddress> {
+    return if (hostname == host) {
+      listOf(inetAddress)
+    } else {
+      delegate.lookup(hostname)
+    }
   }
 }
 
