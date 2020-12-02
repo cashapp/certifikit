@@ -15,9 +15,11 @@
  */
 package app.cash.certifikit.cli
 
+import app.cash.certifikit.BasicDerAdapter
 import app.cash.certifikit.Certificate
 import app.cash.certifikit.ObjectIdentifiers
 import app.cash.certifikit.decodeKeyUsage
+import java.net.InetAddress
 import java.security.cert.X509Certificate
 import java.time.Instant.ofEpochMilli
 import javax.net.ssl.X509TrustManager
@@ -97,7 +99,12 @@ private fun Certificate.subjectAlternativeNameValue(): List<String>? {
         @Suppress("UNCHECKED_CAST")
         it.value as List<Pair<Any, Any>>
       }
-      ?.map {
-        it.second.toString()
+      ?.map { (adapter, value) ->
+        if (adapter is BasicDerAdapter<*> && adapter.tag == 7L) {
+          val bytes = (value as ByteString).toByteArray()
+          InetAddress.getByAddress(bytes).toString()
+        } else {
+          value.toString()
+        }
       }
 }
