@@ -49,7 +49,7 @@ class Main : Callable<Int> {
   @Option(names = ["--redirect"], description = ["Follow redirects"])
   var followRedirects: Boolean = false
 
-  @Option(names = ["--output"], description = ["Output file or directory"])
+  @Option(names = ["--output", "-o"], description = ["Output file or directory"])
   var output: File? = null
 
   @Option(names = ["--keystore"], description = ["Keystore for local verification"])

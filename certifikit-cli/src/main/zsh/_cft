@@ -23,11 +23,12 @@ _cft() {
   _arguments -C -S \
     {-h,--help}'[Show this help message and exit.]' \
     --host='[Show certificates for host]: :_cft_hosts' \
-    --output='[Output directory or file]: :_cft_output_files' \
+    {-o,--output}='[Output directory or file]: :_cft_output_files' \
     --verbose'[Verbose Output.]' \
     --insecure'[Insecure HTTPS Mode.]' \
     --redirect'[Follow redirect]' \
     --keystore='[Provide KeyStore]: :_files' \
+    --all'[Fetch from all DNS hosts]' \
     {-V,--version}'[Print version information and exit.]' \
     '*:File:_cft_files' \
     && ret=0
