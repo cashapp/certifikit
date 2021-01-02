@@ -20,11 +20,17 @@ import app.cash.certifikit.cli.Main.Companion.NAME
 import app.cash.certifikit.cli.Main.VersionProvider
 import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
-import java.io.File
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import okhttp3.internal.platform.Platform
+import okio.ExperimentalFilesystem
+import okio.Filesystem
+import okio.Path
+import okio.Path.Companion.toPath
+import okio.buffer
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Help.Ansi
@@ -36,6 +42,7 @@ import picocli.CommandLine.Parameters
   name = NAME, description = ["An ergonomic CLI for understanding certificates."],
   mixinStandardHelpOptions = true, versionProvider = VersionProvider::class
 )
+@OptIn(ExperimentalFilesystem::class)
 class Main : Callable<Int> {
   @Option(names = ["--host"], description = ["From HTTPS Handshake"])
   var host: String? = null
@@ -50,10 +57,10 @@ class Main : Callable<Int> {
   var followRedirects: Boolean = false
 
   @Option(names = ["--output", "-o"], description = ["Output file or directory"])
-  var output: File? = null
+  var output: Path? = null
 
   @Option(names = ["--keystore"], description = ["Keystore for local verification"])
-  var keyStoreFile: File? = null
+  var keyStoreFile: Path? = null
 
   @Option(names = ["--complete"], description = ["Complete option"])
   var complete: String? = null
@@ -63,6 +70,8 @@ class Main : Callable<Int> {
 
   @Option(names = ["--all"], description = ["Fetch from all DNS hosts"])
   var allHosts: Boolean = false
+
+  var filesystem: Filesystem = Filesystem.SYSTEM
 
   val trustManager by lazy {
     keyStoreFile?.trustManager() ?: Platform.get().platformTrustManager()
@@ -76,7 +85,7 @@ class Main : Callable<Int> {
     try {
       when {
         complete != null -> {
-          completeOption()
+          runBlocking { completeOption() }
         }
         host != null -> {
           runBlocking { queryHost(host!!) }
@@ -111,7 +120,7 @@ class Main : Callable<Int> {
     } else if (filename.startsWith("https://") || filename.startsWith("http://")) {
       fetchCertificates(filename)
     } else {
-      listOf(File(filename).parsePemCertificate())
+      listOf(filename.toPath().parsePemCertificate(filesystem))
     }
 
     certificates.forEachIndexed { index, certificate ->
@@ -132,7 +141,7 @@ class Main : Callable<Int> {
     }
   }
 
-  private fun completeOption() {
+  private suspend fun completeOption() {
     if (complete == "host") {
       for (host in knownHosts()) {
         println(host)
@@ -140,19 +149,27 @@ class Main : Callable<Int> {
     }
   }
 
-  internal fun addHostToCompletionFile(host: String) {
+  @Suppress("BlockingMethodInNonBlockingContext")
+  internal suspend fun addHostToCompletionFile(host: String) {
     val previousHosts = knownHosts()
     val newHosts = previousHosts + host
 
     val lineSeparator = System.getProperty("line.separator")
-    knownHostsFile.writeText(newHosts.joinToString(lineSeparator, postfix = lineSeparator))
+    filesystem.sink(knownHostsFile.also { filesystem.createDirectories(it.parent!!) }).buffer().use {
+      it.writeUtf8(newHosts.joinToString(lineSeparator, postfix = lineSeparator))
+    }
   }
 
-  private fun knownHosts(): Set<String> {
-    return if (knownHostsFile.isFile) {
-      knownHostsFile.readLines().filter { it.trim().isNotBlank() }.toSortedSet()
-    } else {
-      setOf()
+  @Suppress("BlockingMethodInNonBlockingContext")
+  private suspend fun knownHosts(): Set<String> {
+    return withContext(Dispatchers.IO) {
+      if (filesystem.metadataOrNull(knownHostsFile)?.isRegularFile == true) {
+        filesystem.source(knownHostsFile).buffer().use { source ->
+          source.readUtf8().lines().filter { it.trim().isNotBlank() }.toSortedSet()
+        }
+      } else {
+        setOf()
+      }
     }
   }
 
@@ -165,16 +182,15 @@ class Main : Callable<Int> {
   companion object {
     internal const val NAME = "cft"
 
-    val confDir = File(System.getProperty("user.home"), ".cft").also {
-      if (!it.isDirectory) {
-        it.mkdirs()
-      }
-    }
-    val knownHostsFile = File(confDir, "knownhosts.txt")
+    val confDir = (System.getProperty("user.home").toPath() / ".cft")
+    val knownHostsFile = confDir / "knownhosts.txt"
 
     @JvmStatic
     fun main(vararg args: String) {
-      exitProcess(CommandLine(Main()).execute(*args))
+      exitProcess(
+        CommandLine(Main())
+          .registerConverter(Path::class.java) { value -> value.toPath() }
+          .execute(*args))
     }
   }
 }

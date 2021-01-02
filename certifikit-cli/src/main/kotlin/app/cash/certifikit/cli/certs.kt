@@ -19,10 +19,15 @@ import app.cash.certifikit.Certificate
 import app.cash.certifikit.CertificateAdapters
 import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.text.certificatePem
-import java.io.File
-import java.io.FileNotFoundException
 import java.security.cert.X509Certificate
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okio.ByteString.Companion.decodeBase64
+import okio.ExperimentalFilesystem
+import okio.FileNotFoundException
+import okio.Filesystem
+import okio.Path
+import okio.buffer
 
 internal fun String.parsePemCertificate(fileName: String? = null): Certificate {
   val regex = """-----BEGIN CERTIFICATE-----(.*)-----END CERTIFICATE-----""".toRegex(RegexOption.DOT_MATCHES_ALL)
@@ -35,18 +40,29 @@ internal fun String.parsePemCertificate(fileName: String? = null): Certificate {
   return CertificateAdapters.certificate.fromDer(data)
 }
 
-internal fun File.parsePemCertificate(): Certificate {
-  try {
-    val pemText = readText()
+@Suppress("BlockingMethodInNonBlockingContext")
+@OptIn(ExperimentalFilesystem::class)
+internal suspend fun Path.parsePemCertificate(filesystem: Filesystem = Filesystem.SYSTEM): Certificate {
+  return withContext(Dispatchers.IO) {
+    try {
+      val pemText = filesystem.source(this@parsePemCertificate).buffer().use { it.readUtf8() }
 
-    return pemText.parsePemCertificate(name)
-  } catch (fnfe: FileNotFoundException) {
-    throw UsageException("No such file: $this", fnfe)
+      pemText.parsePemCertificate(name)
+    } catch (fnfe: FileNotFoundException) {
+      throw UsageException("No such file: $this", fnfe)
+    }
   }
 }
 
-internal fun X509Certificate.writePem(
-  output: File
+@Suppress("BlockingMethodInNonBlockingContext")
+@OptIn(ExperimentalFilesystem::class)
+internal suspend fun X509Certificate.writePem(
+  output: Path,
+  filesystem: Filesystem = Filesystem.SYSTEM
 ) {
-  output.writeText(certificatePem())
+  withContext(Dispatchers.IO) {
+    filesystem.sink(output).buffer().use {
+      it.writeUtf8(certificatePem())
+    }
+  }
 }

@@ -9,6 +9,6 @@ ext.dep = [
   "kotlinStdLib": "org.jetbrains.kotlin:kotlin-stdlib:1.4.20",
   "ktlintVersion": "0.34.2",
   "mavenPublishGradlePlugin": "com.vanniktech:gradle-maven-publish-plugin:0.11.1",
-  "okio": "com.squareup.okio:okio:2.9.0",
+  "okio": "com.squareup.okio:okio:2.10.0-SNAPSHOT",
   "spotlessPlugin": "com.diffplug.spotless:spotless-plugin-gradle:5.6.1",
 ]

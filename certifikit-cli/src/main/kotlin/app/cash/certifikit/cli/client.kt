@@ -19,7 +19,9 @@ import java.util.concurrent.TimeUnit
 import okhttp3.ConnectionSpec
 import okhttp3.OkHttpClient
 import okhttp3.tls.HandshakeCertificates
+import okio.ExperimentalFilesystem
 
+@OptIn(ExperimentalFilesystem::class)
 fun Main.buildClient(): OkHttpClient {
   return OkHttpClient.Builder()
       .connectTimeout(2, TimeUnit.SECONDS)
