@@ -15,14 +15,14 @@
  */
 package app.cash.certifikit.text
 
+import java.security.KeyPair
+import java.security.cert.X509Certificate
 import okio.ExperimentalFileSystem
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import java.security.KeyPair
-import java.security.cert.X509Certificate
 
 @OptIn(ExperimentalFileSystem::class)
 class PemTest {
