@@ -19,16 +19,16 @@ import java.util.concurrent.TimeUnit
 import okhttp3.ConnectionSpec
 import okhttp3.OkHttpClient
 import okhttp3.tls.HandshakeCertificates
-import okio.ExperimentalFilesystem
+import okio.ExperimentalFileSystem
 
-@OptIn(ExperimentalFilesystem::class)
+@OptIn(ExperimentalFileSystem::class)
 fun Main.buildClient(): OkHttpClient {
   return OkHttpClient.Builder()
       .connectTimeout(2, TimeUnit.SECONDS)
       .followRedirects(followRedirects)
       .eventListener(VerboseEventListener(verbose))
       .connectionSpecs(listOf(ConnectionSpec.MODERN_TLS,
-          ConnectionSpec.CLEARTEXT)) // The specs may be overriden later.
+          ConnectionSpec.CLEARTEXT)) // The specs may be overridden later.
       .apply {
         if (insecure) {
           hostnameVerifier { _, _ -> true }

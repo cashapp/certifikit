@@ -26,11 +26,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import okhttp3.internal.platform.Platform
-import okio.ExperimentalFilesystem
-import okio.Filesystem
+import okio.ExperimentalFileSystem
+import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
-import okio.buffer
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Help.Ansi
@@ -42,7 +41,7 @@ import picocli.CommandLine.Parameters
   name = NAME, description = ["An ergonomic CLI for understanding certificates."],
   mixinStandardHelpOptions = true, versionProvider = VersionProvider::class
 )
-@OptIn(ExperimentalFilesystem::class)
+@OptIn(ExperimentalFileSystem::class)
 class Main : Callable<Int> {
   @Option(names = ["--host"], description = ["From HTTPS Handshake"])
   var host: String? = null
@@ -71,7 +70,7 @@ class Main : Callable<Int> {
   @Option(names = ["--all"], description = ["Fetch from all DNS hosts"])
   var allHosts: Boolean = false
 
-  var filesystem: Filesystem = Filesystem.SYSTEM
+  var filesystem: FileSystem = FileSystem.SYSTEM
 
   val trustManager by lazy {
     keyStoreFile?.trustManager() ?: Platform.get().platformTrustManager()
@@ -155,8 +154,8 @@ class Main : Callable<Int> {
     val newHosts = previousHosts + host
 
     val lineSeparator = System.getProperty("line.separator")
-    filesystem.sink(knownHostsFile.also { filesystem.createDirectories(it.parent!!) }).buffer().use {
-      it.writeUtf8(newHosts.joinToString(lineSeparator, postfix = lineSeparator))
+    filesystem.write(knownHostsFile.also { filesystem.createDirectories(it.parent!!) }) {
+      writeUtf8(newHosts.joinToString(lineSeparator, postfix = lineSeparator))
     }
   }
 
@@ -164,8 +163,8 @@ class Main : Callable<Int> {
   private suspend fun knownHosts(): Set<String> {
     return withContext(Dispatchers.IO) {
       if (filesystem.metadataOrNull(knownHostsFile)?.isRegularFile == true) {
-        filesystem.source(knownHostsFile).buffer().use { source ->
-          source.readUtf8().lines().filter { it.trim().isNotBlank() }.toSortedSet()
+        filesystem.read(knownHostsFile) {
+          readUtf8().lines().filter { it.trim().isNotBlank() }.toSortedSet()
         }
       } else {
         setOf()

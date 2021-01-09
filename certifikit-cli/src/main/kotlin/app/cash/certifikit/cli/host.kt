@@ -28,10 +28,10 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
-import okio.ExperimentalFilesystem
+import okio.ExperimentalFileSystem
 import picocli.CommandLine
 
-@OptIn(ExperimentalFilesystem::class)
+@OptIn(ExperimentalFileSystem::class)
 suspend fun Main.queryHost(host: String) {
   coroutineScope {
     val addresses = dnsLookup(host)

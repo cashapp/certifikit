@@ -23,11 +23,10 @@ import java.security.cert.X509Certificate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okio.ByteString.Companion.decodeBase64
-import okio.ExperimentalFilesystem
+import okio.ExperimentalFileSystem
 import okio.FileNotFoundException
-import okio.Filesystem
+import okio.FileSystem
 import okio.Path
-import okio.buffer
 
 internal fun String.parsePemCertificate(fileName: String? = null): Certificate {
   val regex = """-----BEGIN CERTIFICATE-----(.*)-----END CERTIFICATE-----""".toRegex(RegexOption.DOT_MATCHES_ALL)
@@ -41,11 +40,11 @@ internal fun String.parsePemCertificate(fileName: String? = null): Certificate {
 }
 
 @Suppress("BlockingMethodInNonBlockingContext")
-@OptIn(ExperimentalFilesystem::class)
-internal suspend fun Path.parsePemCertificate(filesystem: Filesystem = Filesystem.SYSTEM): Certificate {
+@OptIn(ExperimentalFileSystem::class)
+internal suspend fun Path.parsePemCertificate(filesystem: FileSystem = FileSystem.SYSTEM): Certificate {
   return withContext(Dispatchers.IO) {
     try {
-      val pemText = filesystem.source(this@parsePemCertificate).buffer().use { it.readUtf8() }
+      val pemText = filesystem.read(this@parsePemCertificate) { readUtf8() }
 
       pemText.parsePemCertificate(name)
     } catch (fnfe: FileNotFoundException) {
@@ -55,14 +54,14 @@ internal suspend fun Path.parsePemCertificate(filesystem: Filesystem = Filesyste
 }
 
 @Suppress("BlockingMethodInNonBlockingContext")
-@OptIn(ExperimentalFilesystem::class)
+@OptIn(ExperimentalFileSystem::class)
 internal suspend fun X509Certificate.writePem(
   output: Path,
-  filesystem: Filesystem = Filesystem.SYSTEM
+  filesystem: FileSystem = FileSystem.SYSTEM
 ) {
   withContext(Dispatchers.IO) {
-    filesystem.sink(output).buffer().use {
-      it.writeUtf8(certificatePem())
+    filesystem.write(output) {
+      writeUtf8(certificatePem())
     }
   }
 }
