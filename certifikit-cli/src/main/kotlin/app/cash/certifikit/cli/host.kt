@@ -20,7 +20,6 @@ import app.cash.certifikit.cli.oscp.OcspResponse
 import app.cash.certifikit.cli.oscp.ocsp
 import app.cash.certifikit.cli.oscp.toCertificate
 import app.cash.certifikit.text.certificatePem
-import java.io.File
 import java.io.IOException
 import java.net.InetAddress
 import kotlinx.coroutines.Deferred
@@ -29,8 +28,10 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
+import okio.ExperimentalFileSystem
 import picocli.CommandLine
 
+@OptIn(ExperimentalFileSystem::class)
 suspend fun Main.queryHost(host: String) {
   coroutineScope {
     val addresses = dnsLookup(host)
@@ -64,8 +65,9 @@ suspend fun Main.queryHost(host: String) {
 
       if (output != null) {
         val outputFile = when {
-          output.isDirectory -> File(output, "${certificate.publicKeySha256().hex()}.pem")
-          output.path == "-" -> output
+          filesystem.metadataOrNull(output)?.isDirectory == true ->
+            output / "${certificate.publicKeySha256().hex()}.pem"
+          output.name == "-" -> output
           i > 0 -> {
             System.err.println(
               CommandLine.Help.Ansi.AUTO.string(
@@ -78,7 +80,7 @@ suspend fun Main.queryHost(host: String) {
         }
 
         if (outputFile != null) {
-          if (outputFile.path == "-") {
+          if (outputFile.name == "-") {
             println(certificate.certificatePem())
           } else {
             try {

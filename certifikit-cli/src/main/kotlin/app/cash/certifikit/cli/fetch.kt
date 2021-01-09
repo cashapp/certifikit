@@ -51,8 +51,8 @@ suspend fun Main.fetchCertificates(url: String, fullChain: Boolean = false): Lis
         return certs
       }
 
-      val rest = certs.singleOrNull()?.caIssuers?.let {
-        fetchCertificates(it, fullChain = true)
+      val rest = certs.singleOrNull()?.caIssuers?.let { certificate ->
+        fetchCertificates(certificate, fullChain = true)
       }.orEmpty()
 
       return certs + rest
