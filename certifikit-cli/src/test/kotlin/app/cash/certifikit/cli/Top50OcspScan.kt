@@ -17,17 +17,24 @@ package app.cash.certifikit.cli
 
 import app.cash.certifikit.cli.oscp.OcspClient
 import app.cash.certifikit.cli.oscp.OcspResponse
-import java.io.File
 import java.util.concurrent.TimeUnit
 import kotlin.system.exitProcess
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import okhttp3.OkHttpClient
+import okio.ExperimentalFileSystem
+import okio.FileSystem
+import okio.Path.Companion.toPath
 
+@OptIn(ExperimentalFileSystem::class)
 suspend fun main() {
+  val fileSystem = FileSystem.SYSTEM
+
   coroutineScope {
     // https://en.wikipedia.org/wiki/List_of_most_popular_websites
-    val hosts = File("certifikit-cli/src/test/resources/top50.csv").readLines()
+    val hosts = fileSystem.read("certifikit-cli/src/test/resources/top50.csv".toPath()) {
+      readUtf8().lines()
+    }
 
     val client = OkHttpClient.Builder().callTimeout(2, TimeUnit.SECONDS).build()
     val ocspClient = OcspClient(client, secure = false)
@@ -46,5 +53,6 @@ suspend fun main() {
       }
     }
   }
+
   exitProcess(1)
 }

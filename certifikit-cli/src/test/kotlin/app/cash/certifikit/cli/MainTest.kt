@@ -15,14 +15,19 @@
  */
 package app.cash.certifikit.cli
 
-import java.io.File
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import okio.ExperimentalFileSystem
+import okio.FileSystem
+import okio.Path.Companion.toPath
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import picocli.CommandLine
 
+@OptIn(ExperimentalFileSystem::class)
 class MainTest {
+  val fileSystem = FileSystem.SYSTEM
+
   @Test fun version() {
     CommandLine(Main()).execute("-V")
   }
@@ -38,7 +43,8 @@ class MainTest {
 
   @Test fun testFetch() {
     MockWebServer().use { server ->
-      server.enqueue(MockResponse().setBody(File("src/test/resources/cert.pem").readText()))
+      val pemText = fileSystem.read("src/test/resources/cert.pem".toPath()) { readUtf8() }
+      server.enqueue(MockResponse().setBody(pemText))
       server.start()
 
       fromArgs(server.url("/cert.pem").toString()).call()
