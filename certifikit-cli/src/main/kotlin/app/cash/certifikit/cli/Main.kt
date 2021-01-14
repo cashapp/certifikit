@@ -18,11 +18,13 @@ package app.cash.certifikit.cli
 import app.cash.certifikit.Certifikit
 import app.cash.certifikit.cli.Main.Companion.NAME
 import app.cash.certifikit.cli.Main.VersionProvider
+import app.cash.certifikit.cli.ct.crt
 import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.cli.oscp.ocsp
 import app.cash.certifikit.cli.oscp.toCertificate
 import app.cash.certifikit.text.certificatePem
+import kotlinx.coroutines.async
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.Callable
@@ -63,6 +65,9 @@ class Main : Callable<Int> {
   @Option(names = ["--complete"], description = ["Complete option"])
   var complete: String? = null
 
+  @Option(names = ["--ctlogs"], description = ["Show CT Logs"])
+  var ctlogs: Boolean = false
+
   @Parameters(paramLabel = "file", description = ["Input File"], arity = "0..1")
   var file: File? = null
 
@@ -81,7 +86,7 @@ class Main : Callable<Int> {
           completeOption()
         }
         host != null -> {
-          runBlocking { queryHost() }
+          runBlocking { queryHost(host!!) }
         }
         file != null -> {
           showPemFile(file!!)
@@ -125,12 +130,20 @@ class Main : Callable<Int> {
     }
   }
 
-  private suspend fun queryHost() {
+  private suspend fun queryHost(host: String) {
     coroutineScope {
-      val siteResponse = fromHttps(host!!)
+      val siteResponse = fromHttps(host)
 
       if (siteResponse.peerCertificates.isEmpty()) {
         System.err.println("Warn: ${Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
+      }
+
+      val crtResponse = if (ctlogs) {
+        async {
+          this@Main.crt(host)
+        }
+      } else {
+        null
       }
 
       val ocspResponse = ocsp(client, siteResponse)
@@ -174,7 +187,7 @@ class Main : Callable<Int> {
         println()
         println("Strict Transport Security: ${siteResponse.strictTransportSecurity}")
       } // TODO We should add SANs and complete wildcard hosts.
-      addHostToCompletionFile(host!!)
+      addHostToCompletionFile(host)
 
       try {
         val response = ocspResponse.await()
@@ -187,6 +200,28 @@ class Main : Callable<Int> {
       } catch (e: Exception) {
         System.err.println(Ansi.AUTO.string(
             "@|yellow Failed checking OCSP status (${e.message})|@"))
+      }
+
+      if (crtResponse != null) {
+        try {
+          // TODO show from root CA as list with trusted CA highlighted
+          val response = crtResponse.await().groupBy { it.issuer_name }
+
+          println()
+          println("Certificate Issuers:")
+          for ((issuer, certificates) in response) {
+            println(issuer)
+            certificates.forEach { c ->
+              println("\t${c.common_name}\t${c.not_after}")
+            }
+          }
+        } catch (e: Exception) {
+          System.err.println(
+            Ansi.AUTO.string(
+              "@|yellow Failed checking CT logs (${e.message})|@"
+            )
+          )
+        }
       }
     }
   }
