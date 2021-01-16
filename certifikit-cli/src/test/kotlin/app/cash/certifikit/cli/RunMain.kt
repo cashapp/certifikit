@@ -16,5 +16,5 @@
 package app.cash.certifikit.cli
 
 fun main() {
-  Main.main("--host", "squareup.com", "--ctlogs")
+  Main.main("--host", "schimke.ee", "--ctlogs", "--verbose")
 }

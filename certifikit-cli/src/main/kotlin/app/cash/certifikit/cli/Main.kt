@@ -31,6 +31,11 @@ import java.util.concurrent.Callable
 import kotlin.system.exitProcess
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
+import okhttp3.Cache
+import okhttp3.Call
+import okhttp3.Connection
+import okhttp3.EventListener
+import okhttp3.OkHttpClient
 import okhttp3.internal.platform.Platform
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -75,7 +80,26 @@ class Main : Callable<Int> {
     keyStoreFile?.trustManager() ?: Platform.get().platformTrustManager()
   }
 
-  val client by lazy {
+  val baseClient by lazy {
+    OkHttpClient.Builder()
+      .eventListener(object : EventListener() {
+        override fun connectionAcquired(call: Call, connection: Connection) {
+          // println(connection.socket().localPort)
+        }
+
+        override fun callStart(call: Call) {
+          // println(call.request().url)
+        }
+
+        override fun callEnd(call: Call) {
+          // println("done " + call.request().url)
+        }
+      })
+      // .cache(Cache(File("./cache"), 10000000))
+      .build()
+  }
+
+  val certClient by lazy {
     buildClient()
   }
 
@@ -146,7 +170,7 @@ class Main : Callable<Int> {
         null
       }
 
-      val ocspResponse = ocsp(client, siteResponse)
+      val ocspResponse = ocsp(baseClient, siteResponse)
 
       val output = output
 
@@ -205,14 +229,14 @@ class Main : Callable<Int> {
       if (crtResponse != null) {
         try {
           // TODO show from root CA as list with trusted CA highlighted
-          val response = crtResponse.await().groupBy { it.issuer_name }
+          val response = crtResponse.await().groupBy { it.tbsCertificate.issuerUniqueID }
 
           println()
           println("Certificate Issuers:")
           for ((issuer, certificates) in response) {
             println(issuer)
             certificates.forEach { c ->
-              println("\t${c.common_name}\t${c.not_after}")
+              println("\t${c.commonName}\t${c.tbsCertificate.validity.notAfter}")
             }
           }
         } catch (e: Exception) {

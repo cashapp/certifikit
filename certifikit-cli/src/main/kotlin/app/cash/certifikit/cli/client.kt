@@ -21,7 +21,7 @@ import okhttp3.OkHttpClient
 import okhttp3.tls.HandshakeCertificates
 
 fun Main.buildClient(): OkHttpClient {
-  return OkHttpClient.Builder()
+  return baseClient.newBuilder()
       .connectTimeout(2, TimeUnit.SECONDS)
       .followRedirects(followRedirects)
       .eventListener(VerboseEventListener(verbose))

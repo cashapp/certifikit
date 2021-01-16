@@ -18,6 +18,7 @@ package app.cash.certifikit.cli
 import app.cash.certifikit.Certifikit
 import app.cash.certifikit.cli.errors.ClientException
 import app.cash.certifikit.cli.errors.classify
+import kotlinx.coroutines.Dispatchers
 import java.io.IOException
 import java.net.InetAddress
 import java.net.InetSocketAddress
@@ -25,7 +26,6 @@ import java.net.Proxy
 import java.security.cert.X509Certificate
 import javax.net.ssl.X509TrustManager
 import kotlin.coroutines.resumeWithException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -84,7 +84,7 @@ data class SiteResponse(val peerCertificates: List<X509Certificate>, val headers
 
 suspend fun Main.fromHttps(host: String): SiteResponse {
   val response = try {
-    client.newCall(
+    certClient.newCall(
         Request.Builder()
             .url("https://$host/")
             .header("User-Agent", userAgent)
@@ -184,7 +184,8 @@ suspend fun Call.await(): Response {
   }
 }
 
-suspend fun ResponseBody.readString() = withContext(Dispatchers.IO) { string() }
+@Suppress("BlockingMethodInNonBlockingContext")
+suspend fun Response.readString() = withContext(Dispatchers.IO) { body!!.string() }
 
 suspend fun OkHttpClient.execute(request: Request): Response {
   val call = this.newCall(request)
@@ -200,5 +201,3 @@ suspend fun OkHttpClient.execute(request: Request): Response {
 
   return response
 }
-
-fun Response.statusMessage(): String = this.code.toString() + " " + this.message
