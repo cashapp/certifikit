@@ -204,15 +204,15 @@ class Main : Callable<Int> {
 
       if (crtResponse != null) {
         try {
-          // TODO show from root CA as list with trusted CA highlighted
-          val response = crtResponse.await().groupBy { it.issuer_name }
+          // TODO show from root CA as list with trusted CA highlighted, unsafe currently
+          val response = crtResponse.await().groupBy { it.issuerCommonName }
 
           println()
           println("Certificate Issuers:")
           for ((issuer, certificates) in response) {
             println(issuer)
             certificates.forEach { c ->
-              println("\t${c.common_name}\t${c.not_after}")
+              println("\t${c.commonName}\t${c.tbsCertificate.validity.prettyPrint()}")
             }
           }
         } catch (e: Exception) {
