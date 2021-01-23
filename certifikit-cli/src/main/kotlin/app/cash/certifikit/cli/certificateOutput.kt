@@ -18,6 +18,7 @@ package app.cash.certifikit.cli
 import app.cash.certifikit.BasicDerAdapter
 import app.cash.certifikit.Certificate
 import app.cash.certifikit.ObjectIdentifiers
+import app.cash.certifikit.Validity
 import app.cash.certifikit.decodeKeyUsage
 import java.net.InetAddress
 import java.security.cert.X509Certificate
@@ -68,27 +69,30 @@ fun Certificate.prettyPrintCertificate(
       }
     }
 
-    val periodLeft = tbsCertificate.validity.periodLeft
-    val periodLeftString = when {
-      periodLeft == null -> Ansi.AUTO.string(" (@|red Not valid|@)")
-      periodLeft.years >= 1 -> " (${periodLeft.years} years)"
-      periodLeft.months >= 1 -> " (${periodLeft.months} months)"
-      periodLeft.days < 20 -> Ansi.AUTO.string(" (@|yellow $periodLeft days|@)")
-      else -> " (${periodLeft.days})"
-    }
-    append(
-        "Valid: \t${
-          ofEpochMilli(tbsCertificate.validity.notBefore)
-        }..${
-          ofEpochMilli(tbsCertificate.validity.notAfter)
-        }$periodLeftString"
-    )
+    append(tbsCertificate.validity.prettyPrint())
 
     basicConstraints?.apply {
       append("\nCA: $ca")
       if (maxIntermediateCas != null) append(" Max Intermediate: $maxIntermediateCas")
     }
   }
+}
+
+fun Validity.prettyPrint(): String {
+  val periodLeft = periodLeft
+  val periodLeftString = when {
+    periodLeft == null -> Ansi.AUTO.string(" (@|red Not valid|@)")
+    periodLeft.years > 1 -> " (${periodLeft.years} years)"
+    periodLeft.years == 1 -> " (1 year)"
+    periodLeft.months > 1 -> " (${periodLeft.months} months)"
+    periodLeft.months == 1 -> " (1 month)"
+    periodLeft.days == 1 -> Ansi.AUTO.string(" (@|yellow 1 day|@)")
+    periodLeft.days < 20 -> Ansi.AUTO.string(" (@|yellow $periodLeft days|@)")
+    else -> " (${periodLeft.days})"
+  }
+  val before = ofEpochMilli(notBefore)
+  val after = ofEpochMilli(notAfter)
+  return "Valid: \t$before..$after$periodLeftString"
 }
 
 private fun Certificate.subjectAlternativeNameValue(): List<String>? {

@@ -64,6 +64,9 @@ class Main : Callable<Int> {
   @Option(names = ["--complete"], description = ["Complete option"])
   var complete: String? = null
 
+  @Option(names = ["--ctlogs"], description = ["Show CT Logs"])
+  var ctlogs: Boolean = false
+
   @Parameters(paramLabel = "file", description = ["Input File"], arity = "0..1")
   var file: String? = null
 
@@ -149,13 +152,15 @@ class Main : Callable<Int> {
   }
 
   @Suppress("BlockingMethodInNonBlockingContext")
-  internal suspend fun addHostToCompletionFile(host: String) {
+  suspend fun addHostToCompletionFile(host: String) {
     val previousHosts = knownHosts()
     val newHosts = previousHosts + host
 
     val lineSeparator = System.getProperty("line.separator")
-    filesystem.write(knownHostsFile.also { filesystem.createDirectories(it.parent!!) }) {
-      writeUtf8(newHosts.joinToString(lineSeparator, postfix = lineSeparator))
+    withContext(Dispatchers.IO) {
+      filesystem.write(knownHostsFile.also { filesystem.createDirectories(it.parent!!) }) {
+        writeUtf8(newHosts.joinToString(lineSeparator, postfix = lineSeparator))
+      }
     }
   }
 

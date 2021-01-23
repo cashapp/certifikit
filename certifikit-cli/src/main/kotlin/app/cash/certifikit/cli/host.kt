@@ -15,6 +15,8 @@
  */
 package app.cash.certifikit.cli
 
+import app.cash.certifikit.cli.ct.crt
+import app.cash.certifikit.cli.ct.showCrtResponse
 import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.cli.oscp.OcspResponse
 import app.cash.certifikit.cli.oscp.ocsp
@@ -25,6 +27,7 @@ import java.net.InetAddress
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
@@ -34,6 +37,14 @@ import picocli.CommandLine
 @OptIn(ExperimentalFileSystem::class)
 suspend fun Main.queryHost(host: String) {
   coroutineScope {
+    val crtResponse = if (ctlogs) {
+      async {
+        this@queryHost.crt(host)
+      }
+    } else {
+      null
+    }
+
     val addresses = dnsLookup(host)
 
     val siteResponses = if (allHosts) {
@@ -106,6 +117,14 @@ suspend fun Main.queryHost(host: String) {
     if (siteResponses != null) {
       showDnsAlternatives(siteResponses)
     }
+
+    if (crtResponse != null) {
+      showCrtResponse(crtResponse)
+    }
+
+    // TODO(yschimke) Required for cleanup after timeout,
+    //  make Main.crt cooperatively cancellable to avoid this.
+    this.coroutineContext.cancelChildren()
   }
 }
 
