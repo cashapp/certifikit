@@ -276,8 +276,8 @@ internal object Adapters {
    * The fields are specified as a list of member adapters. When decoding, a value for each
    * non-optional member but be included in sequence.
    *
-   * TODO: for sets, sort by tag when encoding.
-   * TODO: for set ofs, sort by encoded value when encoding.
+   * TODO(jwilson): for sets, sort by tag when encoding.
+   * TODO(jwilson): for set ofs, sort by encoded value when encoding.
    */
   fun <T> sequence(
     name: String,

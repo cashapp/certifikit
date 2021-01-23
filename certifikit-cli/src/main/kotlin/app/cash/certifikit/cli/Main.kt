@@ -186,7 +186,7 @@ class Main : Callable<Int> {
       if (siteResponse.strictTransportSecurity != null) {
         println()
         println("Strict Transport Security: ${siteResponse.strictTransportSecurity}")
-      } // TODO We should add SANs and complete wildcard hosts.
+      } // TODO(yschimke): Add SANs and complete wildcard hosts.
       addHostToCompletionFile(host)
 
       try {
@@ -204,7 +204,7 @@ class Main : Callable<Int> {
 
       if (crtResponse != null) {
         try {
-          // TODO show from root CA as list with trusted CA highlighted, strictly unsafe currently.
+          // TODO(yschimke): Show from root CA with trusted CA highlighted, unsafe currently.
           val response = crtResponse.await().groupBy { it.issuerCommonName }
 
           println()
