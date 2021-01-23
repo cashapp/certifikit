@@ -34,7 +34,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
 graal {
   mainClass(application.mainClassName)
   outputName("cft")
-  graalVersion('20.3.0')
+  graalVersion('21.0.0')
   javaVersion('11')
 
   option("--enable-https")
