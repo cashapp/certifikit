@@ -24,11 +24,11 @@ import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.cli.oscp.ocsp
 import app.cash.certifikit.cli.oscp.toCertificate
 import app.cash.certifikit.text.certificatePem
-import kotlinx.coroutines.async
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
+import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import okhttp3.internal.platform.Platform
@@ -204,7 +204,7 @@ class Main : Callable<Int> {
 
       if (crtResponse != null) {
         try {
-          // TODO show from root CA as list with trusted CA highlighted, unsafe currently
+          // TODO show from root CA as list with trusted CA highlighted, strictly unsafe currently.
           val response = crtResponse.await().groupBy { it.issuerCommonName }
 
           println()

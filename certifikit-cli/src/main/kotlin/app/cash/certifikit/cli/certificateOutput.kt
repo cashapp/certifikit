@@ -79,17 +79,17 @@ fun Validity.prettyPrint(): String {
   val periodLeft = periodLeft
   val periodLeftString = when {
     periodLeft == null -> Ansi.AUTO.string(" (@|red Not valid|@)")
-    periodLeft.years >= 1 -> " (${periodLeft.years} years)"
-    periodLeft.months >= 1 -> " (${periodLeft.months} months)"
+    periodLeft.years > 1 -> " (${periodLeft.years} years)"
+    periodLeft.years == 1 -> " (1 year)"
+    periodLeft.months > 1 -> " (${periodLeft.months} months)"
+    periodLeft.months == 1 -> " (1 month)"
+    periodLeft.days == 1 -> Ansi.AUTO.string(" (@|yellow 1 day|@)")
     periodLeft.days < 20 -> Ansi.AUTO.string(" (@|yellow $periodLeft days|@)")
     else -> " (${periodLeft.days})"
   }
-  val validityString = "Valid: \t${
-    ofEpochMilli(notBefore)
-  }..${
-    ofEpochMilli(notAfter)
-  }$periodLeftString"
-  return validityString
+  val before = ofEpochMilli(notBefore)
+  val after = ofEpochMilli(notAfter)
+  return "Valid: \t$before..$after$periodLeftString"
 }
 
 private fun Certificate.subjectAlternativeNameValue(): List<String>? {

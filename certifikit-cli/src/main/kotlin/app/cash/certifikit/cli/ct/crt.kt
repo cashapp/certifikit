@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2020 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package app.cash.certifikit.cli.ct
 
 import app.cash.certifikit.Certificate
@@ -6,7 +21,10 @@ import app.cash.certifikit.cli.Main
 import io.r2dbc.postgresql.PostgresqlConnectionConfiguration
 import io.r2dbc.postgresql.PostgresqlConnectionFactory
 import io.r2dbc.postgresql.api.PostgresqlConnection
+import java.net.Inet4Address
 import kotlinx.coroutines.reactive.awaitSingle
+import okhttp3.Dns
+import okhttp3.internal.and
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 
@@ -51,19 +69,38 @@ suspend fun PostgresqlConnection.queryHostCertificates(host: String): List<Certi
 }
 
 fun Certificate.matches(host: String): Boolean {
-  // TODO check exact hostname match here
-  return true
+  this.subjectAlternativeNames?.forEach { (_, value) ->
+    if (value == host) {
+      return true
+    } else if (value is String && value.startsWith("*.")) {
+      val regex = ("[^.]+\\." + value.substring(2).replace(".", "\\.")).toRegex()
+      return regex.matches(host)
+    }
+  }
+
+  return false
 }
 
 fun ByteString.decodeCertificatePem(): Certificate {
   return CertificateAdapters.certificate.fromDer(this)
 }
 
+fun Inet4Address.ipAddress(): String {
+  val src = this.address
+  return "${(src[0] and 0xff)}.${src[1] and 0xff}.${src[2] and 0xff}.${src[3] and 0xff}"
+}
+
+// https://groups.google.com/g/crtsh/c/sUmV0mBz8bQ/m/K-6Vymd_AAAJ
 suspend fun connectToCrtShDb(): PostgresqlConnection {
+  // Avoid IPv6, since it is problematic.
+  val hostname = "crt.sh"
+
+  val ipv4host = Dns.SYSTEM.lookup(hostname).firstOrNull {
+    it is Inet4Address
+  } as Inet4Address?
+
   val conf = PostgresqlConnectionConfiguration.builder()
-    // Failing on IPv6
-    // .host("crt.sh")
-    .host("91.199.212.73")
+    .host(ipv4host?.ipAddress() ?: hostname)
     .port(5432)
     .username("guest")
     .database("certwatch")
@@ -72,7 +109,5 @@ suspend fun connectToCrtShDb(): PostgresqlConnection {
 
   val connFactory = PostgresqlConnectionFactory(conf)
 
-  return connFactory.create().awaitSingle().apply {
-    isAutoCommit = true
-  }
+  return connFactory.create().awaitSingle()
 }

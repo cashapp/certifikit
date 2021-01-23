@@ -55,11 +55,6 @@ dependencies {
   implementation 'com.squareup.okhttp3:okhttp:4.10.0-RC1'
   implementation 'com.squareup.okhttp3:okhttp-tls:4.10.0-RC1'
 
-  implementation("com.squareup.moshi:moshi:1.11.0")
-  implementation("com.squareup.moshi:moshi-adapters:1.11.0")
-  implementation("com.squareup.moshi:moshi-kotlin:1.11.0")
-  kapt("com.squareup.moshi:moshi-kotlin-codegen:1.11.0")
-
   implementation("io.r2dbc:r2dbc-postgresql:0.8.6.RELEASE")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.4.2")
 
