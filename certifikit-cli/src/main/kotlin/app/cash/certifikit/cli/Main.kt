@@ -18,12 +18,10 @@ package app.cash.certifikit.cli
 import app.cash.certifikit.Certifikit
 import app.cash.certifikit.cli.Main.Companion.NAME
 import app.cash.certifikit.cli.Main.VersionProvider
-import app.cash.certifikit.cli.ct.crt
 import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
-import kotlinx.coroutines.async
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -153,103 +151,7 @@ class Main : Callable<Int> {
     }
   }
 
-  private suspend fun queryHost(host: String) {
-    coroutineScope {
-      val siteResponse = fromHttps(host)
-
-      if (siteResponse.peerCertificates.isEmpty()) {
-        System.err.println("Warn: ${Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
-      }
-
-      val crtResponse = if (ctlogs) {
-        async {
-          this@Main.crt(host)
-        }
-      } else {
-        null
-      }
-
-      val ocspResponse = ocsp(client, siteResponse)
-
-      val output = output
-
-      siteResponse.peerCertificates.forEachIndexed { i, certificate ->
-        if (i > 0) {
-          println()
-        }
-
-        if (output != null) {
-          val outputFile = when {
-            output.isDirectory -> File(output, "${certificate.publicKeySha256().hex()}.pem")
-            output.path == "-" -> output
-            i > 0 -> {
-              System.err.println(Ansi.AUTO.string(
-                  "@|yellow Writing host certificate only, skipping (${certificate.subjectX500Principal.name})|@"))
-              null
-            }
-            else -> output
-          }
-
-          if (outputFile != null) {
-            if (outputFile.path == "-") {
-              println(certificate.certificatePem())
-            } else {
-              try {
-                certificate.writePem(outputFile)
-              } catch (ioe: IOException) {
-                throw UsageException("Unable to write to $output", ioe)
-              }
-            }
-          }
-        }
-
-        println(certificate.toCertificate().prettyPrintCertificate(trustManager))
-      }
-
-      if (siteResponse.strictTransportSecurity != null) {
-        println()
-        println("Strict Transport Security: ${siteResponse.strictTransportSecurity}")
-      } // TODO(yschimke): Add SANs and complete wildcard hosts.
-      addHostToCompletionFile(host)
-
-      try {
-        val response = ocspResponse.await()
-
-        // null if no url to check.
-        if (response != null) {
-          println()
-          println(response.prettyPrint())
-        }
-      } catch (e: Exception) {
-        System.err.println(Ansi.AUTO.string(
-            "@|yellow Failed checking OCSP status (${e.message})|@"))
-      }
-
-      if (crtResponse != null) {
-        try {
-          // TODO(yschimke): Show from root CA with trusted CA highlighted, unsafe currently.
-          val response = crtResponse.await().groupBy { it.issuerCommonName }
-
-          println()
-          println("Certificate Issuers:")
-          for ((issuer, certificates) in response) {
-            println(issuer)
-            certificates.forEach { c ->
-              println("\t${c.commonName}\t${c.tbsCertificate.validity.prettyPrint()}")
-            }
-          }
-        } catch (e: Exception) {
-          System.err.println(
-            Ansi.AUTO.string(
-              "@|yellow Failed checking CT logs (${e.message})|@"
-            )
-          )
-        }
-      }
-    }
-  }
-
-  private fun addHostToCompletionFile(host: String) {
+  suspend fun addHostToCompletionFile(host: String) {
     val previousHosts = knownHosts()
     val newHosts = previousHosts + host
 

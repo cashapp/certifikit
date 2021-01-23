@@ -15,6 +15,8 @@
  */
 package app.cash.certifikit.cli
 
+import app.cash.certifikit.Certificate
+import app.cash.certifikit.cli.ct.crt
 import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.cli.oscp.OcspResponse
 import app.cash.certifikit.cli.oscp.ocsp
@@ -34,6 +36,14 @@ import picocli.CommandLine
 @OptIn(ExperimentalFileSystem::class)
 suspend fun Main.queryHost(host: String) {
   coroutineScope {
+    val crtResponse = if (ctlogs) {
+      async {
+        this@queryHost.crt(host)
+      }
+    } else {
+      null
+    }
+
     val addresses = dnsLookup(host)
 
     val siteResponses = if (allHosts) {
@@ -103,8 +113,36 @@ suspend fun Main.queryHost(host: String) {
 
     showOcspResponse(ocspResponse)
 
+    if (crtResponse != null) {
+      showCrtResponse(crtResponse)
+    }
+
     if (siteResponses != null) {
       showDnsAlternatives(siteResponses)
+    }
+  }
+}
+
+suspend fun showCrtResponse(crtResponse: Deferred<List<Certificate>>?) {
+  if (crtResponse != null) {
+    try {
+      // TODO(yschimke): Show from root CA with trusted CA highlighted, unsafe currently.
+      val response = crtResponse.await().groupBy { it.issuerCommonName }
+
+      println()
+      println("Certificate Issuers:")
+      for ((issuer, certificates) in response) {
+        println(issuer)
+        certificates.forEach { c ->
+          println("\t${c.commonName}\t${c.tbsCertificate.validity.prettyPrint()}")
+        }
+      }
+    } catch (e: Exception) {
+      System.err.println(
+        CommandLine.Help.Ansi.AUTO.string(
+          "@|yellow Failed checking CT logs (${e.message})|@"
+        )
+      )
     }
   }
 }
