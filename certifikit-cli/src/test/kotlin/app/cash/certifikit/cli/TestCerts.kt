@@ -15,14 +15,21 @@
  */
 package app.cash.certifikit.cli
 
-import java.io.File
+import okio.ExperimentalFileSystem
+import okio.FileSystem
+import okio.Path.Companion.toPath
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
+@OptIn(ExperimentalFileSystem::class)
 class TestCerts {
+  val fileSystem = FileSystem.SYSTEM
+
   @Test
   fun parseCert() {
-      val cert = File("src/test/resources/cert.pem").readText().parsePemCertificate()
-      assertThat(cert.signatureAlgorithm.algorithm).isEqualTo("1.2.840.113549.1.1.11")
+    val cert = fileSystem.read("src/test/resources/cert.pem".toPath()) {
+      readUtf8().parsePemCertificate()
+    }
+    assertThat(cert.signatureAlgorithm.algorithm).isEqualTo("1.2.840.113549.1.1.11")
   }
 }

@@ -15,10 +15,19 @@
  */
 package app.cash.certifikit.cli
 
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import okio.ExperimentalFileSystem
+import okio.FileSystem
+import okio.Path.Companion.toPath
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import picocli.CommandLine
 
+@OptIn(ExperimentalFileSystem::class)
 class MainTest {
+  val fileSystem = FileSystem.SYSTEM
+
   @Test fun version() {
     CommandLine(Main()).execute("-V")
   }
@@ -27,8 +36,28 @@ class MainTest {
     fromArgs("src/test/resources/cert.pem").call()
   }
 
+  @Tag("Remote")
   @Test fun https() {
     fromArgs("--host", "www.google.com").call()
+  }
+
+  @Test fun testFetch() {
+    MockWebServer().use { server ->
+      val pemText = fileSystem.read("src/test/resources/cert.pem".toPath()) { readUtf8() }
+      server.enqueue(MockResponse().setBody(pemText))
+      server.start()
+
+      fromArgs(server.url("/cert.pem").toString()).call()
+    }
+  }
+
+  @Test fun testFetch404() {
+    MockWebServer().use { server ->
+      server.enqueue(MockResponse().setResponseCode(404))
+      server.start()
+
+      fromArgs(server.url("/cert.pem").toString()).call()
+    }
   }
 
   companion object {

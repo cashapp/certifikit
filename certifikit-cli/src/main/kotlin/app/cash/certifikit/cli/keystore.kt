@@ -15,19 +15,21 @@
  */
 package app.cash.certifikit.cli
 
-import java.io.File
 import java.security.KeyStore
-import javax.net.ssl.KeyManagerFactory.getDefaultAlgorithm
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
+import okio.ExperimentalFileSystem
+import okio.FileSystem
+import okio.Path
 
-fun File.trustManager(): X509TrustManager {
+@OptIn(ExperimentalFileSystem::class)
+fun Path.trustManager(filesystem: FileSystem = FileSystem.SYSTEM): X509TrustManager {
     val factory = TrustManagerFactory.getInstance(
             TrustManagerFactory.getDefaultAlgorithm())
 
     val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
-    this.inputStream().use {
-        keyStore.load(it, null)
+    filesystem.read(this) {
+        keyStore.load(inputStream(), null)
     }
     factory.init(keyStore)
 

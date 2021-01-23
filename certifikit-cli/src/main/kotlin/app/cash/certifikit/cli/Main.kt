@@ -21,17 +21,17 @@ import app.cash.certifikit.cli.Main.VersionProvider
 import app.cash.certifikit.cli.ct.crt
 import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
-import app.cash.certifikit.cli.oscp.ocsp
-import app.cash.certifikit.cli.oscp.toCertificate
-import app.cash.certifikit.text.certificatePem
-import java.io.File
-import java.io.IOException
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
 import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import okhttp3.internal.platform.Platform
+import okio.ExperimentalFileSystem
+import okio.FileSystem
+import okio.Path
+import okio.Path.Companion.toPath
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Help.Ansi
@@ -40,9 +40,10 @@ import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 
 @Command(
-    name = NAME, description = ["An ergonomic CLI for understanding certificates."],
-    mixinStandardHelpOptions = true, versionProvider = VersionProvider::class
+  name = NAME, description = ["An ergonomic CLI for understanding certificates."],
+  mixinStandardHelpOptions = true, versionProvider = VersionProvider::class
 )
+@OptIn(ExperimentalFileSystem::class)
 class Main : Callable<Int> {
   @Option(names = ["--host"], description = ["From HTTPS Handshake"])
   var host: String? = null
@@ -56,11 +57,11 @@ class Main : Callable<Int> {
   @Option(names = ["--redirect"], description = ["Follow redirects"])
   var followRedirects: Boolean = false
 
-  @Option(names = ["--output"], description = ["Output file or directory"])
-  var output: File? = null
+  @Option(names = ["--output", "-o"], description = ["Output file or directory"])
+  var output: Path? = null
 
   @Option(names = ["--keystore"], description = ["Keystore for local verification"])
-  var keyStoreFile: File? = null
+  var keyStoreFile: Path? = null
 
   @Option(names = ["--complete"], description = ["Complete option"])
   var complete: String? = null
@@ -69,7 +70,12 @@ class Main : Callable<Int> {
   var ctlogs: Boolean = false
 
   @Parameters(paramLabel = "file", description = ["Input File"], arity = "0..1")
-  var file: File? = null
+  var file: String? = null
+
+  @Option(names = ["--all"], description = ["Fetch from all DNS hosts"])
+  var allHosts: Boolean = false
+
+  var filesystem: FileSystem = FileSystem.SYSTEM
 
   val trustManager by lazy {
     keyStoreFile?.trustManager() ?: Platform.get().platformTrustManager()
@@ -83,13 +89,13 @@ class Main : Callable<Int> {
     try {
       when {
         complete != null -> {
-          completeOption()
+          runBlocking { completeOption() }
         }
         host != null -> {
           runBlocking { queryHost(host!!) }
         }
         file != null -> {
-          showPemFile(file!!)
+          runBlocking { showPemFile(file!!) }
         }
         else -> {
           throw UsageException("No action to run")
@@ -111,18 +117,35 @@ class Main : Callable<Int> {
     }
   }
 
-  private fun showPemFile(file: File) {
-    val certificate = if (file.path == "-") {
+  private suspend fun showPemFile(filename: String) {
+    val certificates = if (filename == "-") {
       val stdInText = System.`in`.bufferedReader().readText()
-      stdInText.parsePemCertificate()
+      listOf(stdInText.parsePemCertificate())
+    } else if (filename.startsWith("https://") || filename.startsWith("http://")) {
+      fetchCertificates(filename)
     } else {
-      file.parsePemCertificate()
+      listOf(filename.toPath().parsePemCertificate(filesystem))
     }
 
-    println(certificate.prettyPrintCertificate(trustManager))
+    certificates.forEachIndexed { index, certificate ->
+      if (index != 0) println()
+
+      println(certificate.prettyPrintCertificate(trustManager))
+    }
+
+    val additionalCertificatesUrl =
+      certificates.singleOrNull()?.caIssuers
+
+    if (additionalCertificatesUrl != null) {
+      val chain = fetchCertificates(additionalCertificatesUrl, fullChain = true)
+      chain.forEach { certificate ->
+        println()
+        println(certificate.prettyPrintCertificate(trustManager))
+      }
+    }
   }
 
-  private fun completeOption() {
+  private suspend fun completeOption() {
     if (complete == "host") {
       for (host in knownHosts()) {
         println(host)
@@ -231,14 +254,21 @@ class Main : Callable<Int> {
     val newHosts = previousHosts + host
 
     val lineSeparator = System.getProperty("line.separator")
-    knownHostsFile.writeText(newHosts.joinToString(lineSeparator, postfix = lineSeparator))
+    filesystem.write(knownHostsFile.also { filesystem.createDirectories(it.parent!!) }) {
+      writeUtf8(newHosts.joinToString(lineSeparator, postfix = lineSeparator))
+    }
   }
 
-  private fun knownHosts(): Set<String> {
-    return if (knownHostsFile.isFile) {
-      knownHostsFile.readLines().filter { it.trim().isNotBlank() }.toSortedSet()
-    } else {
-      setOf()
+  @Suppress("BlockingMethodInNonBlockingContext")
+  private suspend fun knownHosts(): Set<String> {
+    return withContext(Dispatchers.IO) {
+      if (filesystem.metadataOrNull(knownHostsFile)?.isRegularFile == true) {
+        filesystem.read(knownHostsFile) {
+          readUtf8().lines().filter { it.trim().isNotBlank() }.toSortedSet()
+        }
+      } else {
+        setOf()
+      }
     }
   }
 
@@ -251,16 +281,15 @@ class Main : Callable<Int> {
   companion object {
     internal const val NAME = "cft"
 
-    val confDir = File(System.getProperty("user.home"), ".cft").also {
-      if (!it.isDirectory) {
-        it.mkdirs()
-      }
-    }
-    val knownHostsFile = File(confDir, "knownhosts.txt")
+    val confDir = (System.getProperty("user.home").toPath() / ".cft")
+    val knownHostsFile = confDir / "knownhosts.txt"
 
     @JvmStatic
     fun main(vararg args: String) {
-      exitProcess(CommandLine(Main()).execute(*args))
+      exitProcess(
+        CommandLine(Main())
+          .registerConverter(Path::class.java) { value -> value.toPath() }
+          .execute(*args))
     }
   }
 }

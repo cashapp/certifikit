@@ -16,5 +16,5 @@
 package app.cash.certifikit.cli
 
 fun main() {
-  Main.main("--host", "www.squareup.com", "--ctlogs")
+  Main.main("--all", "--host", "api.twitter.com")
 }
