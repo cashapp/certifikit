@@ -15,8 +15,8 @@
  */
 package app.cash.certifikit.cli
 
-import app.cash.certifikit.Certificate
 import app.cash.certifikit.cli.ct.crt
+import app.cash.certifikit.cli.ct.showCrtResponse
 import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.cli.oscp.OcspResponse
 import app.cash.certifikit.cli.oscp.ocsp
@@ -27,6 +27,7 @@ import java.net.InetAddress
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
@@ -113,37 +114,17 @@ suspend fun Main.queryHost(host: String) {
 
     showOcspResponse(ocspResponse)
 
+    if (siteResponses != null) {
+      showDnsAlternatives(siteResponses)
+    }
+
     if (crtResponse != null) {
       showCrtResponse(crtResponse)
     }
 
-    if (siteResponses != null) {
-      showDnsAlternatives(siteResponses)
-    }
-  }
-}
-
-suspend fun showCrtResponse(crtResponse: Deferred<List<Certificate>>?) {
-  if (crtResponse != null) {
-    try {
-      // TODO(yschimke): Show from root CA with trusted CA highlighted, unsafe currently.
-      val response = crtResponse.await().groupBy { it.issuerCommonName }
-
-      println()
-      println("Certificate Issuers:")
-      for ((issuer, certificates) in response) {
-        println(issuer)
-        certificates.forEach { c ->
-          println("\t${c.commonName}\t${c.tbsCertificate.validity.prettyPrint()}")
-        }
-      }
-    } catch (e: Exception) {
-      System.err.println(
-        CommandLine.Help.Ansi.AUTO.string(
-          "@|yellow Failed checking CT logs (${e.message})|@"
-        )
-      )
-    }
+    // TODO(yschimke) Required for cleanup after timeout,
+    //  make Main.crt cooperatively cancellable to avoid this.
+    this.coroutineContext.cancelChildren()
   }
 }
 

@@ -18,22 +18,30 @@ package app.cash.certifikit.cli.ct
 import app.cash.certifikit.Certificate
 import app.cash.certifikit.CertificateAdapters
 import app.cash.certifikit.cli.Main
+import app.cash.certifikit.cli.prettyPrint
 import io.r2dbc.postgresql.PostgresqlConnectionConfiguration
 import io.r2dbc.postgresql.PostgresqlConnectionFactory
 import io.r2dbc.postgresql.api.PostgresqlConnection
 import java.net.Inet4Address
+import java.time.Duration.ofSeconds
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.time.withTimeout
+import kotlinx.coroutines.withContext
 import okhttp3.Dns
 import okhttp3.internal.and
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
+import picocli.CommandLine
 
 @Suppress("unused")
-suspend fun Main.crt(host: String): List<Certificate> {
+suspend fun Main.crt(host: String): List<Pair<String, Certificate>> {
   return connectToCrtShDb().queryHostCertificates(host)
 }
 
-suspend fun PostgresqlConnection.queryHostCertificates(host: String): List<Certificate> {
+suspend fun PostgresqlConnection.queryHostCertificates(host: String): List<Pair<String, Certificate>> {
   val query = """
     SELECT min(CERTIFICATE_ID) ID,
            min(ISSUER_CA_ID) ISSUER_CA_ID,
@@ -61,11 +69,15 @@ suspend fun PostgresqlConnection.queryHostCertificates(host: String): List<Certi
     .bind("$3", wildcard)
     .execute().flatMap {
       it.map { t, u ->
-        (t.get("certificate", ByteArray::class.java) as ByteArray).toByteString()
+        val id = t.get("id").toString()
+        val cert = (t.get("certificate", ByteArray::class.java) as ByteArray).toByteString()
+        Pair(id, cert)
       }
-    }.map { it.decodeCertificatePem() }.collectList().awaitSingle()
+    }.collectList().awaitSingle()
 
-  return certificates.filter { it.matches(host) }
+  return certificates.map { (id, certBytes) ->
+    Pair(id, certBytes.decodeCertificatePem())
+  }.filter { it.second.matches(host) }
 }
 
 fun Certificate.matches(host: String): Boolean {
@@ -95,7 +107,7 @@ suspend fun connectToCrtShDb(): PostgresqlConnection {
   // Avoid IPv6, since it is problematic.
   val hostname = "crt.sh"
 
-  val ipv4host = Dns.SYSTEM.lookup(hostname).firstOrNull {
+  val ipv4host = withContext(Dispatchers.IO) { Dns.SYSTEM.lookup(hostname) }.firstOrNull {
     it is Inet4Address
   } as Inet4Address?
 
@@ -110,4 +122,38 @@ suspend fun connectToCrtShDb(): PostgresqlConnection {
   val connFactory = PostgresqlConnectionFactory(conf)
 
   return connFactory.create().awaitSingle()
+}
+
+suspend fun showCrtResponse(crtResponse: Deferred<List<Pair<String, Certificate>>>?) {
+  if (crtResponse != null) {
+    println()
+    println("CT Logs:")
+
+    try {
+      // TODO(yschimke): Show from root CA with trusted CA highlighted, unsafe currently.
+      val response =
+        withTimeout(ofSeconds(5)) { crtResponse.await() }.groupBy { it.second.issuerCommonName }
+
+      for ((issuer, certificates) in response) {
+        println(issuer)
+        certificates.forEach { (id, c) ->
+          val validity = c.tbsCertificate.validity.prettyPrint()
+          val link = "https://crt.sh/?id=$id"
+          println("\t${c.commonName}\t$validity\t$link")
+        }
+      }
+    } catch (e: TimeoutCancellationException) {
+      System.err.println(
+        CommandLine.Help.Ansi.AUTO.string(
+          "@|yellow Timeout querying CT logs (${e.message})|@"
+        )
+      )
+    } catch (e: Exception) {
+      System.err.println(
+        CommandLine.Help.Ansi.AUTO.string(
+          "@|yellow Failed checking CT logs (${e.message})|@"
+        )
+      )
+    }
+  }
 }

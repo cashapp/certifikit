@@ -151,13 +151,16 @@ class Main : Callable<Int> {
     }
   }
 
+  @Suppress("BlockingMethodInNonBlockingContext")
   suspend fun addHostToCompletionFile(host: String) {
     val previousHosts = knownHosts()
     val newHosts = previousHosts + host
 
     val lineSeparator = System.getProperty("line.separator")
-    filesystem.write(knownHostsFile.also { filesystem.createDirectories(it.parent!!) }) {
-      writeUtf8(newHosts.joinToString(lineSeparator, postfix = lineSeparator))
+    withContext(Dispatchers.IO) {
+      filesystem.write(knownHostsFile.also { filesystem.createDirectories(it.parent!!) }) {
+        writeUtf8(newHosts.joinToString(lineSeparator, postfix = lineSeparator))
+      }
     }
   }
 
