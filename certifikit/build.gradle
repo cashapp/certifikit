@@ -11,7 +11,7 @@ jar {
 }
 
 dependencies {
-  api dep.okio
+  api Dependencies.okio
 
   testImplementation Dependencies.junit5Api
   testImplementation Dependencies.junit5JupiterEngine

@@ -5,11 +5,11 @@ buildscript {
   }
 
   dependencies {
-    classpath Versions.junitGradlePlugin
-    classpath Versions.kotlinGradlePlugin
-    classpath Versions.dokkaGradlePlugin
-    classpath Versions.mavenPublishGradlePlugin
-    classpath Versions.spotlessPlugin
+    classpath Dependencies.junitGradlePlugin
+    classpath Dependencies.kotlinGradlePlugin
+    classpath Dependencies.dokkaGradlePlugin
+    classpath Dependencies.mavenPublishGradlePlugin
+    classpath Dependencies.spotlessPlugin
   }
 }
 
