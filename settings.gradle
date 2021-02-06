@@ -1,2 +1,0 @@
-include ':certifikit'
-include ':certifikit-cli'
