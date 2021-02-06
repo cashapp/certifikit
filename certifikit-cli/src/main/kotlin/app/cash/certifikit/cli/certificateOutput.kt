@@ -86,9 +86,8 @@ fun Validity.prettyPrint(): String {
     periodLeft.years == 1 -> " (1 year)"
     periodLeft.months > 1 -> " (${periodLeft.months} months)"
     periodLeft.months == 1 -> " (1 month)"
-    periodLeft.days == 1 -> Ansi.AUTO.string(" (@|yellow 1 day|@)")
-    periodLeft.days < 20 -> Ansi.AUTO.string(" (@|yellow $periodLeft days|@)")
-    else -> " (${periodLeft.days})"
+    periodLeft.days <= 1 -> Ansi.AUTO.string(" (@|yellow 1 day|@)")
+    else -> Ansi.AUTO.string(" (@|yellow ${periodLeft.days} days|@)")
   }
   val before = ofEpochMilli(notBefore)
   val after = ofEpochMilli(notAfter)
