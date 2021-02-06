@@ -1,0 +1,9 @@
+$dokka.format:gfm
+$dokka.linkExtension:md
+$dokka.location:app.cash.certifikit.text$certificatePem(java.security.cert.X509Certificate)app.cash.certifikit.text/java.security.cert.-x509-certificate/certificate-pem.md
+$dokka.location:app.cash.certifikit.text$decodeCertificatePem(kotlin.String)app.cash.certifikit.text/kotlin.-string/decode-certificate-pem.md
+$dokka.location:app.cash.certifikit.text$privateKeyPkcs1Pem(java.security.PrivateKey)app.cash.certifikit.text/java.security.-private-key/private-key-pkcs1-pem.md
+$dokka.location:app.cash.certifikit.text$privateKeyPkcs8Pem(java.security.PrivateKey)app.cash.certifikit.text/java.security.-private-key/private-key-pkcs8-pem.md
+app.cash.certifikit
+app.cash.certifikit.attestation
+app.cash.certifikit.text
