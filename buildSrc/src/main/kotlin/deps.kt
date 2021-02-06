@@ -15,8 +15,8 @@
   */
 
 object Versions {
-    const val okio = "2.9.0"
-    const val okhttp = "4.9.0"
+    const val okio = "3.0.0-alpha.1"
+    const val okhttp = "5.0.0-alpha.2"
     const val ktlintVersion = "0.34.2"
     const val kotlin = "1.4.30"
 }
