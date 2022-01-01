@@ -31,10 +31,8 @@ import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
-import okio.ExperimentalFileSystem
 import picocli.CommandLine
 
-@OptIn(ExperimentalFileSystem::class)
 suspend fun Main.queryHost(host: String) {
   coroutineScope {
     val crtResponse = if (ctlogs) {

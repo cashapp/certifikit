@@ -23,7 +23,6 @@ import java.security.cert.X509Certificate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okio.ByteString.Companion.decodeBase64
-import okio.ExperimentalFileSystem
 import okio.FileNotFoundException
 import okio.FileSystem
 import okio.Path
@@ -40,7 +39,6 @@ internal fun String.parsePemCertificate(fileName: String? = null): Certificate {
 }
 
 @Suppress("BlockingMethodInNonBlockingContext")
-@OptIn(ExperimentalFileSystem::class)
 internal suspend fun Path.parsePemCertificate(filesystem: FileSystem = FileSystem.SYSTEM): Certificate {
   return withContext(Dispatchers.IO) {
     try {
@@ -54,7 +52,6 @@ internal suspend fun Path.parsePemCertificate(filesystem: FileSystem = FileSyste
 }
 
 @Suppress("BlockingMethodInNonBlockingContext")
-@OptIn(ExperimentalFileSystem::class)
 internal suspend fun X509Certificate.writePem(
   output: Path,
   filesystem: FileSystem = FileSystem.SYSTEM

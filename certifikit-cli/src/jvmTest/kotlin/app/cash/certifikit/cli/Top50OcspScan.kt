@@ -22,11 +22,9 @@ import kotlin.system.exitProcess
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import okhttp3.OkHttpClient
-import okio.ExperimentalFileSystem
 import okio.FileSystem
 import okio.Path.Companion.toPath
 
-@OptIn(ExperimentalFileSystem::class)
 suspend fun main() {
   val fileSystem = FileSystem.SYSTEM
 

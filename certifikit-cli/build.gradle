@@ -1,8 +1,9 @@
 import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
+  id 'org.jetbrains.kotlin.multiplatform'
   id 'application'
-  id 'com.palantir.graal' version '0.7.2'
+  id 'com.palantir.graal' version '0.10.0'
   id "org.jetbrains.kotlin.kapt"
 }
 
@@ -16,10 +17,59 @@ application {
   mainClassName = 'app.cash.certifikit.cli.Main'
 }
 
-jar {
-  manifest {
-    attributes 'Automatic-Module-Name': 'app.cash.certifikit.cli'
-    attributes 'Main-Class': application.mainClassName
+kotlin {
+  jvm {
+    withJava()
+    jvmJar {
+      manifest {
+        attributes 'Automatic-Module-Name': 'app.cash.certifikit.cli'
+        attributes 'Main-Class': application.mainClassName
+      }
+//      archiveClassifier.set("")
+//      archiveBaseName.set("xxx")
+    }
+  }
+
+  sourceSets {
+    jvmMain {
+      dependencies {
+        api project(':certifikit')
+        api Dependencies.okio
+        implementation('info.picocli:picocli:4.6.2')
+        implementation(project.dependencies.platform("com.squareup.okhttp3:okhttp-bom:5.0.0-alpha.3"))
+        implementation('com.squareup.okhttp3:okhttp')
+        implementation('com.squareup.okhttp3:okhttp-tls')
+        implementation('com.squareup.okhttp3:logging-interceptor')
+
+        implementation(project.dependencies.platform("io.netty:netty-bom:4.1.72.Final"))
+        implementation('io.projectreactor.netty:reactor-netty-core:1.0.14')
+        implementation('io.r2dbc:r2dbc-postgresql:0.8.10.RELEASE') {
+          exclude group: 'io.projectreactor.netty'
+        }
+        implementation('org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.6.0')
+
+        implementation('org.jetbrains.kotlinx:kotlinx-datetime:0.3.1')
+        implementation("org.jetbrains.kotlin:kotlin-reflect:${Versions.kotlin}")
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}")
+        implementation('org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0')
+        implementation('org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.0')
+
+        implementation('org.bouncycastle:bcprov-jdk15on:1.70')
+        implementation('org.bouncycastle:bcpkix-jdk15on:1.70')
+        implementation('org.bouncycastle:bctls-jdk15on:1.70')
+
+        configurations["kapt"].dependencies.add(project.dependencies.create("info.picocli:picocli-codegen:4.6.1"))
+      }
+    }
+
+    jvmTest {
+      dependencies {
+        implementation 'com.squareup.okhttp3:mockwebserver3-junit5:5.0.0-alpha.3'
+        implementation Dependencies.junit5Api
+        implementation Dependencies.junit5JupiterEngine
+        implementation Dependencies.assertj
+      }
+    }
   }
 }
 
@@ -34,52 +84,22 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
 graal {
   mainClass(application.mainClassName)
   outputName("cft")
-  graalVersion('21.0.0')
+  graalVersion('21.3.0')
   javaVersion('11')
 
   option("--enable-https")
   option("--no-fallback")
   option("--allow-incomplete-classpath")
-  option("--initialize-at-run-time=io.netty.channel")
-
-  if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-    // May be possible without, but autodetection is problematic on Windows 10
-    // see https://github.com/palantir/gradle-graal
-    // see https://www.graalvm.org/docs/reference-manual/native-image/#prerequisites
-    windowsVsVarsPath('C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat')
-  }
+  option("--initialize-at-run-time=io.netty")
 }
 
-dependencies {
-  api project(':certifikit')
-  api Dependencies.okio
-  implementation('info.picocli:picocli:4.6.1')
-  implementation(platform("com.squareup.okhttp3:okhttp-bom:5.0.0-alpha.2"))
-  implementation('com.squareup.okhttp3:okhttp')
-  implementation('com.squareup.okhttp3:okhttp-tls')
-  implementation('com.squareup.okhttp3:logging-interceptor')
-
-  implementation(platform("io.netty:netty-bom:4.1.58.Final"))
-  implementation("io.projectreactor.netty:reactor-netty-core:1.0.3")
-  implementation("io.r2dbc:r2dbc-postgresql:0.8.6.RELEASE") {
-    exclude group: 'io.projectreactor.netty'
-  }
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.4.2")
-
-  implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.1.1")
-  implementation("org.jetbrains.kotlin:kotlin-reflect:${Versions.kotlin}")
-  implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.4.2")
-
-  implementation("org.bouncycastle:bcprov-jdk15on:1.68")
-  implementation("org.bouncycastle:bcpkix-jdk15on:1.68")
-  implementation("org.bouncycastle:bctls-jdk15on:1.68")
-
-  kapt("info.picocli:picocli-codegen:4.6.1")
-
-  implementation('com.squareup.okhttp3:mockwebserver')
-  testImplementation Dependencies.junit5Api
-  testImplementation Dependencies.junit5JupiterEngine
-  testImplementation Dependencies.assertj
+task copyJvmJar(type: Copy) {
+  def sourceFile = project.tasks.getByName("jvmJar").outputs.files.singleFile
+  def destFile = project.tasks.getByName("jar").outputs.files.singleFile
+  from sourceFile
+  into destFile.parentFile
+  rename (sourceFile.name, destFile.name)
 }
+
+tasks.getByName("copyJvmJar").dependsOn(jvmJar)
+tasks.getByName("nativeImage").dependsOn(copyJvmJar)

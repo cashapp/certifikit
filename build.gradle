@@ -20,24 +20,18 @@ allprojects {
 
 subprojects {
   apply plugin: 'java-library'
-  apply plugin: 'org.jetbrains.kotlin.platform.jvm'
+  apply plugin: 'org.jetbrains.kotlin.multiplatform'
   apply plugin: 'org.jetbrains.dokka'
   apply plugin: 'com.diffplug.spotless'
 
-  compileJava {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+  tasks.withType(JavaCompile) {
+    sourceCompatibility = JavaVersion.VERSION_1_8.toString()
+    targetCompatibility = JavaVersion.VERSION_1_8.toString()
   }
 
-  compileKotlin {
+  tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
     kotlinOptions {
-      jvmTarget = JavaVersion.VERSION_1_8
-    }
-  }
-
-  compileTestKotlin {
-    kotlinOptions {
-      jvmTarget = JavaVersion.VERSION_1_8
+      jvmTarget = JavaVersion.VERSION_1_8.toString()
     }
   }
 

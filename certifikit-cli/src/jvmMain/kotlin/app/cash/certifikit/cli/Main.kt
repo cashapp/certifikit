@@ -26,7 +26,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import okhttp3.internal.platform.Platform
-import okio.ExperimentalFileSystem
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
@@ -41,7 +40,6 @@ import picocli.CommandLine.Parameters
   name = NAME, description = ["An ergonomic CLI for understanding certificates."],
   mixinStandardHelpOptions = true, versionProvider = VersionProvider::class
 )
-@OptIn(ExperimentalFileSystem::class)
 class Main : Callable<Int> {
   @Option(names = ["--host"], description = ["From HTTPS Handshake"])
   var host: String? = null

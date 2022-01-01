@@ -1,42 +1,62 @@
+plugins {
+    id 'org.jetbrains.kotlin.multiplatform'
+}
+
 java {
-  toolchain {
-    languageVersion = JavaLanguageVersion.of(11)
-  }
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
 }
 
 jar {
-  manifest {
-    attributes('Automatic-Module-Name': 'certifikit')
-  }
+    manifest {
+        attributes('Automatic-Module-Name': 'certifikit')
+    }
 }
 
-dependencies {
-  api Dependencies.okio
+kotlin {
+    jvm {
+        withJava()
+    }
 
-  testImplementation Dependencies.junit5Api
-  testImplementation Dependencies.junit5JupiterEngine
-  testImplementation Dependencies.assertj
-}
+    sourceSets {
+        commonMain {
+            kotlin.srcDir("$buildDir/generated/sources/kotlinTemplates")
+        }
 
-sourceSets {
-  main.kotlin.srcDirs += "$buildDir/generated/sources/kotlin-templates/kotlin/main"
-}
+        getByName("jvmMain") {
+            dependencies {
+                implementation Dependencies.okio
+            }
+        }
 
-compileKotlin {
-  dependsOn 'copyKotlinTemplates'
-}
-
-task copyKotlinTemplates(type: Copy) {
-  from 'src/main/kotlin-templates'
-  into "$buildDir/generated/sources/kotlin-templates/kotlin/main"
-  expand('projectVersion': "${project.version}")
-  filteringCharset = 'UTF-8'
+        getByName("jvmTest") {
+            dependencies {
+                dependsOn(jvmMain)
+                implementation(Dependencies.okio)
+                implementation Dependencies.junit5Api
+                implementation Dependencies.junit5JupiterEngine
+                implementation Dependencies.assertj
+            }
+        }
+    }
 }
 
 afterEvaluate { project ->
-  project.tasks.dokka {
-    outputDirectory = "$rootDir/docs/0.x"
-    outputFormat = 'gfm'
-  }
+    project.tasks.dokka {
+        outputDirectory = "$rootDir/docs/0.x"
+        outputFormat = 'gfm'
+    }
+}
+
+task copyKotlinTemplates(type: Copy) {
+    from "$projectDir/src/commonMain/kotlinTemplates"
+    into "$buildDir/generated/sources/kotlinTemplates"
+    expand('projectVersion': "${project.version}")
+    filteringCharset = 'UTF-8'
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    dependsOn(copyKotlinTemplates)
 }
 
