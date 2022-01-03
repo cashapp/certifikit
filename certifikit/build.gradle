@@ -22,6 +22,19 @@ kotlin {
     sourceSets {
         commonMain {
             kotlin.srcDir("$buildDir/generated/sources/kotlinTemplates")
+            
+            dependencies {
+                implementation Dependencies.okio
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
+            }
+        }
+
+        commonTest {
+            dependencies {
+                dependsOn(commonMain)
+                implementation(kotlin("test"))
+                implementation(Dependencies.okio)
+            }
         }
 
         getByName("jvmMain") {
@@ -33,9 +46,8 @@ kotlin {
         getByName("jvmTest") {
             dependencies {
                 dependsOn(jvmMain)
+                implementation(kotlin("test"))
                 implementation(Dependencies.okio)
-                implementation Dependencies.junit5Api
-                implementation Dependencies.junit5JupiterEngine
                 implementation Dependencies.assertj
             }
         }

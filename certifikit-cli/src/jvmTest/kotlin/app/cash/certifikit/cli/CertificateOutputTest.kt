@@ -19,7 +19,7 @@ import app.cash.certifikit.CertificateAdapters
 import okhttp3.internal.platform.Platform
 import okio.ByteString.Companion.decodeBase64
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 
 class CertificateOutputTest {
   val certificateBase64 = """

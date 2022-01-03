@@ -1,12 +1,9 @@
 /*
- * Copyright (C) 2020 Square, Inc.
- *
+ * Copyright (C) 2022 Square, Inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,7 +50,7 @@ import okio.ByteString.Companion.toByteString
  * -----END CERTIFICATE-----
  * ```
  */
-fun String.decodeCertificatePem(): X509Certificate {
+actual fun String.decodeCertificatePem(): X509Certificate {
   try {
     val certificateFactory = CertificateFactory.getInstance("X.509")
     val certificates = certificateFactory
@@ -75,7 +72,7 @@ fun String.decodeCertificatePem(): X509Certificate {
  *
  * [rfc_7468]: https://tools.ietf.org/html/rfc7468
  */
-fun X509Certificate.certificatePem(): String {
+actual fun X509Certificate.certificatePem(): String {
   return buildString {
     append("-----BEGIN CERTIFICATE-----\n")
     encodeBase64Lines(encoded.toByteString())
@@ -89,7 +86,7 @@ fun X509Certificate.certificatePem(): String {
  * [rfc_5208]: https://tools.ietf.org/html/rfc5208
  * [rfc_7468]: https://tools.ietf.org/html/rfc7468
  */
-fun PrivateKey.privateKeyPkcs8Pem(): String {
+actual fun PrivateKey.privateKeyPkcs8Pem(): String {
   return buildString {
     append("-----BEGIN PRIVATE KEY-----\n")
     encodeBase64Lines(encoded.toByteString())
@@ -103,7 +100,7 @@ fun PrivateKey.privateKeyPkcs8Pem(): String {
  * [rfc_8017]: https://tools.ietf.org/html/rfc8017
  * [rfc_7468]: https://tools.ietf.org/html/rfc7468
  */
-fun PrivateKey.privateKeyPkcs1Pem(): String {
+actual fun PrivateKey.privateKeyPkcs1Pem(): String {
   check(this is RSAPrivateKey) { "PKCS1 only supports RSA keys" }
   return buildString {
     append("-----BEGIN RSA PRIVATE KEY-----\n")
@@ -112,7 +109,7 @@ fun PrivateKey.privateKeyPkcs1Pem(): String {
   }
 }
 
-private fun PrivateKey.pkcs1Bytes(): ByteString {
+internal actual fun PrivateKey.pkcs1Bytes(): ByteString {
   val decoded = CertificateAdapters.privateKeyInfo.fromDer(this.encoded.toByteString())
   return decoded.privateKey
 }
@@ -149,7 +146,7 @@ private fun PrivateKey.pkcs1Bytes(): ByteString {
  * [rfc_7468]: https://tools.ietf.org/html/rfc7468
  * [rfc_5208]: https://tools.ietf.org/html/rfc5208
  */
-fun decode(certificateAndPrivateKeyPem: String): Pair<KeyPair, X509Certificate> {
+actual fun decode(certificateAndPrivateKeyPem: String): Pair<KeyPair, X509Certificate> {
   var certificatePem: String? = null
   var pkcs8Base64: String? = null
   var pkcs1Base64: String? = null
@@ -204,7 +201,7 @@ fun decode(certificateAndPrivateKeyPem: String): Pair<KeyPair, X509Certificate> 
   }
 }
 
-private fun decodePkcs8(data: ByteString, keyAlgorithm: String): PrivateKey {
+internal actual fun decodePkcs8(data: ByteString, keyAlgorithm: String): PrivateKey {
   try {
     val keyFactory = KeyFactory.getInstance(keyAlgorithm)
     val x = CertificateAdapters.privateKeyInfo.fromDer(data)
@@ -214,21 +211,12 @@ private fun decodePkcs8(data: ByteString, keyAlgorithm: String): PrivateKey {
   }
 }
 
-private fun decodePkcs1(data: ByteString): PrivateKey {
+internal actual fun decodePkcs1(data: ByteString): PrivateKey {
   try {
     val privateKeyInfo = PrivateKeyInfo(0L, AlgorithmIdentifier("1.2.840.113549.1.1.1", null), data)
     val pkcs8data = CertificateAdapters.privateKeyInfo.toDer(privateKeyInfo)
     return decodePkcs8(pkcs8data, "RSA")
   } catch (e: GeneralSecurityException) {
     throw IllegalArgumentException("failed to decode private key", e)
-  }
-}
-
-internal val PEM_REGEX = Regex("""-----BEGIN ([!-,.-~ ]*)-----([^-]*)-----END \1-----""")
-
-internal fun StringBuilder.encodeBase64Lines(data: ByteString) {
-  val base64 = data.base64()
-  for (i in base64.indices step 64) {
-    append(base64, i, minOf(i + 64, base64.length)).append('\n')
   }
 }

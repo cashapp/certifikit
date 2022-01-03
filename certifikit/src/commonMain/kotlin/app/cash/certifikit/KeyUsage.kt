@@ -26,5 +26,3 @@ enum class KeyUsage(val bit: Int) {
   EncipherOnly(7),
   DecipherOnly(8)
 }
-
-fun BitString.decodeKeyUsage(): List<KeyUsage> = bitSet.map { KeyUsage.values()[it] }

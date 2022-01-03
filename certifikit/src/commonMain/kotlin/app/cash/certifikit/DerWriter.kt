@@ -1,12 +1,9 @@
 /*
- * Copyright (C) 2020 Square, Inc.
- *
+ * Copyright (C) 2022 Square, Inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,7 +12,6 @@
  */
 package app.cash.certifikit
 
-import java.math.BigInteger
 import okio.Buffer
 import okio.BufferedSink
 import okio.ByteString
@@ -80,7 +76,7 @@ class DerWriter(sink: BufferedSink) {
       sink.writeByte(length.toInt())
     } else {
       // count how many bytes we'll need to express the length.
-      val lengthBitCount = 64 - java.lang.Long.numberOfLeadingZeros(length)
+      val lengthBitCount = 64 - length.countLeadingZeroBits()
       val lengthByteCount = (lengthBitCount + 7) / 8
       sink.writeByte(0b1000_0000 or lengthByteCount)
       for (shift in (lengthByteCount - 1) * 8 downTo 0 step 8) {
@@ -119,9 +115,9 @@ class DerWriter(sink: BufferedSink) {
     val sink = sink()
 
     val lengthBitCount: Int = if (v < 0L) {
-      65 - java.lang.Long.numberOfLeadingZeros(v xor -1L)
+      65 - (v xor -1L).countLeadingZeroBits()
     } else {
-      65 - java.lang.Long.numberOfLeadingZeros(v)
+      65 - v.countLeadingZeroBits()
     }
 
     val lengthByteCount = (lengthBitCount + 7) / 8
@@ -147,12 +143,12 @@ class DerWriter(sink: BufferedSink) {
   fun writeObjectIdentifier(s: String) {
     val utf8 = Buffer().writeUtf8(s)
     val v1 = utf8.readDecimalLong()
-    require(utf8.readByte() == '.'.toByte())
+    require(utf8.readByte() == '.'.code.toByte())
     val v2 = utf8.readDecimalLong()
     writeVariableLengthLong(v1 * 40 + v2)
 
     while (!utf8.exhausted()) {
-      require(utf8.readByte() == '.'.toByte())
+      require(utf8.readByte() == '.'.code.toByte())
       val vN = utf8.readDecimalLong()
       writeVariableLengthLong(vN)
     }
@@ -161,11 +157,11 @@ class DerWriter(sink: BufferedSink) {
   fun writeRelativeObjectIdentifier(s: String) {
     // Add a leading dot so each subidentifier has a dot prefix.
     val utf8 = Buffer()
-        .writeByte('.'.toByte().toInt())
+        .writeByte('.'.code)
         .writeUtf8(s)
 
     while (!utf8.exhausted()) {
-      require(utf8.readByte() == '.'.toByte())
+      require(utf8.readByte() == '.'.code.toByte())
       val vN = utf8.readDecimalLong()
       writeVariableLengthLong(vN)
     }
@@ -174,7 +170,7 @@ class DerWriter(sink: BufferedSink) {
   /** Used for tags and subidentifiers. */
   private fun writeVariableLengthLong(v: Long) {
     val sink = sink()
-    val bitCount = 64 - java.lang.Long.numberOfLeadingZeros(v)
+    val bitCount = 64 - v.countLeadingZeroBits()
     val byteCount = (bitCount + 6) / 7
     for (shift in (byteCount - 1) * 7 downTo 0 step 7) {
       val lastBit = if (shift == 0) 0 else 0b1000_0000

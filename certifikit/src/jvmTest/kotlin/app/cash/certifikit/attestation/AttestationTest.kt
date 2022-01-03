@@ -13,21 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package okhttp3.tls.internal.der
+package app.cash.certifikit.attestation
 
 import app.cash.certifikit.CertificateAdapters
-import app.cash.certifikit.attestation.AttestationAdapters
-import app.cash.certifikit.attestation.AuthorizationList
-import app.cash.certifikit.attestation.KeyDescription
-import app.cash.certifikit.attestation.RootOfTrust
 import app.cash.certifikit.decodeCertificatePem
 import okio.ByteString
 import okio.ByteString.Companion.decodeBase64
 import okio.ByteString.Companion.decodeHex
 import okio.ByteString.Companion.encodeUtf8
 import okio.ByteString.Companion.toByteString
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class AttestTest {
   @Test
@@ -64,14 +60,13 @@ class AttestTest {
     val okHttpCertificate = CertificateAdapters.certificate
         .fromDer(certificateByteString)
 
-    assertThat(okHttpCertificate.signatureValue.byteString)
-        .isEqualTo(javaCertificate.signature.toByteString())
+    assertEquals(javaCertificate.signature.toByteString(), okHttpCertificate.signatureValue.byteString)
 
     val keyDescription = okHttpCertificate.tbsCertificate.extensions.first {
       it.id == AttestationAdapters.KEY_DESCRIPTION_OID
     }.value as KeyDescription
 
-    assertThat(keyDescription).isEqualTo(
+    assertEquals(
         KeyDescription(
             attestationVersion = 3L,
             attestationSecurityLevel = 2L, // 2=StrongBox
@@ -100,7 +95,8 @@ class AttestTest {
                 vendorPatchLevel = 20190705L,
                 bootPatchLevel = 20190700L
             )
-        )
+        ),
+      keyDescription
     )
   }
 }

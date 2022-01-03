@@ -1,12 +1,9 @@
 /*
- * Copyright (C) 2020 Square, Inc.
- *
+ * Copyright (C) 2022 Square, Inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,12 +12,6 @@
  */
 package app.cash.certifikit
 
-import java.math.BigInteger
-import java.net.ProtocolException
-import java.text.ParseException
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.TimeZone
 import kotlin.reflect.KClass
 import okio.ByteString
 
@@ -176,30 +167,9 @@ internal object Adapters {
       }
   )
 
-  internal fun parseUtcTime(string: String): Long {
-    val utc = TimeZone.getTimeZone("GMT")
-    val dateFormat = SimpleDateFormat("yyMMddHHmmss'Z'").apply {
-      timeZone = utc
-      set2DigitYearStart(Date(-631152000000L)) // 1950-01-01T00:00:00Z.
-    }
+  internal fun parseUtcTime(string: String): Long = string.parseUtcTime()
 
-    try {
-      val parsed = dateFormat.parse(string)
-      return parsed.time
-    } catch (e: ParseException) {
-      throw ProtocolException("Failed to parse UTCTime $string")
-    }
-  }
-
-  internal fun formatUtcTime(date: Long): String {
-    val utc = TimeZone.getTimeZone("GMT")
-    val dateFormat = SimpleDateFormat("yyMMddHHmmss'Z'").apply {
-      timeZone = utc
-      set2DigitYearStart(Date(-631152000000L)) // 1950-01-01T00:00:00Z.
-    }
-
-    return dateFormat.format(date)
-  }
+  internal fun formatUtcTime(date: Long): String = date.formatUtcTime()
 
   /**
    * A timestamp like "191216030210Z" or "20191215190210-0800" for 2019-12-15T19:02:10-08:00. This
@@ -246,28 +216,9 @@ internal object Adapters {
     }
   }
 
-  internal fun parseGeneralizedTime(string: String): Long {
-    val utc = TimeZone.getTimeZone("GMT")
-    val dateFormat = SimpleDateFormat("yyyyMMddHHmmss'Z'").apply {
-      timeZone = utc
-    }
+  internal fun parseGeneralizedTime(string: String): Long = string.parseGeneralizedTime()
 
-    try {
-      val parsed = dateFormat.parse(string)
-      return parsed.time
-    } catch (e: ParseException) {
-      throw ProtocolException("Failed to parse GeneralizedTime $string")
-    }
-  }
-
-  internal fun formatGeneralizedTime(date: Long): String {
-    val utc = TimeZone.getTimeZone("GMT")
-    val dateFormat = SimpleDateFormat("yyyyMMddHHmmss'Z'").apply {
-      timeZone = utc
-    }
-
-    return dateFormat.format(date)
-  }
+  internal fun formatGeneralizedTime(date: Long): String = date.formatGeneralizedTime()
 
   /**
    * Returns a composite adapter for a struct or data class. This may be used for both SEQUENCE and

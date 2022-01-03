@@ -65,6 +65,7 @@ kotlin {
     jvmTest {
       dependencies {
         implementation 'com.squareup.okhttp3:mockwebserver3-junit5:5.0.0-alpha.3'
+        implementation(kotlin("test"))
         implementation Dependencies.junit5Api
         implementation Dependencies.junit5JupiterEngine
         implementation Dependencies.assertj

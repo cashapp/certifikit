@@ -1,12 +1,9 @@
 /*
- * Copyright (C) 2020 Square, Inc.
- *
+ * Copyright (C) 2022 Square, Inc.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,18 +12,11 @@
  */
 package app.cash.certifikit
 
-import java.math.BigInteger
-import java.security.GeneralSecurityException
-import java.security.PublicKey
-import java.security.Signature
-import java.security.SignatureException
-import java.security.cert.CertificateFactory
-import java.security.cert.X509Certificate
-import java.time.Duration
-import java.time.Instant
-import java.time.Period
-import java.time.ZoneId
-import okio.Buffer
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimePeriod
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.periodUntil
 import okio.ByteString
 
 data class Certificate(
@@ -43,16 +33,16 @@ data class Certificate(
   val serialNumberString: String
     get() {
       return tbsCertificate.serialNumber.run {
-        "${if (testBit(bitLength() - 1)) "00" else ""}${toString(16)}"
+        "${if (testBit(bitLength() - 1)) "00" else ""}${toHexString()}"
       }
     }
 
   val commonName: String?
     get() {
       return tbsCertificate.subject
-          .flatten()
-          .firstOrNull { it.type == ObjectIdentifiers.commonName }
-          ?.value?.toString() // This allows for legacy encodings like Teletex but left fugly.
+        .flatten()
+        .firstOrNull { it.type == ObjectIdentifiers.commonName }
+        ?.value?.toString() // This allows for legacy encodings like Teletex but left fugly.
     }
 
   val issuerCommonName: String?
@@ -66,23 +56,23 @@ data class Certificate(
   val organizationalUnitName: String?
     get() {
       return tbsCertificate.subject
-          .flatten()
-          .firstOrNull { it.type == ObjectIdentifiers.organizationalUnitName }
-          ?.value as String?
+        .flatten()
+        .firstOrNull { it.type == ObjectIdentifiers.organizationalUnitName }
+        ?.value as String?
     }
 
   val keyUsage: BitString?
     get() {
       return tbsCertificate.extensions
-          .firstOrNull { it.id == ObjectIdentifiers.keyUsage }
-          ?.value as BitString?
+        .firstOrNull { it.id == ObjectIdentifiers.keyUsage }
+        ?.value as BitString?
     }
 
   val authorityInfoAccess: List<AccessDescription>?
     get() {
       val value = tbsCertificate.extensions
-          .firstOrNull { it.id == ObjectIdentifiers.authorityInfoAccess }
-          ?.value
+        .firstOrNull { it.id == ObjectIdentifiers.authorityInfoAccess }
+        ?.value
       return value as List<AccessDescription>?
     }
 
@@ -90,8 +80,8 @@ data class Certificate(
   val extKeyUsage: List<ExtKeyUsage>?
     get() {
       val list = tbsCertificate.extensions
-          .firstOrNull { it.id == ObjectIdentifiers.extKeyUsage }
-          ?.value as List<String>?
+        .firstOrNull { it.id == ObjectIdentifiers.extKeyUsage }
+        ?.value as List<String>?
       return list?.map { ExtKeyUsage(it) }
     }
 
@@ -105,33 +95,6 @@ data class Certificate(
     get() = tbsCertificate.extensions.firstOrNull {
       it.id == ObjectIdentifiers.basicConstraints
     }?.value as? BasicConstraints
-
-  /** Returns true if the certificate was signed by [issuer]. */
-  @Throws(SignatureException::class)
-  fun checkSignature(issuer: PublicKey): Boolean {
-    val signedData = CertificateAdapters.tbsCertificate.toDer(tbsCertificate)
-
-    return Signature.getInstance(tbsCertificate.signatureAlgorithmName).run {
-      initVerify(issuer)
-      update(signedData.toByteArray())
-      verify(signatureValue.byteString.toByteArray())
-    }
-  }
-
-  fun toX509Certificate(): X509Certificate {
-    val data = CertificateAdapters.certificate.toDer(this)
-    try {
-      val certificateFactory = CertificateFactory.getInstance("X.509")
-      val certificates = certificateFactory.generateCertificates(Buffer().write(data).inputStream())
-      return certificates.single() as X509Certificate
-    } catch (e: NoSuchElementException) {
-      throw IllegalArgumentException("failed to decode certificate", e)
-    } catch (e: IllegalArgumentException) {
-      throw IllegalArgumentException("failed to decode certificate", e)
-    } catch (e: GeneralSecurityException) {
-      throw IllegalArgumentException("failed to decode certificate", e)
-    }
-  }
 }
 
 data class TbsCertificate(
@@ -197,23 +160,18 @@ data class Validity(
   /**
    * Returns the remaining Period, or null if the certificate is not within the valid period.
    */
-  val periodLeft: Period?
-  get() {
-    val now = Instant.now()
+  val periodLeft: DateTimePeriod?
+    get() {
+      val now = Clock.System.now()
+      val notBeforeInstant = Instant.fromEpochMilliseconds(notBefore)
+      val notAfterInstant = Instant.fromEpochMilliseconds(notAfter)
 
-    return if (now.isBefore(Instant.ofEpochMilli(notBefore))) {
-      null
-    } else {
-      val notAfterInstant = Instant.ofEpochMilli(notAfter)
-      val left = Duration.between(now, notAfterInstant)
-
-      if (left.isNegative) {
-        null
-      } else {
-        Period.between(now.atZone(ZoneId.systemDefault()).toLocalDate(), notAfterInstant.atZone(ZoneId.systemDefault()).toLocalDate())
+      return when {
+        now < notBeforeInstant -> null
+        now > notAfterInstant -> null
+        else -> now.periodUntil(notAfterInstant, TimeZone.currentSystemDefault())
       }
     }
-  }
 
   // Avoid Long.hashCode(long) which isn't available on Android 5.
   override fun hashCode(): Int {

@@ -16,6 +16,7 @@
 package app.cash.certifikit.cli
 
 import app.cash.certifikit.Certificate
+import app.cash.certifikit.ObjectIdentifiers
 import app.cash.certifikit.cli.errors.ClientException
 import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.cli.oscp.toCertificate
@@ -24,7 +25,7 @@ import java.security.cert.X509Certificate
 import okhttp3.MediaType.Companion.toMediaType
 
 val Certificate.caIssuers: String?
-  get() = authorityInfoAccess?.find { it.accessMethod == app.cash.certifikit.ObjectIdentifiers.caIssuers }?.accessLocation?.second?.toString()
+  get() = authorityInfoAccess?.find { it.accessMethod == ObjectIdentifiers.caIssuers }?.accessLocation?.second?.toString()
 
 suspend fun Main.fetchCertificates(url: String, fullChain: Boolean = false): List<Certificate> {
   try {
