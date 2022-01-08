@@ -42,11 +42,3 @@ internal expect fun Long.formatUtcTime(): String
 internal expect fun Long.formatGeneralizedTime(): String
 
 internal expect fun String.parseGeneralizedTime(): Long
-
-// TODO: the modality of these 3 is worryingly platform specific
-
-expect abstract class X509Certificate
-
-expect interface PrivateKey
-
-expect class KeyPair

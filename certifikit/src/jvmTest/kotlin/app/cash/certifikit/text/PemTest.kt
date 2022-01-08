@@ -38,7 +38,7 @@ class PemTest {
 
   private fun decode(file: Path): Pair<KeyPair, X509Certificate> {
     return fileSystem.read(file) {
-      decode(readUtf8())
+      app.cash.certifikit.decode(readUtf8())
     }
   }
 }

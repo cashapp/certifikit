@@ -134,9 +134,3 @@ fun Certificate.checkSignature(issuer: PublicKey): Boolean {
 internal actual fun BigInteger.testBit(bit: Int): Boolean = testBit(bit)
 
 internal actual fun BigInteger.bitLength(): Int = bitLength()
-
-actual typealias X509Certificate = X509Certificate
-
-actual typealias PrivateKey = PrivateKey
-
-actual typealias KeyPair = KeyPair
