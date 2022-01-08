@@ -15,16 +15,14 @@
  */
 package app.cash.certifikit.cli
 
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
-import okio.ExperimentalFileSystem
+import mockwebserver3.MockResponse
+import mockwebserver3.MockWebServer
 import okio.FileSystem
 import okio.Path.Companion.toPath
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import picocli.CommandLine
 
-@OptIn(ExperimentalFileSystem::class)
 class MainTest {
   val fileSystem = FileSystem.SYSTEM
 

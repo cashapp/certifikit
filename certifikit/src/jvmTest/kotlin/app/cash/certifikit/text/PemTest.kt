@@ -13,23 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.certifikit.cli
+package app.cash.certifikit.text
 
-import okio.ExperimentalFileSystem
+import java.security.KeyPair
+import java.security.cert.X509Certificate
 import okio.FileSystem
+import okio.Path
 import okio.Path.Companion.toPath
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-@OptIn(ExperimentalFileSystem::class)
-class TestCerts {
+class PemTest {
   val fileSystem = FileSystem.SYSTEM
 
   @Test
-  fun parseCert() {
-    val cert = fileSystem.read("src/test/resources/cert.pem".toPath()) {
-      readUtf8().parsePemCertificate()
+  fun parseHeldCertificate() {
+    val (pkcs8pair, cert1) = decode("src/test/resources/pkcs8pair.pem".toPath())
+    val (pkcs1pair, cert2) = decode("src/test/resources/pkcs1pair.pem".toPath())
+
+    assertThat(cert1).isEqualTo(cert2)
+    assertThat(pkcs1pair.private).isEqualTo(pkcs8pair.private)
+    assertThat(pkcs1pair.public).isEqualTo(pkcs8pair.public)
+  }
+
+  private fun decode(file: Path): Pair<KeyPair, X509Certificate> {
+    return fileSystem.read(file) {
+      decode(readUtf8())
     }
-    assertThat(cert.signatureAlgorithm.algorithm).isEqualTo("1.2.840.113549.1.1.11")
   }
 }

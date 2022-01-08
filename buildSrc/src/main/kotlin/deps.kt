@@ -15,10 +15,10 @@
   */
 
 object Versions {
-    const val okio = "3.0.0-alpha.1"
-    const val okhttp = "5.0.0-alpha.2"
+    const val okio = "3.0.0"
+    const val okhttp = "5.0.0-alpha.3"
     const val ktlintVersion = "0.34.2"
-    const val kotlin = "1.4.30"
+    const val kotlin = "1.6.10"
 }
 
 object Dependencies {
