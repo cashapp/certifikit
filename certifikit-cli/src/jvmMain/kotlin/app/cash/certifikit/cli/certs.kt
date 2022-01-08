@@ -17,8 +17,8 @@ package app.cash.certifikit.cli
 
 import app.cash.certifikit.Certificate
 import app.cash.certifikit.CertificateAdapters
-import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.certificatePem
+import app.cash.certifikit.cli.errors.UsageException
 import java.security.cert.X509Certificate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

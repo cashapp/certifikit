@@ -16,10 +16,10 @@
 package app.cash.certifikit.cli
 
 import app.cash.certifikit.CertificateAdapters
+import kotlin.test.Test
 import okhttp3.internal.platform.Platform
 import okio.ByteString.Companion.decodeBase64
 import org.assertj.core.api.Assertions.assertThat
-import kotlin.test.Test
 
 class CertificateOutputTest {
   val certificateBase64 = """

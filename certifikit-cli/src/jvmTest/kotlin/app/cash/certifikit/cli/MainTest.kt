@@ -15,12 +15,12 @@
  */
 package app.cash.certifikit.cli
 
+import kotlin.test.Test
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import okio.FileSystem
 import okio.Path.Companion.toPath
 import org.junit.jupiter.api.Tag
-import kotlin.test.Test
 import picocli.CommandLine
 
 class MainTest {

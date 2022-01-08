@@ -15,13 +15,13 @@
  */
 package app.cash.certifikit.cli
 
+import app.cash.certifikit.certificatePem
 import app.cash.certifikit.cli.ct.crt
 import app.cash.certifikit.cli.ct.showCrtResponse
 import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.cli.oscp.OcspResponse
 import app.cash.certifikit.cli.oscp.ocsp
 import app.cash.certifikit.cli.oscp.toCertificate
-import app.cash.certifikit.certificatePem
 import java.io.IOException
 import java.net.InetAddress
 import kotlinx.coroutines.Deferred
