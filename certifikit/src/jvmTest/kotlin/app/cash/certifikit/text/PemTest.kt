@@ -17,28 +17,28 @@ package app.cash.certifikit.text
 
 import java.security.KeyPair
 import java.security.cert.X509Certificate
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
 
 class PemTest {
   val fileSystem = FileSystem.SYSTEM
 
   @Test
   fun parseHeldCertificate() {
-    val (pkcs8pair, cert1) = decode("src/test/resources/pkcs8pair.pem".toPath())
-    val (pkcs1pair, cert2) = decode("src/test/resources/pkcs1pair.pem".toPath())
+    val (pkcs8pair, cert1) = decode("src/jvmTest/resources/pkcs8pair.pem".toPath())
+    val (pkcs1pair, cert2) = decode("src/jvmTest/resources/pkcs1pair.pem".toPath())
 
-    assertThat(cert1).isEqualTo(cert2)
-    assertThat(pkcs1pair.private).isEqualTo(pkcs8pair.private)
-    assertThat(pkcs1pair.public).isEqualTo(pkcs8pair.public)
+    assertEquals(cert2, cert1)
+    assertEquals(pkcs1pair.private, pkcs8pair.private)
+    assertEquals(pkcs1pair.public, pkcs8pair.public)
   }
 
   private fun decode(file: Path): Pair<KeyPair, X509Certificate> {
     return fileSystem.read(file) {
-      decode(readUtf8())
+      app.cash.certifikit.decode(readUtf8())
     }
   }
 }

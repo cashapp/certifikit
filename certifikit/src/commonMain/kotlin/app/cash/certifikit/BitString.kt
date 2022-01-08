@@ -15,7 +15,6 @@
  */
 package app.cash.certifikit
 
-import java.math.BigInteger
 import okio.ByteString
 
 /**
@@ -36,17 +35,5 @@ data class BitString(
   }
 
   val bitSet: List<Int>
-  get() {
-    if (byteString.size == 0)
-      return listOf()
-
-    // Bits are encoded from the front, with lowest value bits possibly ignored.
-    val maxResultBit = byteString.size * 8 - 1 - this.unusedBitsCount
-    val bitField = BigInteger(byteString.toByteArray())
-
-    return (0..maxResultBit).mapNotNull {
-      val offset = (maxResultBit - it) + unusedBitsCount
-      if (bitField.testBit(offset)) it else null
-    }
-  }
+  get() = byteString.toBitList(unusedBitsCount)
 }

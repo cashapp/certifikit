@@ -22,8 +22,6 @@ import app.cash.certifikit.ObjectIdentifiers.organizationalUnitName
 import app.cash.certifikit.ObjectIdentifiers.sha256WithRSAEncryption
 import app.cash.certifikit.ObjectIdentifiers.sha256withEcdsa
 import app.cash.certifikit.ObjectIdentifiers.subjectAlternativeName
-import app.cash.certifikit.text.privateKeyPkcs1Pem
-import app.cash.certifikit.text.privateKeyPkcs8Pem
 import java.math.BigInteger
 import java.net.InetAddress
 import java.security.KeyPair

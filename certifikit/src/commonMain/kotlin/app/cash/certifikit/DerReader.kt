@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Square, Inc.
+ * Copyright (C) 2022 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,10 @@
  */
 package app.cash.certifikit
 
-import java.math.BigInteger
-import java.net.ProtocolException
+import app.cash.certifikit.okio.ForwardingSource
 import okio.Buffer
 import okio.BufferedSource
 import okio.ByteString
-import okio.ForwardingSource
 import okio.Source
 import okio.buffer
 
@@ -214,7 +212,7 @@ class DerReader(source: Source) {
   fun readBigInteger(): BigInteger {
     if (bytesLeft == 0L) throw ProtocolException("unexpected length: $bytesLeft at $this")
     val byteArray = source.readByteArray(bytesLeft)
-    return BigInteger(byteArray)
+    return byteArray.toBigInteger()
   }
 
   fun readLong(): Long {
@@ -256,7 +254,7 @@ class DerReader(source: Source) {
 
   fun readObjectIdentifier(): String {
     val result = Buffer()
-    val dot = '.'.toByte().toInt()
+    val dot = '.'.code
     when (val xy = readVariableLengthLong()) {
       in 0L until 40L -> {
         result.writeDecimalLong(0)
@@ -283,7 +281,7 @@ class DerReader(source: Source) {
 
   fun readRelativeObjectIdentifier(): String {
     val result = Buffer()
-    val dot = '.'.toByte().toInt()
+    val dot = '.'.code
     while (byteCount < limit) {
       if (result.size > 0) {
         result.writeByte(dot)

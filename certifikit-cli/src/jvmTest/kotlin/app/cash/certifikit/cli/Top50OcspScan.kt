@@ -30,8 +30,8 @@ suspend fun main() {
 
   coroutineScope {
     // https://en.wikipedia.org/wiki/List_of_most_popular_websites
-    val hosts = fileSystem.read("certifikit-cli/src/test/resources/top50.csv".toPath()) {
-      readUtf8().lines()
+    val hosts = fileSystem.read("certifikit-cli/src/jvmTest/resources/top50.csv".toPath()) {
+      readUtf8().lines().filter { it.isNotBlank() }
     }
 
     val client = OkHttpClient.Builder().callTimeout(2, TimeUnit.SECONDS).build()

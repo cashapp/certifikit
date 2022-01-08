@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Square, Inc.
+ * Copyright (C) 2022 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ package app.cash.certifikit
 import app.cash.certifikit.Adapters.BIT_STRING
 import app.cash.certifikit.Adapters.OBJECT_IDENTIFIER
 import app.cash.certifikit.attestation.AttestationAdapters
-import java.math.BigInteger
-import java.net.ProtocolException
 import okio.ByteString
 
 /**
@@ -276,7 +274,7 @@ object CertificateAdapters {
       Adapters.any(
           String::class to Adapters.UTF8_STRING,
           Nothing::class to Adapters.PRINTABLE_STRING,
-          Void::class to Adapters.TELETEX,
+          Unit::class to Adapters.TELETEX,
           AnyValue::class to Adapters.ANY_VALUE
       ),
       decompose = {

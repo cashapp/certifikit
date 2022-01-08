@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Square, Inc.
+ * Copyright (C) 2022 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,20 +21,16 @@ import app.cash.certifikit.ObjectIdentifiers.basicConstraints
 import app.cash.certifikit.ObjectIdentifiers.commonName
 import app.cash.certifikit.ObjectIdentifiers.sha256WithRSAEncryption
 import app.cash.certifikit.ObjectIdentifiers.subjectAlternativeName
-import java.math.BigInteger
-import java.net.InetAddress
-import java.net.ProtocolException
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.TimeZone
+import kotlin.test.Ignore
+import kotlin.test.Test
+import kotlin.test.fail
+import kotlinx.datetime.Instant
+import kotlinx.datetime.toInstant
 import okio.Buffer
 import okio.ByteString.Companion.decodeHex
 import okio.ByteString.Companion.encodeUtf8
 import okio.ByteString.Companion.toByteString
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.fail
 
 internal class DerTest {
   @Test fun `decode tag and length`() {
@@ -639,7 +635,7 @@ internal class DerTest {
 
   @Test fun `utc time`() {
     val bytes = "170d3139313231363033303231305a".decodeHex()
-    val utcTime = date("2019-12-16T03:02:10.000+0000").time
+    val utcTime = date("2019-12-16T03:02:10.000Z").toEpochMilliseconds()
     assertThat(Adapters.UTC_TIME.toDer(utcTime)).isEqualTo(bytes)
     assertThat(Adapters.UTC_TIME.fromDer(bytes)).isEqualTo(utcTime)
   }
@@ -665,7 +661,7 @@ internal class DerTest {
 
   @Test fun `generalized time`() {
     val bytes = "180f32303139313231363033303231305a".decodeHex()
-    val generalizedTime = date("2019-12-16T03:02:10.000+0000").time
+    val generalizedTime = date("2019-12-16T03:02:10.000Z").toEpochMilliseconds()
     assertThat(Adapters.GENERALIZED_TIME.fromDer(bytes)).isEqualTo(generalizedTime)
     assertThat(Adapters.GENERALIZED_TIME.toDer(generalizedTime)).isEqualTo(bytes)
   }
@@ -682,61 +678,69 @@ internal class DerTest {
 
   @Test fun `parse utc time`() {
     assertThat(Adapters.parseUtcTime("920521000000Z"))
-        .isEqualTo(date("1992-05-21T00:00:00.000+0000").time)
+        .isEqualTo(date("1992-05-21T00:00:00.000Z").toEpochMilliseconds())
     assertThat(Adapters.parseUtcTime("920622123421Z"))
-        .isEqualTo(date("1992-06-22T12:34:21.000+0000").time)
+        .isEqualTo(date("1992-06-22T12:34:21.000Z").toEpochMilliseconds())
     assertThat(Adapters.parseUtcTime("920722132100Z"))
-        .isEqualTo(date("1992-07-22T13:21:00.000+0000").time)
+        .isEqualTo(date("1992-07-22T13:21:00.000Z").toEpochMilliseconds())
   }
 
   @Test fun `decode utc time two digit year cutoff is 1950`() {
     assertThat(Adapters.parseUtcTime("500101000000Z"))
-        .isEqualTo(date("1950-01-01T00:00:00.000+0000").time)
+        .isEqualTo(date("1950-01-01T00:00:00.000Z").toEpochMilliseconds())
     assertThat(Adapters.parseUtcTime("500101010000Z"))
-        .isEqualTo(date("1950-01-01T01:00:00.000+0000").time)
+        .isEqualTo(date("1950-01-01T01:00:00.000Z").toEpochMilliseconds())
 
     assertThat(Adapters.parseUtcTime("491231225959Z"))
-        .isEqualTo(date("2049-12-31T22:59:59.000+0000").time)
+        .isEqualTo(date("2049-12-31T22:59:59.000Z").toEpochMilliseconds())
     assertThat(Adapters.parseUtcTime("491231235959Z"))
-        .isEqualTo(date("2049-12-31T23:59:59.000+0000").time)
+        .isEqualTo(date("2049-12-31T23:59:59.000Z").toEpochMilliseconds())
   }
 
   @Test fun `encode utc time two digit year cutoff is 1950`() {
-    assertThat(Adapters.formatUtcTime(date("1950-01-01T00:00:00.000+0000").time))
+    assertThat(Adapters.formatUtcTime(date("1950-01-01T00:00:00.000Z").toEpochMilliseconds()))
         .isEqualTo("500101000000Z")
-    assertThat(Adapters.formatUtcTime(date("2049-12-31T23:59:59.000+0000").time))
+    assertThat(Adapters.formatUtcTime(date("2049-12-31T23:59:59.000Z").toEpochMilliseconds()))
         .isEqualTo("491231235959Z")
   }
 
   @Test fun `parse generalized time`() {
     assertThat(Adapters.parseGeneralizedTime("18990101000000Z"))
-        .isEqualTo(date("1899-01-01T00:00:00.000+0000").time)
+        .isEqualTo(date("1899-01-01T00:00:00.000Z").toEpochMilliseconds())
     assertThat(Adapters.parseGeneralizedTime("19500101000000Z"))
-        .isEqualTo(date("1950-01-01T00:00:00.000+0000").time)
+        .isEqualTo(date("1950-01-01T00:00:00.000Z").toEpochMilliseconds())
     assertThat(Adapters.parseGeneralizedTime("20500101000000Z"))
-        .isEqualTo(date("2050-01-01T00:00:00.000+0000").time)
+        .isEqualTo(date("2050-01-01T00:00:00.000Z").toEpochMilliseconds())
     assertThat(Adapters.parseGeneralizedTime("20990101000000Z"))
-        .isEqualTo(date("2099-01-01T00:00:00.000+0000").time)
+        .isEqualTo(date("2099-01-01T00:00:00.000Z").toEpochMilliseconds())
     assertThat(Adapters.parseGeneralizedTime("19920521000000Z"))
-        .isEqualTo(date("1992-05-21T00:00:00.000+0000").time)
+        .isEqualTo(date("1992-05-21T00:00:00.000Z").toEpochMilliseconds())
     assertThat(Adapters.parseGeneralizedTime("19920622123421Z"))
-        .isEqualTo(date("1992-06-22T12:34:21.000+0000").time)
+        .isEqualTo(date("1992-06-22T12:34:21.000Z").toEpochMilliseconds())
   }
 
-  @Disabled("fractional seconds are not implemented")
+  @Ignore("fractional seconds are not implemented")
   @Test fun `parse generalized time with fractional seconds`() {
     assertThat(Adapters.parseGeneralizedTime("19920722132100.3Z"))
-        .isEqualTo(date("1992-07-22T13:21:00.300+0000").time)
+        .isEqualTo(date("1992-07-22T13:21:00.300+0000").toEpochMilliseconds())
   }
 
   @Test fun `format generalized time`() {
-    assertThat(Adapters.formatGeneralizedTime(date("1899-01-01T00:00:00.000+0000").time))
+    assertThat(Adapters.formatGeneralizedTime(
+      date("1899-01-01T00:00:00.000Z").toEpochMilliseconds()
+    ))
         .isEqualTo("18990101000000Z")
-    assertThat(Adapters.formatGeneralizedTime(date("1950-01-01T00:00:00.000+0000").time))
+    assertThat(Adapters.formatGeneralizedTime(
+      date("1950-01-01T00:00:00.000Z").toEpochMilliseconds()
+    ))
         .isEqualTo("19500101000000Z")
-    assertThat(Adapters.formatGeneralizedTime(date("2050-01-01T00:00:00.000+0000").time))
+    assertThat(Adapters.formatGeneralizedTime(
+      date("2050-01-01T00:00:00.000Z").toEpochMilliseconds()
+    ))
         .isEqualTo("20500101000000Z")
-    assertThat(Adapters.formatGeneralizedTime(date("2099-01-01T00:00:00.000+0000").time))
+    assertThat(Adapters.formatGeneralizedTime(
+      date("2099-01-01T00:00:00.000Z").toEpochMilliseconds()
+    ))
         .isEqualTo("20990101000000Z")
   }
 
@@ -845,7 +849,7 @@ internal class DerTest {
 
   @Test fun `choice IP address`() {
     val bytes = "8704c0a80201".decodeHex()
-    val localhost = InetAddress.getByName("192.168.2.1").address.toByteString()
+    val localhost = "192.168.2.1".split(".").map { it.toUByte().toByte() }.toByteArray().toByteString()
     assertThat(CertificateAdapters.generalName.fromDer(bytes))
         .isEqualTo(generalNameIpAddress to localhost)
     assertThat(CertificateAdapters.generalName.toDer(generalNameIpAddress to localhost))
@@ -950,21 +954,18 @@ internal class DerTest {
   ) {
     companion object {
       val ADAPTER = Adapters.sequence(
-          "Point",
-          Adapters.INTEGER_AS_LONG.withTag(tag = 0L)
-              .optional(),
-          Adapters.INTEGER_AS_LONG.withTag(tag = 1L)
-              .optional(),
-          decompose = { listOf(it.x, it.y) },
-          construct = { Point(it[0] as Long?, it[1] as Long?) }
+        "Point",
+        Adapters.INTEGER_AS_LONG.withTag(tag = 0L)
+          .optional(),
+        Adapters.INTEGER_AS_LONG.withTag(tag = 1L)
+          .optional(),
+        decompose = { listOf(it.x, it.y) },
+        construct = { Point(it[0] as Long?, it[1] as Long?) }
       )
     }
   }
 
-  private fun date(s: String): Date {
-    return SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").run {
-      timeZone = TimeZone.getTimeZone("GMT")
-      parse(s)
-    }
+  private fun date(s: String): Instant {
+    return s.toInstant()
   }
 }

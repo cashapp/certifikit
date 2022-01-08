@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Square, Inc.
+ * Copyright (C) 2022 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,8 @@
 
 @file:JvmName("Pem")
 
-package app.cash.certifikit.text
+package app.cash.certifikit
 
-import app.cash.certifikit.AlgorithmIdentifier
-import app.cash.certifikit.CertificateAdapters
-import app.cash.certifikit.PrivateKeyInfo
 import java.security.GeneralSecurityException
 import java.security.KeyFactory
 import java.security.KeyPair
@@ -112,7 +109,7 @@ fun PrivateKey.privateKeyPkcs1Pem(): String {
   }
 }
 
-private fun PrivateKey.pkcs1Bytes(): ByteString {
+fun PrivateKey.pkcs1Bytes(): ByteString {
   val decoded = CertificateAdapters.privateKeyInfo.fromDer(this.encoded.toByteString())
   return decoded.privateKey
 }
@@ -204,7 +201,7 @@ fun decode(certificateAndPrivateKeyPem: String): Pair<KeyPair, X509Certificate> 
   }
 }
 
-private fun decodePkcs8(data: ByteString, keyAlgorithm: String): PrivateKey {
+internal fun decodePkcs8(data: ByteString, keyAlgorithm: String): PrivateKey {
   try {
     val keyFactory = KeyFactory.getInstance(keyAlgorithm)
     val x = CertificateAdapters.privateKeyInfo.fromDer(data)
@@ -214,7 +211,7 @@ private fun decodePkcs8(data: ByteString, keyAlgorithm: String): PrivateKey {
   }
 }
 
-private fun decodePkcs1(data: ByteString): PrivateKey {
+internal fun decodePkcs1(data: ByteString): PrivateKey {
   try {
     val privateKeyInfo = PrivateKeyInfo(0L, AlgorithmIdentifier("1.2.840.113549.1.1.1", null), data)
     val pkcs8data = CertificateAdapters.privateKeyInfo.toDer(privateKeyInfo)
