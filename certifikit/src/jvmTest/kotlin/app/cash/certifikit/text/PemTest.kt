@@ -17,11 +17,11 @@ package app.cash.certifikit.text
 
 import java.security.KeyPair
 import java.security.cert.X509Certificate
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class PemTest {
   val fileSystem = FileSystem.SYSTEM

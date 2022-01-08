@@ -18,9 +18,9 @@ package app.cash.certifikit
 import app.cash.certifikit.KeyUsage.CRLSign
 import app.cash.certifikit.KeyUsage.DigitalSignature
 import app.cash.certifikit.KeyUsage.KeyCertSign
-import okio.ByteString.Companion.decodeHex
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import okio.ByteString.Companion.decodeHex
 
 class KeyUsageTest {
   @Test

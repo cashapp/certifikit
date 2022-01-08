@@ -17,13 +17,13 @@ package app.cash.certifikit.attestation
 
 import app.cash.certifikit.CertificateAdapters
 import app.cash.certifikit.decodeCertificatePem
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import okio.ByteString
 import okio.ByteString.Companion.decodeBase64
 import okio.ByteString.Companion.decodeHex
 import okio.ByteString.Companion.encodeUtf8
 import okio.ByteString.Companion.toByteString
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class AttestTest {
   @Test

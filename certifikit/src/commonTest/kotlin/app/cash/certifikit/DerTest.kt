@@ -21,6 +21,9 @@ import app.cash.certifikit.ObjectIdentifiers.basicConstraints
 import app.cash.certifikit.ObjectIdentifiers.commonName
 import app.cash.certifikit.ObjectIdentifiers.sha256WithRSAEncryption
 import app.cash.certifikit.ObjectIdentifiers.subjectAlternativeName
+import kotlin.test.Ignore
+import kotlin.test.Test
+import kotlin.test.fail
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toInstant
 import okio.Buffer
@@ -28,9 +31,6 @@ import okio.ByteString.Companion.decodeHex
 import okio.ByteString.Companion.encodeUtf8
 import okio.ByteString.Companion.toByteString
 import org.assertj.core.api.Assertions.assertThat
-import kotlin.test.Ignore
-import kotlin.test.Test
-import kotlin.test.fail
 
 internal class DerTest {
   @Test fun `decode tag and length`() {
