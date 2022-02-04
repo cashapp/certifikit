@@ -31,7 +31,6 @@ import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.time.withTimeout
 import kotlinx.coroutines.withContext
 import okhttp3.Dns
-import okhttp3.internal.and
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine
@@ -157,3 +156,5 @@ suspend fun showCrtResponse(crtResponse: Deferred<List<Pair<String, Certificate>
     }
   }
 }
+
+infix fun Byte.and(mask: Int): Int = toInt() and mask
