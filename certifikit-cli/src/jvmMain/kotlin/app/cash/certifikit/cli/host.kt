@@ -21,7 +21,6 @@ import app.cash.certifikit.cli.ct.showCrtResponse
 import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.cli.oscp.OcspResponse
 import app.cash.certifikit.cli.oscp.ocsp
-import app.cash.certifikit.cli.oscp.toCertificate
 import java.io.IOException
 import java.net.InetAddress
 import kotlinx.coroutines.Deferred
@@ -49,7 +48,7 @@ suspend fun Main.queryHost(host: String) {
       supervisorScope {
         addresses.map {
           it to async {
-            fromHttps(host, it)
+            fromHttps(host = host, inetAddress = it, insecure = insecure)
           }
         }
       }
@@ -57,7 +56,7 @@ suspend fun Main.queryHost(host: String) {
       null
     }
 
-    val siteResponse = fromHttps(host)
+    val siteResponse = fromHttps(host = host, insecure = insecure)
 
     if (siteResponse.peerCertificates.isEmpty()) {
       System.err.println("Warn: ${CommandLine.Help.Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
@@ -80,7 +79,7 @@ suspend fun Main.queryHost(host: String) {
           i > 0 -> {
             System.err.println(
               CommandLine.Help.Ansi.AUTO.string(
-                "@|yellow Writing host certificate only, skipping (${certificate.subjectX500Principal.name})|@"
+                "@|yellow Writing host certificate only, skipping (${certificate.commonName})|@"
               )
             )
             null
@@ -101,7 +100,21 @@ suspend fun Main.queryHost(host: String) {
         }
       }
 
-      println(certificate.toCertificate().prettyPrintCertificate(trustManager))
+      println(certificate.prettyPrintCertificate(trustManager))
+    }
+
+    if (siteResponse.fetchedCertificates != null) {
+      println()
+      System.err.println(
+        CommandLine.Help.Ansi.AUTO.string(
+          "@|yellow Incomplete Chain, Fetched Certificates|@"
+        )
+      )
+      println()
+
+      siteResponse.fetchedCertificates.forEachIndexed { i, certificate ->
+        println(certificate.prettyPrintCertificate(trustManager))
+      }
     }
 
     addHostToCompletionFile(host)
@@ -133,7 +146,7 @@ private suspend fun showDnsAlternatives(siteResponses: List<Pair<InetAddress, De
 
       try {
         val response = siteResponse.second.await()
-        println("$address: ${response.peerCertificates.firstOrNull()?.subjectX500Principal?.name}")
+        println("$address: ${response.peerCertificates.firstOrNull()?.commonName}")
       } catch (e: Exception) {
         println("$address: $e")
       }
