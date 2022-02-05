@@ -16,7 +16,7 @@
 
 object Versions {
     const val okio = "3.0.0"
-    const val okhttp = "5.0.0-alpha.3"
+    const val okhttp = "5.0.0-alpha.4"
     const val ktlintVersion = "0.34.2"
     const val kotlin = "1.6.10"
 }
@@ -30,7 +30,7 @@ object Dependencies {
     const val kotlinGradlePlugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
     const val kotlinReflection = "org.jetbrains.kotlin:kotlin-reflect:${Versions.kotlin}"
     const val kotlinStdLib = "org.jetbrains.kotlin:kotlin-stdlib:${Versions.kotlin}"
-    const val mavenPublishGradlePlugin = "com.vanniktech:gradle-maven-publish-plugin:0.11.1"
+    const val mavenPublishGradlePlugin = "com.vanniktech:gradle-maven-publish-plugin:0.18.0"
     const val okhttp = "com.squareup.okhttp3:okhttp:${Versions.okhttp}"
     const val okio = "com.squareup.okio:okio:${Versions.okio}"
     const val spotlessPlugin = "com.diffplug.spotless:spotless-plugin-gradle:5.6.1"

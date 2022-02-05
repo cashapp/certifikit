@@ -1,3 +1,4 @@
+//file:noinspection GroovyAssignabilityCheck
 import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
@@ -25,8 +26,6 @@ kotlin {
         attributes 'Automatic-Module-Name': 'app.cash.certifikit.cli'
         attributes 'Main-Class': application.mainClassName
       }
-//      archiveClassifier.set("")
-//      archiveBaseName.set("xxx")
     }
   }
 
@@ -36,7 +35,7 @@ kotlin {
         api project(':certifikit')
         api Dependencies.okio
         implementation('info.picocli:picocli:4.6.2')
-        implementation(project.dependencies.platform("com.squareup.okhttp3:okhttp-bom:5.0.0-alpha.3"))
+        implementation(project.dependencies.platform("com.squareup.okhttp3:okhttp-bom:5.0.0-alpha.4"))
         implementation('com.squareup.okhttp3:okhttp')
         implementation('com.squareup.okhttp3:okhttp-tls')
         implementation('com.squareup.okhttp3:logging-interceptor')
@@ -94,6 +93,7 @@ graal {
   option("--initialize-at-run-time=io.netty")
 }
 
+// Fixes for Gradle plugins missing on Jar location with -jvm- in name.
 task copyJvmJar(type: Copy) {
   def sourceFile = project.tasks.getByName("jvmJar").outputs.files.singleFile
   def destFile = project.tasks.getByName("jar").outputs.files.singleFile
@@ -104,3 +104,5 @@ task copyJvmJar(type: Copy) {
 
 tasks.getByName("copyJvmJar").dependsOn(jvmJar)
 tasks.getByName("nativeImage").dependsOn(copyJvmJar)
+
+tasks.getByName("installDist").dependsOn(copyJvmJar)
