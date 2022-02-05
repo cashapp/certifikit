@@ -964,6 +964,72 @@ internal class DerCertificatesTest {
     assertThat(decoded.commonName).isEqualTo("*.badssl.com")
   }
 
+  @Test
+  fun `decode problem google certificate`() {
+    val certificatePem = """
+        |-----BEGIN CERTIFICATE-----
+        |MIIEijCCA3KgAwIBAgIRAK//jqI8CPcfCgAAAAEuB3owDQYJKoZIhvcNAQELBQAw
+        |RjELMAkGA1UEBhMCVVMxIjAgBgNVBAoTGUdvb2dsZSBUcnVzdCBTZXJ2aWNlcyBM
+        |TEMxEzARBgNVBAMTCkdUUyBDQSAxQzMwHhcNMjIwMTEwMDMzNTMyWhcNMjIwNDA0
+        |MDMzNTMxWjAZMRcwFQYDVQQDEw53d3cuZ29vZ2xlLmNvbTBZMBMGByqGSM49AgEG
+        |CCqGSM49AwEHA0IABNXELhu6Vprhg/AEhN/zi16JPcov/FLl7ldjSzhXOcsv01yl
+        |dzHvXSSDJ75B7M4T8Bw7g907uuWJ4RQafcuK4n6jggJpMIICZTAOBgNVHQ8BAf8E
+        |BAMCB4AwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADAdBgNVHQ4E
+        |FgQUzPrcxRuC0t6LvXF4AVtuDLAVSmIwHwYDVR0jBBgwFoAUinR/r4XN7pXNPZzQ
+        |4kYU83E1HScwagYIKwYBBQUHAQEEXjBcMCcGCCsGAQUFBzABhhtodHRwOi8vb2Nz
+        |cC5wa2kuZ29vZy9ndHMxYzMwMQYIKwYBBQUHMAKGJWh0dHA6Ly9wa2kuZ29vZy9y
+        |ZXBvL2NlcnRzL2d0czFjMy5kZXIwGQYDVR0RBBIwEIIOd3d3Lmdvb2dsZS5jb20w
+        |IQYDVR0gBBowGDAIBgZngQwBAgEwDAYKKwYBBAHWeQIFAzA8BgNVHR8ENTAzMDGg
+        |L6AthitodHRwOi8vY3Jscy5wa2kuZ29vZy9ndHMxYzMvZlZKeGJWLUt0bWsuY3Js
+        |MIIBBgYKKwYBBAHWeQIEAgSB9wSB9ADyAHcARqVV63X6kSAwtaKJafTzfREsQXS+
+        |/Um4havy/HD+bUcAAAF+QkUdvQAABAMASDBGAiEA1TKRPyZR4zyG6pwtX1Tfu9oV
+        |Kq9CrttoiZtWYLkh4fkCIQD/Pu5JHjut+7AN9cnPCDa5oGMe5WfPM2cehLWZhha5
+        |bQB3AEHIyrHfIkZKEMahOglCh15OMYsbA+vrS8do8JBilgb2AAABfkJFHbcAAAQD
+        |AEgwRgIhAJcOYFi8YgTYmjNRHJDKLP8rvlk6MGPTSEJ3SF0CRZoEAiEAqt8Rj5Pa
+        |ndUuFURwNdzs7pdI3NvkzPLc3t11vhmZGKQwDQYJKoZIhvcNAQELBQADggEBADsy
+        |RJII9KlEqgHvqbJvYAsPlRF2lNjjbPRt5iviUhEkYPuv6q36ShtENHg164BQoPOt
+        |l8oDHXI/iGAmfJNrqbWJW7UHmHvWpQfAa7SOuETgZfXYXrrxNUd9oHI1+6GEtBvv
+        |sBu5CwtigrGmiaf/DDY8zxlFRVx4vYWPNFSa/OswmxTUwppxzj/AhzB4KH+7LfJV
+        |0Hll4ZUlBuLpy/r8cbbPX9KgQnCxY3xHgvTyNJyxNjY0ahf/C4WkADvmEbHRZTfh
+        |JLIJBFdx0gTKExZFYWE37oKy3AwC4jSko45F+muglxbbD5VM9E2c+3fNBLOZdPWn
+        |iQB8WQEO+ZEpFBT9WDY=
+        |-----END CERTIFICATE-----
+        |""".trimMargin()
+
+    val javaCertificate1 = certificatePem.decodeCertificatePem()
+    val encoded1 = javaCertificate1.encoded.toByteString()
+
+    val okHttpCertificate = CertificateAdapters.certificate.fromDer(encoded1)
+    val encodedO = CertificateAdapters.certificate.toDer(okHttpCertificate)
+
+    val hex1 = encoded1.hex()
+    val hexO = encodedO.hex()
+
+    val diff1 = StringBuffer(hex1)
+    val diffO = StringBuffer(hexO)
+    diff1.forEachIndexed() { i, c ->
+      if (diff1[i] == diffO[i]) {
+        diff1.setCharAt(i, ' ')
+        diffO.setCharAt(i, ' ')
+      }
+    }
+
+    println(diff1.replace(" +".toRegex(), ":"))
+    println(diffO.replace(" +".toRegex(), ":"))
+
+    println(diff1)
+    println(diffO)
+
+    assertThat(hex1).isEqualTo(hexO)
+
+    val javaCertificate2 = okHttpCertificate.toX509Certificate()
+
+    assertThat(okHttpCertificate.signatureValue.byteString)
+      .isEqualTo(javaCertificate2.signature.toByteString())
+
+    assertThat(javaCertificate1.sha256Hash()).isEqualTo(javaCertificate2.sha256Hash())
+  }
+
   /** Converts public key bytes to SubjectPublicKeyInfo bytes. */
   private fun encodeKey(algorithm: String, publicKeyBytes: ByteString): ByteString {
     val subjectPublicKeyInfo = SubjectPublicKeyInfo(
