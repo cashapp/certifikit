@@ -33,5 +33,5 @@ object Dependencies {
     const val mavenPublishGradlePlugin = "com.vanniktech:gradle-maven-publish-plugin:0.18.0"
     const val okhttp = "com.squareup.okhttp3:okhttp:${Versions.okhttp}"
     const val okio = "com.squareup.okio:okio:${Versions.okio}"
-    const val spotlessPlugin = "com.diffplug.spotless:spotless-plugin-gradle:6.2.1"
+    const val spotlessPlugin = "com.diffplug.spotless:spotless-plugin-gradle:5.6.1"
 }
