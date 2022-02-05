@@ -18,28 +18,36 @@ package app.cash.certifikit
 import app.cash.certifikit.KeyUsage.CRLSign
 import app.cash.certifikit.KeyUsage.DigitalSignature
 import app.cash.certifikit.KeyUsage.KeyCertSign
+import okio.ByteString.Companion.decodeHex
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import okio.ByteString.Companion.decodeHex
 
 class KeyUsageTest {
   @Test
   fun testKnownValues() {
     assertEquals(
       BitString("80".decodeHex(), unusedBitsCount = 7).decodeKeyUsage(),
-      listOf(DigitalSignature))
+      listOf(DigitalSignature)
+    )
     assertEquals(
-      BitString("06".decodeHex(), unusedBitsCount = 1).decodeKeyUsage(), listOf(
-        KeyCertSign, CRLSign))
+      BitString("06".decodeHex(), unusedBitsCount = 1).decodeKeyUsage(),
+      listOf(
+        KeyCertSign, CRLSign
+      )
+    )
     assertEquals(
-      BitString("86".decodeHex(), unusedBitsCount = 1).decodeKeyUsage(), listOf(
-        DigitalSignature, KeyCertSign, CRLSign))
+      BitString("86".decodeHex(), unusedBitsCount = 1).decodeKeyUsage(),
+      listOf(
+        DigitalSignature, KeyCertSign, CRLSign
+      )
+    )
   }
 
   @Test
   fun testEdgeValues() {
     assertEquals(BitString("".decodeHex(), unusedBitsCount = 0).decodeKeyUsage(), listOf())
     assertEquals(
-      BitString("FF80".decodeHex(), unusedBitsCount = 7).decodeKeyUsage(), listOf(*KeyUsage.values()))
+      BitString("FF80".decodeHex(), unusedBitsCount = 7).decodeKeyUsage(), listOf(*KeyUsage.values())
+    )
   }
 }

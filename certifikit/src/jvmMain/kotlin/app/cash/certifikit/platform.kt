@@ -16,6 +16,8 @@
 
 package app.cash.certifikit
 
+import okio.Buffer
+import okio.ByteString
 import java.math.BigInteger
 import java.security.GeneralSecurityException
 import java.security.PublicKey
@@ -26,8 +28,6 @@ import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.TimeZone
-import okio.Buffer
-import okio.ByteString
 
 fun BitString.decodeKeyUsage(): List<KeyUsage> = bitSet.map { KeyUsage.values()[it] }
 

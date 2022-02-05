@@ -35,5 +35,5 @@ data class BitString(
   }
 
   val bitSet: List<Int>
-  get() = byteString.toBitList(unusedBitsCount)
+    get() = byteString.toBitList(unusedBitsCount)
 }

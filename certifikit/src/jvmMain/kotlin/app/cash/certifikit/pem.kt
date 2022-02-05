@@ -18,6 +18,10 @@
 
 package app.cash.certifikit
 
+import okio.Buffer
+import okio.ByteString
+import okio.ByteString.Companion.decodeBase64
+import okio.ByteString.Companion.toByteString
 import java.security.GeneralSecurityException
 import java.security.KeyFactory
 import java.security.KeyPair
@@ -28,10 +32,6 @@ import java.security.interfaces.ECPublicKey
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import java.security.spec.PKCS8EncodedKeySpec
-import okio.Buffer
-import okio.ByteString
-import okio.ByteString.Companion.decodeBase64
-import okio.ByteString.Companion.toByteString
 
 /**
  * Decodes a multiline string that contains a [certificate][certificatePem] which is
@@ -54,8 +54,9 @@ fun String.decodeCertificatePem(): X509Certificate {
   try {
     val certificateFactory = CertificateFactory.getInstance("X.509")
     val certificates = certificateFactory
-        .generateCertificates(
-            Buffer().writeUtf8(this).inputStream())
+      .generateCertificates(
+        Buffer().writeUtf8(this).inputStream()
+      )
 
     return certificates.single() as X509Certificate
   } catch (nsee: NoSuchElementException) {
@@ -195,7 +196,7 @@ fun decode(certificateAndPrivateKeyPem: String): Pair<KeyPair, X509Certificate> 
       }
 
       val pkcs8Bytes = pkcs8Base64.decodeBase64()
-          ?: throw IllegalArgumentException("failed to decode private key")
+        ?: throw IllegalArgumentException("failed to decode private key")
       val privateKey = decodePkcs8(pkcs8Bytes, keyType)
       val keyPair = KeyPair(certificate.publicKey, privateKey)
       return Pair(keyPair, certificate)
@@ -204,7 +205,7 @@ fun decode(certificateAndPrivateKeyPem: String): Pair<KeyPair, X509Certificate> 
       require(certificate.publicKey is RSAPublicKey) { "unexpected key type: ${certificate.publicKey}" }
 
       val pkcs1Bytes = pkcs1Base64.decodeBase64()
-          ?: throw IllegalArgumentException("failed to decode private key")
+        ?: throw IllegalArgumentException("failed to decode private key")
       val privateKey = decodePkcs1(pkcs1Bytes)
       val keyPair = KeyPair(certificate.publicKey, privateKey)
       return Pair(keyPair, certificate)
