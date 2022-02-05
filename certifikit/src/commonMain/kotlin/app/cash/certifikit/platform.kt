@@ -25,6 +25,8 @@ expect class ProtocolException(message: String? = null) : IOException
 
 expect class BigInteger
 
+internal expect fun parseBigInteger(value: String): BigInteger
+
 internal expect fun BigInteger.toByteArray(): ByteArray
 
 internal expect fun BigInteger.testBit(bit: Int): Boolean
