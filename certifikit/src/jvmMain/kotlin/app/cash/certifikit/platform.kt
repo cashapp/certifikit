@@ -49,6 +49,8 @@ actual typealias ProtocolException = java.net.ProtocolException
 
 actual typealias BigInteger = BigInteger
 
+internal actual fun parseBigInteger(value: String): BigInteger = BigInteger(value)
+
 internal actual fun BigInteger.toByteArray(): ByteArray = this.toByteArray()
 
 internal actual fun BigInteger.toHexString(): String = this.toString(16)

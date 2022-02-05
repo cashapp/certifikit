@@ -21,6 +21,12 @@ import app.cash.certifikit.ObjectIdentifiers.basicConstraints
 import app.cash.certifikit.ObjectIdentifiers.commonName
 import app.cash.certifikit.ObjectIdentifiers.sha256WithRSAEncryption
 import app.cash.certifikit.ObjectIdentifiers.subjectAlternativeName
+import assertk.assertThat
+import assertk.assertions.hasMessage
+import assertk.assertions.isEqualTo
+import assertk.assertions.isFalse
+import assertk.assertions.isNull
+import assertk.assertions.isTrue
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.fail
@@ -30,7 +36,6 @@ import okio.Buffer
 import okio.ByteString.Companion.decodeHex
 import okio.ByteString.Companion.encodeUtf8
 import okio.ByteString.Companion.toByteString
-import org.assertj.core.api.Assertions.assertThat
 
 internal class DerTest {
   @Test fun `decode tag and length`() {
@@ -601,7 +606,7 @@ internal class DerTest {
 
   @Test fun `bigger than max long`() {
     val bytes = "0209008000000000000001".decodeHex()
-    val bigInteger = BigInteger("9223372036854775809")
+    val bigInteger = parseBigInteger("9223372036854775809")
     assertThat(Adapters.INTEGER_AS_BIG_INTEGER.fromDer(bytes)).isEqualTo(bigInteger)
     assertThat(Adapters.INTEGER_AS_BIG_INTEGER.toDer(bigInteger)).isEqualTo(bytes)
   }
@@ -719,7 +724,7 @@ internal class DerTest {
         .isEqualTo(date("1992-06-22T12:34:21.000Z").toEpochMilliseconds())
   }
 
-  @Ignore("fractional seconds are not implemented")
+  @Ignore // "fractional seconds are not implemented"
   @Test fun `parse generalized time with fractional seconds`() {
     assertThat(Adapters.parseGeneralizedTime("19920722132100.3Z"))
         .isEqualTo(date("1992-07-22T13:21:00.300+0000").toEpochMilliseconds())

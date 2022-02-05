@@ -34,6 +34,7 @@ kotlin {
                 dependsOn(commonMain)
                 implementation(kotlin("test"))
                 implementation(Dependencies.okio)
+                implementation("com.willowtreeapps.assertk:assertk:0.25")
             }
         }
 
