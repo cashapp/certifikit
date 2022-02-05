@@ -93,6 +93,7 @@ graal {
   option("--initialize-at-run-time=io.netty")
 }
 
+// Fixes for Gradle plugins missing on Jar location with -jvm- in name.
 task copyJvmJar(type: Copy) {
   def sourceFile = project.tasks.getByName("jvmJar").outputs.files.singleFile
   def destFile = project.tasks.getByName("jar").outputs.files.singleFile
