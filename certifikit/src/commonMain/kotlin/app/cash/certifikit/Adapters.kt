@@ -258,6 +258,8 @@ internal object Adapters {
       }
 
       override fun encode(writer: DerWriter, value: T) {
+        // Sequence is always constructed
+        writer.constructed = true
         val list = decompose(value)
         writer.withTypeHint {
           for (i in list.indices) {
