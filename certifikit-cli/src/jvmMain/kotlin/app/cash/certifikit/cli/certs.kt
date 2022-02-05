@@ -62,3 +62,15 @@ internal suspend fun X509Certificate.writePem(
     }
   }
 }
+
+@Suppress("BlockingMethodInNonBlockingContext")
+internal suspend fun Certificate.writePem(
+  output: Path,
+  filesystem: FileSystem = FileSystem.SYSTEM
+) {
+  withContext(Dispatchers.IO) {
+    filesystem.write(output) {
+      writeUtf8(certificatePem())
+    }
+  }
+}

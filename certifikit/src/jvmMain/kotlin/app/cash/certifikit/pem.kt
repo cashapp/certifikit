@@ -81,6 +81,20 @@ fun X509Certificate.certificatePem(): String {
 }
 
 /**
+ * Returns the certificate encoded in [PEM format][rfc_7468].
+ *
+ * [rfc_7468]: https://tools.ietf.org/html/rfc7468
+ */
+fun Certificate.certificatePem(): String {
+  val encoded = CertificateAdapters.certificate.toDer(this)
+  return buildString {
+    append("-----BEGIN CERTIFICATE-----\n")
+    encodeBase64Lines(encoded)
+    append("-----END CERTIFICATE-----\n")
+  }
+}
+
+/**
  * Returns the RSA private key encoded in [PKCS #8][rfc_5208] [PEM format][rfc_7468].
  *
  * [rfc_5208]: https://tools.ietf.org/html/rfc5208
