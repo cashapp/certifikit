@@ -140,7 +140,6 @@ private suspend fun showDnsAlternatives(siteResponses: List<Pair<InetAddress, De
     }
 }
 
-@Suppress("BlockingMethodInNonBlockingContext")
 suspend fun Main.dnsLookup(host: String) = withContext(Dispatchers.IO) { client.dns.lookup(host) }
 
 suspend fun showOcspResponse(ocspResponse: Deferred<OcspResponse?>) {
