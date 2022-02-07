@@ -149,7 +149,6 @@ class Main : Callable<Int> {
     }
   }
 
-  @Suppress("BlockingMethodInNonBlockingContext")
   suspend fun addHostToCompletionFile(host: String) {
     val previousHosts = knownHosts()
     val newHosts = previousHosts + host
@@ -162,7 +161,6 @@ class Main : Callable<Int> {
     }
   }
 
-  @Suppress("BlockingMethodInNonBlockingContext")
   private suspend fun knownHosts(): Set<String> {
     return withContext(Dispatchers.IO) {
       if (filesystem.metadataOrNull(knownHostsFile)?.isRegularFile == true) {
