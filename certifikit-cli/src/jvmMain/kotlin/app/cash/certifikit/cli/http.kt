@@ -22,6 +22,14 @@ import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.cli.errors.classify
 import app.cash.certifikit.cli.okhttp.CapturingTrustManager
 import app.cash.certifikit.cli.oscp.toCertificate
+import java.io.IOException
+import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.Proxy
+import java.security.cert.X509Certificate
+import javax.net.ssl.X509ExtendedTrustManager
+import javax.net.ssl.X509TrustManager
+import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -47,14 +55,6 @@ import okhttp3.TlsVersion.TLS_1_3
 import okhttp3.internal.platform.Platform
 import okhttp3.tls.HandshakeCertificates
 import picocli.CommandLine.Help.Ansi
-import java.io.IOException
-import java.net.InetAddress
-import java.net.InetSocketAddress
-import java.net.Proxy
-import java.security.cert.X509Certificate
-import javax.net.ssl.X509ExtendedTrustManager
-import javax.net.ssl.X509TrustManager
-import kotlin.coroutines.resumeWithException
 
 enum class Strength(val color: String) {
   Good("green"),
