@@ -17,13 +17,13 @@ package app.cash.certifikit.cli
 
 import app.cash.certifikit.cli.oscp.OcspClient
 import app.cash.certifikit.cli.oscp.OcspResponse
-import java.util.concurrent.TimeUnit
-import kotlin.system.exitProcess
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import okhttp3.OkHttpClient
 import okio.FileSystem
 import okio.Path.Companion.toPath
+import java.util.concurrent.TimeUnit
+import kotlin.system.exitProcess
 
 suspend fun main() {
   val fileSystem = FileSystem.SYSTEM

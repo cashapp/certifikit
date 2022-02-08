@@ -19,13 +19,6 @@ import app.cash.certifikit.CertificateAdapters
 import app.cash.certifikit.ObjectIdentifiers
 import app.cash.certifikit.cli.await
 import app.cash.certifikit.cli.execute
-import java.io.IOException
-import java.lang.IllegalArgumentException
-import java.lang.IllegalStateException
-import java.math.BigInteger
-import java.security.SecureRandom
-import java.security.cert.X509Certificate
-import java.util.logging.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -44,9 +37,16 @@ import org.bouncycastle.cert.ocsp.CertificateID
 import org.bouncycastle.cert.ocsp.OCSPReq
 import org.bouncycastle.cert.ocsp.OCSPReqBuilder
 import org.bouncycastle.cert.ocsp.OCSPResp
+import java.io.IOException
+import java.lang.IllegalArgumentException
+import java.lang.IllegalStateException
+import java.math.BigInteger
+import java.security.SecureRandom
+import java.security.cert.X509Certificate
+import java.util.logging.Logger
 
 fun X509Certificate.toCertificate() =
-    CertificateAdapters.certificate.fromDer(encoded.toByteString())
+  CertificateAdapters.certificate.fromDer(encoded.toByteString())
 
 fun SecureRandom.nextBytes(count: Int) = ByteArray(count).apply {
   nextBytes(this)
@@ -72,14 +72,18 @@ class OcspClient(httpClient: OkHttpClient, val secure: Boolean = false) {
   fun request(certificateX: X509Certificate, issuerX: X509Certificate): OCSPReq {
     val serial: BigInteger = certificateX.serialNumber
     val certId =
-        CertificateID(Digester.sha1(), X509CertificateHolder(issuerX.encoded), serial)
+      CertificateID(Digester.sha1(), X509CertificateHolder(issuerX.encoded), serial)
 
     val builder = OCSPReqBuilder()
     builder.addRequest(certId)
 
     val extensions: Array<Extension> =
-        arrayOf(Extension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce, false,
-            DEROctetString(random.nextBytes(8))))
+      arrayOf(
+        Extension(
+          OCSPObjectIdentifiers.id_pkix_ocsp_nonce, false,
+          DEROctetString(random.nextBytes(8))
+        )
+      )
     builder.setRequestExtensions(Extensions(extensions))
 
     return builder.build()
@@ -89,11 +93,12 @@ class OcspClient(httpClient: OkHttpClient, val secure: Boolean = false) {
     val certificate = certificateX.toCertificate()
 
     val accessLocation =
-        certificate.authorityInfoAccess?.find { it.accessMethod == ObjectIdentifiers.ocsp }?.accessLocation?.second
-            ?: return null
+      certificate.authorityInfoAccess?.find { it.accessMethod == ObjectIdentifiers.ocsp }?.accessLocation?.second
+        ?: return null
 
     val url = accessLocation.toString().toHttpUrlOrNull() ?: throw IllegalArgumentException(
-        "Unable to parse OCSP url $accessLocation")
+      "Unable to parse OCSP url $accessLocation"
+    )
 
     val request = request(certificateX, issuerCertificateX)
 
@@ -104,10 +109,10 @@ class OcspClient(httpClient: OkHttpClient, val secure: Boolean = false) {
     }
 
     val httpRequest = Request.Builder()
-        .url(requestUrl)
-        .header("accept", "application/ocsp-response")
-        .post(request.encoded.toRequestBody(contentType = "application/ocsp-request".toMediaType()))
-        .build()
+      .url(requestUrl)
+      .header("accept", "application/ocsp-response")
+      .post(request.encoded.toRequestBody(contentType = "application/ocsp-request".toMediaType()))
+      .build()
 
     val response = try {
       httpClient.execute(httpRequest)
@@ -119,8 +124,9 @@ class OcspClient(httpClient: OkHttpClient, val secure: Boolean = false) {
     val ocspResponse = OCSPResp(bytes)
 
     val requestStatus =
-        Status.values().find { it.code == ocspResponse.status } ?: throw IllegalStateException(
-            "Unknown response: " + ocspResponse.status)
+      Status.values().find { it.code == ocspResponse.status } ?: throw IllegalStateException(
+        "Unknown response: " + ocspResponse.status
+      )
 
     val responseObject = ocspResponse.responseObject as BasicOCSPResp?
 

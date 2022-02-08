@@ -15,25 +15,26 @@
  */
 package app.cash.certifikit.cli
 
+import okio.FileSystem
+import okio.Path
 import java.security.KeyStore
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
-import okio.FileSystem
-import okio.Path
 
 fun Path.trustManager(filesystem: FileSystem = FileSystem.SYSTEM): X509TrustManager {
-    val factory = TrustManagerFactory.getInstance(
-            TrustManagerFactory.getDefaultAlgorithm())
+  val factory = TrustManagerFactory.getInstance(
+    TrustManagerFactory.getDefaultAlgorithm()
+  )
 
-    val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
-    filesystem.read(this) {
-        keyStore.load(inputStream(), null)
-    }
-    factory.init(keyStore)
+  val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
+  filesystem.read(this) {
+    keyStore.load(inputStream(), null)
+  }
+  factory.init(keyStore)
 
-    val trustManagers = factory.trustManagers!!
-    check(trustManagers.size == 1 && trustManagers[0] is X509TrustManager) {
-        "Unexpected default trust managers: ${trustManagers.contentToString()}"
-    }
-    return trustManagers[0] as X509TrustManager
+  val trustManagers = factory.trustManagers!!
+  check(trustManagers.size == 1 && trustManagers[0] is X509TrustManager) {
+    "Unexpected default trust managers: ${trustManagers.contentToString()}"
+  }
+  return trustManagers[0] as X509TrustManager
 }

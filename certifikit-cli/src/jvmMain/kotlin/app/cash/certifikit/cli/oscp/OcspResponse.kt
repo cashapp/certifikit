@@ -15,12 +15,12 @@
  */
 package app.cash.certifikit.cli.oscp
 
-import java.lang.IllegalStateException
 import okhttp3.HttpUrl
 import org.bouncycastle.cert.ocsp.BasicOCSPResp
 import org.bouncycastle.cert.ocsp.CertificateStatus
 import org.bouncycastle.cert.ocsp.RevokedStatus
 import picocli.CommandLine
+import java.lang.IllegalStateException
 
 class OcspResponse(
   val requestStatus: app.cash.certifikit.cli.oscp.Status? = null,
@@ -46,10 +46,12 @@ class OcspResponse(
   fun prettyPrint(): String {
     return when {
       failure != null -> CommandLine.Help.Ansi.AUTO.string(
-          "@|yellow Failed checking OCSP status (${failure.message}) from $url|@")
+        "@|yellow Failed checking OCSP status (${failure.message}) from $url|@"
+      )
       status == Status.GOOD -> goodStatus()
       else -> CommandLine.Help.Ansi.AUTO.string(
-          "@|yellow Failed checking OCSP status ($status) from $url|@")
+        "@|yellow Failed checking OCSP status ($status) from $url|@"
+      )
     }
   }
 

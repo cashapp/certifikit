@@ -16,10 +16,10 @@
 package app.cash.certifikit.cli
 
 import app.cash.certifikit.CertificateAdapters
-import kotlin.test.Test
 import okhttp3.internal.platform.Platform
 import okio.ByteString.Companion.decodeBase64
 import org.assertj.core.api.Assertions.assertThat
+import kotlin.test.Test
 
 class CertificateOutputTest {
   val certificateBase64 = """
@@ -71,7 +71,8 @@ class CertificateOutputTest {
 
     val output = okHttpCertificate.prettyPrintCertificate(Platform.get().platformTrustManager())
 
-    assertThat(output).matches("""
+    assertThat(output).matches(
+      """
       |CN: 	cash\.app
       |Serial:	00be6800b9a91fb97a0000000054d1321d
       |Pin:	sha256/43a60e5aecabd897cbbcf833150740e18ff0c3d90bde132354dc85a4869b3269
@@ -83,6 +84,7 @@ class CertificateOutputTest {
       |	caIssuers: http://aia.entrust.net/l1m-chain256.cer
       |Valid: 	2020-04-13T13:25:49Z\.\.2021-04-12T13:55:49Z (.*)
       |CA: false
-    """.trimMargin())
+    """.trimMargin()
+    )
   }
 }

@@ -20,8 +20,6 @@ import app.cash.certifikit.cli.Main.Companion.NAME
 import app.cash.certifikit.cli.Main.VersionProvider
 import app.cash.certifikit.cli.errors.CertificationException
 import app.cash.certifikit.cli.errors.UsageException
-import java.util.concurrent.Callable
-import kotlin.system.exitProcess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -35,6 +33,8 @@ import picocli.CommandLine.Help.Ansi
 import picocli.CommandLine.IVersionProvider
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
+import java.util.concurrent.Callable
+import kotlin.system.exitProcess
 
 @Command(
   name = NAME, description = ["An ergonomic CLI for understanding certificates."],
@@ -190,7 +190,8 @@ class Main : Callable<Int> {
       exitProcess(
         CommandLine(Main())
           .registerConverter(Path::class.java) { value -> value.toPath() }
-          .execute(*args))
+          .execute(*args)
+      )
     }
   }
 }

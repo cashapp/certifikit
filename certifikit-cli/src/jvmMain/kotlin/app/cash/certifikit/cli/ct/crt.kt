@@ -22,8 +22,6 @@ import app.cash.certifikit.cli.prettyPrint
 import io.r2dbc.postgresql.PostgresqlConnectionConfiguration
 import io.r2dbc.postgresql.PostgresqlConnectionFactory
 import io.r2dbc.postgresql.api.PostgresqlConnection
-import java.net.Inet4Address
-import java.time.Duration.ofSeconds
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
@@ -34,6 +32,8 @@ import okhttp3.Dns
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 import picocli.CommandLine
+import java.net.Inet4Address
+import java.time.Duration.ofSeconds
 
 @Suppress("unused")
 suspend fun Main.crt(host: String): List<Pair<String, Certificate>> {

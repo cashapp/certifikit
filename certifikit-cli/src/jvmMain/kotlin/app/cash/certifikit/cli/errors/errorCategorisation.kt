@@ -31,11 +31,11 @@ fun Main.classify(
   return when {
     // java.security.cert.CertificateExpiredException: NotAfter: Mon Apr 13 00:59:59 BST 2015
     e.findMatchingCause { it is CertificateExpiredException } != null -> CertificationException(
-        "Certificate for $host is expired", e
+      "Certificate for $host is expired", e
     )
     // javax.net.ssl.SSLHandshakeException: PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
     e.findMatchingCause { it.javaClass.simpleName == "SunCertPathBuilderException" } != null -> CertificationException(
-        "Certificate for $host is untrusted", e
+      "Certificate for $host is untrusted", e
     )
     // SSLPeerUnverifiedException: Hostname wrong.host.badssl.com not verified:
     e is javax.net.ssl.SSLPeerUnverifiedException -> CertificationException(e.message!!, e)
@@ -43,14 +43,14 @@ fun Main.classify(
     e is java.net.UnknownHostException -> CertificationException("DNS Lookup Failed: $host", e)
     // java.net.SocketTimeoutException: Connect timed out
     e is java.net.SocketTimeoutException -> CertificationException(
-        "No response from server: $host", e
+      "No response from server: $host", e
     )
     // javax.net.ssl.SSLException: java.lang.RuntimeException: Unexpected error: java.security.InvalidAlgorithmParameterException: the trustAnchors parameter must be non-empty
     e.findMatchingCause { it is InvalidAlgorithmParameterException } != null ->
       CertificationException("No trusted CA certificates in keystore", e)
     // javax.net.ssl.SSLHandshakeException: Received fatal alert: handshake_failure
     e is SSLHandshakeException -> CertificationException(
-        "SSL Handshake Failure: ${e.message} ${if (insecure) "" else ", try with --insecure"}", e
+      "SSL Handshake Failure: ${e.message} ${if (insecure) "" else ", try with --insecure"}", e
     )
     // java.net.ConnectException: Failed to connect to localhost/[0:0:0:0:0:0:0:1]:443
     e is ConnectException -> CertificationException(e.message ?: "Unable to connect to host", e)
