@@ -16,5 +16,5 @@
 package app.cash.certifikit.cli
 
 fun main() {
-  Main.main("--all", "--host", "api.twitter.com", "--ctlogs")
+  Main.main("--verbose", "--insecure", "--host", "incomplete-chain.badssl.com")
 }

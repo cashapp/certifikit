@@ -16,6 +16,7 @@
 package app.cash.certifikit.cli.oscp
 
 import app.cash.certifikit.cli.SiteResponse
+import app.cash.certifikit.toX509Certificate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -32,7 +33,7 @@ fun CoroutineScope.ocsp(
 
   val ocspResponse = async {
     if (peerCertificate != null && signingCertificate != null) {
-      oscpClient.submit(peerCertificate, signingCertificate)
+      oscpClient.submit(peerCertificate.toX509Certificate(), signingCertificate.toX509Certificate())
     } else {
       OcspResponse.failure("no trusted certificates")
     }

@@ -15,15 +15,19 @@
  */
 package app.cash.certifikit.cli
 
+import app.cash.certifikit.Certificate
 import app.cash.certifikit.Certifikit
 import app.cash.certifikit.cli.errors.ClientException
 import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.cli.errors.classify
+import app.cash.certifikit.cli.okhttp.CapturingTrustManager
+import app.cash.certifikit.cli.oscp.toCertificate
 import java.io.IOException
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.security.cert.X509Certificate
+import javax.net.ssl.X509ExtendedTrustManager
 import javax.net.ssl.X509TrustManager
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.Dispatchers
@@ -44,11 +48,11 @@ import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
-import okhttp3.ResponseBody
 import okhttp3.TlsVersion
 import okhttp3.TlsVersion.TLS_1_1
 import okhttp3.TlsVersion.TLS_1_2
 import okhttp3.TlsVersion.TLS_1_3
+import okhttp3.internal.platform.Platform
 import okhttp3.tls.HandshakeCertificates
 import picocli.CommandLine.Help.Ansi
 
@@ -79,31 +83,80 @@ private val CipherSuite.strength: Strength
 
 const val userAgent = "Certifikit/${Certifikit.VERSION} OkHttp/${OkHttp.VERSION}"
 
-data class SiteResponse(val peerCertificates: List<X509Certificate>, val headers: Headers) {
+data class SiteResponse(
+  val peerCertificates: List<Certificate>,
+  val headers: Headers,
+  val fetchedCertificates: List<Certificate>? = null
+) {
   val strictTransportSecurity: String?
     get() = headers["strict-transport-security"]
 }
 
-suspend fun Main.fromHttps(host: String, inetAddress: InetAddress? = null): SiteResponse {
+suspend fun Main.fromHttps(
+  host: String,
+  inetAddress: InetAddress? = null,
+  insecure: Boolean
+): SiteResponse {
+  val captured = mutableMapOf<String, List<X509Certificate>>()
+
   val response = try {
-    val client = if (inetAddress != null) {
-      client.newBuilder().dns(FixedDns(client.dns, host, inetAddress)).build()
+    val client = if (inetAddress != null || insecure) {
+      client.newBuilder()
+        .apply {
+          if (inetAddress != null) {
+            dns(FixedDns(client.dns, host, inetAddress))
+          }
+          if (insecure) {
+            val trustManager = CapturingTrustManager(
+              client.x509TrustManager as X509ExtendedTrustManager, captured
+            )
+
+            val context = Platform.get().newSSLContext().apply {
+              init(null, arrayOf(trustManager), null)
+            }
+
+            sslSocketFactory(context.socketFactory, trustManager)
+          }
+        }
+        .build()
     } else {
       client
     }
+
     client.newCall(
-        Request.Builder()
-            .url("https://$host/")
-            .header("User-Agent", userAgent)
-            .head()
-            .build())
-        .await()
+      Request.Builder()
+        .url("https://$host/")
+        .header("User-Agent", userAgent)
+        .head()
+        .build()
+    )
+      .await()
   } catch (ioe: IOException) {
     throw this.classify(ioe)
   }
 
   return response.use {
-    val peerCertificates = response.handshake!!.peerCertificates.map { it as X509Certificate }
+    val handshake = response.handshake!!
+    val peerCertificates =
+      handshake.peerCertificates.map { it as X509Certificate }.map { it.toCertificate() }
+
+    if (insecure && peerCertificates.isEmpty()) {
+      val untrustedCertificates = captured[host].orEmpty().map { it.toCertificate() }
+
+      if (untrustedCertificates.isNotEmpty()) {
+        val aia = untrustedCertificates.last().caIssuers
+
+        if (aia != null) {
+          val fetchedCertificates = fetchCertificates(aia, fullChain = true)
+
+          return@use SiteResponse(
+            peerCertificates = untrustedCertificates, headers = response.headers,
+            fetchedCertificates = fetchedCertificates
+          )
+        }
+      }
+    }
+
     SiteResponse(peerCertificates = peerCertificates, headers = response.headers)
   }
 }
@@ -205,8 +258,6 @@ suspend fun Call.await(): Response {
   }
 }
 
-suspend fun ResponseBody.readString() = withContext(Dispatchers.IO) { string() }
-
 suspend fun OkHttpClient.execute(request: Request): Response {
   val call = this.newCall(request)
 
@@ -229,5 +280,3 @@ suspend fun Response.bodyString(): String {
     body?.string() ?: throw UsageException("No response body")
   }
 }
-
-fun Response.statusMessage(): String = this.code.toString() + " " + this.message

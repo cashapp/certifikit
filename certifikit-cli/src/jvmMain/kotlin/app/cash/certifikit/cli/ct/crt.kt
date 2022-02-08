@@ -68,7 +68,7 @@ suspend fun PostgresqlConnection.queryHostCertificates(host: String): List<Pair<
     .bind("$3", wildcard)
     .execute().flatMap {
       it.map { t, _ ->
-        val id = t.get("id").toString()
+        val id = t.get("id")!!.toString()
         val cert = (t.get("certificate", ByteArray::class.java) as ByteArray).toByteString()
         Pair(id, cert)
       }
