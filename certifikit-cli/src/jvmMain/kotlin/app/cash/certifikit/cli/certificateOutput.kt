@@ -20,17 +20,17 @@ import app.cash.certifikit.Certificate
 import app.cash.certifikit.ObjectIdentifiers
 import app.cash.certifikit.Validity
 import app.cash.certifikit.decodeKeyUsage
+import okio.ByteString
+import okio.ByteString.Companion.toByteString
+import picocli.CommandLine.Help.Ansi
 import java.net.InetAddress
 import java.security.cert.X509Certificate
 import java.time.Instant.ofEpochMilli
 import javax.net.ssl.X509TrustManager
-import okio.ByteString
-import okio.ByteString.Companion.toByteString
-import picocli.CommandLine.Help.Ansi
 
 fun X509Certificate.publicKeySha256(): ByteString =
   publicKey.encoded.toByteString()
-      .sha256()
+    .sha256()
 
 fun Certificate.prettyPrintCertificate(
   trustManager: X509TrustManager
@@ -98,16 +98,16 @@ private fun Certificate.subjectAlternativeNameValue(): List<String>? {
   return tbsCertificate.extensions.firstOrNull {
     it.id == ObjectIdentifiers.subjectAlternativeName
   }
-      ?.let {
-        @Suppress("UNCHECKED_CAST")
-        it.value as List<Pair<Any, Any>>
+    ?.let {
+      @Suppress("UNCHECKED_CAST")
+      it.value as List<Pair<Any, Any>>
+    }
+    ?.map { (adapter, value) ->
+      if (adapter is BasicDerAdapter<*> && adapter.tag == 7L) {
+        val bytes = (value as ByteString).toByteArray()
+        InetAddress.getByAddress(bytes).toString()
+      } else {
+        value.toString()
       }
-      ?.map { (adapter, value) ->
-        if (adapter is BasicDerAdapter<*> && adapter.tag == 7L) {
-          val bytes = (value as ByteString).toByteArray()
-          InetAddress.getByAddress(bytes).toString()
-        } else {
-          value.toString()
-        }
-      }
+    }
 }

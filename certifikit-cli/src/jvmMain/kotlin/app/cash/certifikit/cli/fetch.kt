@@ -20,9 +20,9 @@ import app.cash.certifikit.ObjectIdentifiers
 import app.cash.certifikit.cli.errors.ClientException
 import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.cli.oscp.toCertificate
+import okhttp3.MediaType.Companion.toMediaType
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
-import okhttp3.MediaType.Companion.toMediaType
 
 val Certificate.caIssuers: String?
   get() = authorityInfoAccess?.find { it.accessMethod == ObjectIdentifiers.caIssuers }?.accessLocation?.second?.toString()

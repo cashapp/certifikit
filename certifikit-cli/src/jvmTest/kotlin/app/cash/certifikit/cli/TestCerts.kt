@@ -15,10 +15,10 @@
  */
 package app.cash.certifikit.cli
 
-import kotlin.test.Test
 import okio.FileSystem
 import okio.Path.Companion.toPath
 import org.assertj.core.api.Assertions.assertThat
+import kotlin.test.Test
 
 class TestCerts {
   val fileSystem = FileSystem.SYSTEM

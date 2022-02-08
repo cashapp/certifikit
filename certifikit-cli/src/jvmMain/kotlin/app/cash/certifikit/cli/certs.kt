@@ -19,19 +19,21 @@ import app.cash.certifikit.Certificate
 import app.cash.certifikit.CertificateAdapters
 import app.cash.certifikit.certificatePem
 import app.cash.certifikit.cli.errors.UsageException
-import java.security.cert.X509Certificate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okio.ByteString.Companion.decodeBase64
 import okio.FileNotFoundException
 import okio.FileSystem
 import okio.Path
+import java.security.cert.X509Certificate
 
 internal fun String.parsePemCertificate(fileName: String? = null): Certificate {
   val regex = """-----BEGIN CERTIFICATE-----(.*)-----END CERTIFICATE-----""".toRegex(RegexOption.DOT_MATCHES_ALL)
-  val matchResult = regex.find(this) ?: throw UsageException("Invalid format" +
-      if (fileName != null) ": $fileName" else "")
-    val (pemBody) = matchResult.destructured
+  val matchResult = regex.find(this) ?: throw UsageException(
+    "Invalid format" +
+      if (fileName != null) ": $fileName" else ""
+  )
+  val (pemBody) = matchResult.destructured
 
   val data = pemBody.decodeBase64()!!
 

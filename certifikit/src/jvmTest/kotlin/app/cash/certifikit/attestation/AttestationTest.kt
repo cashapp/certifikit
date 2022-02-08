@@ -17,15 +17,15 @@ package app.cash.certifikit.attestation
 
 import app.cash.certifikit.CertificateAdapters
 import app.cash.certifikit.decodeCertificatePem
-import kotlin.test.Test
-import kotlin.test.assertEquals
 import okio.ByteString
 import okio.ByteString.Companion.decodeBase64
 import okio.ByteString.Companion.decodeHex
 import okio.ByteString.Companion.encodeUtf8
 import okio.ByteString.Companion.toByteString
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
-class AttestTest {
+class AttestationTest {
   @Test
   fun `decode attestation certificate`() {
     // https://github.com/google/android-key-attestation/blob/master/server/examples/pem/algorithm_EC_SecurityLevel_StrongBox/cert0.pem
@@ -58,7 +58,7 @@ class AttestTest {
 
     val javaCertificate = certificatePem.decodeCertificatePem()
     val okHttpCertificate = CertificateAdapters.certificate
-        .fromDer(certificateByteString)
+      .fromDer(certificateByteString)
 
     assertEquals(javaCertificate.signature.toByteString(), okHttpCertificate.signatureValue.byteString)
 
@@ -67,35 +67,35 @@ class AttestTest {
     }.value as KeyDescription
 
     assertEquals(
-        KeyDescription(
-            attestationVersion = 3L,
-            attestationSecurityLevel = 2L, // 2=StrongBox
-            keymasterVersion = 4L,
-            keymasterSecurityLevel = 2L, // 2=StrongBox
-            attestationChallenge = "abc".encodeUtf8(),
-            uniqueId = ByteString.EMPTY,
-            softwareEnforced = AuthorizationList(
-                creationDateTime = 1562602372883L,
-                attestationApplicationId = "308201b33182018b300c0407616e64726f696402011d30190414636f6d2e616e64726f69642e6b6579636861696e02011d30190414636f6d2e616e64726f69642e73657474696e677302011d30190414636f6d2e7174692e64696167736572766963657302011d301a0415636f6d2e616e64726f69642e64796e73797374656d02011d301d0418636f6d2e616e64726f69642e696e7075746465766963657302011d301f041a636f6d2e616e64726f69642e6c6f63616c7472616e73706f727402011d301f041a636f6d2e616e64726f69642e6c6f636174696f6e2e667573656402011d301f041a636f6d2e616e64726f69642e7365727665722e74656c65636f6d02011d3020041b636f6d2e616e64726f69642e77616c6c70617065726261636b757002011d3021041c636f6d2e676f6f676c652e5353526573746172744465746563746f7202011d3022041d636f6d2e676f6f676c652e616e64726f69642e68696464656e6d656e750201013023041e636f6d2e616e64726f69642e70726f7669646572732e73657474696e677302011d31220420301aa3cb081134501c45f1422abc66c24224fd5ded5fdc8f17e697176fd866aa".decodeHex()
-            ),
-            teeEnforced = AuthorizationList(
-                purpose = listOf(2L, 3L),
-                algorithm = 3L,
-                keySize = 256L,
-                digest = listOf(4L),
-                origin = 0,
-                rootOfTrust = RootOfTrust(
-                    verifiedBootKey = "0000000000000000000000000000000000000000000000000000000000000000".decodeHex(),
-                    deviceLocked = false,
-                    verifiedBootState = 2L,
-                    verifiedBootHash = "728db1274f1f1cf1571de4380b048a554ac4a380e76f5355083529084a937801".decodeHex()
-                ),
-                osVersion = 0L,
-                osPatchLevel = 201907L,
-                vendorPatchLevel = 20190705L,
-                bootPatchLevel = 20190700L
-            )
+      KeyDescription(
+        attestationVersion = 3L,
+        attestationSecurityLevel = 2L, // 2=StrongBox
+        keymasterVersion = 4L,
+        keymasterSecurityLevel = 2L, // 2=StrongBox
+        attestationChallenge = "abc".encodeUtf8(),
+        uniqueId = ByteString.EMPTY,
+        softwareEnforced = AuthorizationList(
+          creationDateTime = 1562602372883L,
+          attestationApplicationId = "308201b33182018b300c0407616e64726f696402011d30190414636f6d2e616e64726f69642e6b6579636861696e02011d30190414636f6d2e616e64726f69642e73657474696e677302011d30190414636f6d2e7174692e64696167736572766963657302011d301a0415636f6d2e616e64726f69642e64796e73797374656d02011d301d0418636f6d2e616e64726f69642e696e7075746465766963657302011d301f041a636f6d2e616e64726f69642e6c6f63616c7472616e73706f727402011d301f041a636f6d2e616e64726f69642e6c6f636174696f6e2e667573656402011d301f041a636f6d2e616e64726f69642e7365727665722e74656c65636f6d02011d3020041b636f6d2e616e64726f69642e77616c6c70617065726261636b757002011d3021041c636f6d2e676f6f676c652e5353526573746172744465746563746f7202011d3022041d636f6d2e676f6f676c652e616e64726f69642e68696464656e6d656e750201013023041e636f6d2e616e64726f69642e70726f7669646572732e73657474696e677302011d31220420301aa3cb081134501c45f1422abc66c24224fd5ded5fdc8f17e697176fd866aa".decodeHex()
         ),
+        teeEnforced = AuthorizationList(
+          purpose = listOf(2L, 3L),
+          algorithm = 3L,
+          keySize = 256L,
+          digest = listOf(4L),
+          origin = 0,
+          rootOfTrust = RootOfTrust(
+            verifiedBootKey = "0000000000000000000000000000000000000000000000000000000000000000".decodeHex(),
+            deviceLocked = false,
+            verifiedBootState = 2L,
+            verifiedBootHash = "728db1274f1f1cf1571de4380b048a554ac4a380e76f5355083529084a937801".decodeHex()
+          ),
+          osVersion = 0L,
+          osPatchLevel = 201907L,
+          vendorPatchLevel = 20190705L,
+          bootPatchLevel = 20190700L
+        )
+      ),
       keyDescription
     )
   }

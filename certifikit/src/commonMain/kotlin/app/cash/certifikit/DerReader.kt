@@ -319,10 +319,10 @@ class DerReader(source: Source) {
      * value.
      */
     private val END_OF_DATA = DerHeader(
-        tagClass = DerHeader.TAG_CLASS_UNIVERSAL,
-        tag = DerHeader.TAG_END_OF_CONTENTS,
-        constructed = false,
-        length = -1L
+      tagClass = DerHeader.TAG_CLASS_UNIVERSAL,
+      tag = DerHeader.TAG_END_OF_CONTENTS,
+      constructed = false,
+      length = -1L
     )
   }
 

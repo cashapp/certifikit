@@ -15,13 +15,13 @@
  */
 package app.cash.certifikit.text
 
+import okio.FileSystem
+import okio.Path
+import okio.Path.Companion.toPath
 import java.security.KeyPair
 import java.security.cert.X509Certificate
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import okio.FileSystem
-import okio.Path
-import okio.Path.Companion.toPath
 
 class PemTest {
   val fileSystem = FileSystem.SYSTEM

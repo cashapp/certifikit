@@ -15,42 +15,50 @@
  */
 package app.cash.certifikit.cli
 
-import java.util.concurrent.TimeUnit
 import okhttp3.ConnectionSpec
 import okhttp3.OkHttpClient
 import okhttp3.tls.HandshakeCertificates
+import java.util.concurrent.TimeUnit
 
 fun Main.buildClient(): OkHttpClient {
   return OkHttpClient.Builder()
-      .connectTimeout(2, TimeUnit.SECONDS)
-      .followRedirects(followRedirects)
-      .eventListener(VerboseEventListener(verbose))
-      .connectionSpecs(listOf(ConnectionSpec.MODERN_TLS,
-          ConnectionSpec.CLEARTEXT)) // The specs may be overridden later.
-      .apply {
-        if (insecure) {
-          hostnameVerifier { _, _ -> true }
+    .connectTimeout(2, TimeUnit.SECONDS)
+    .followRedirects(followRedirects)
+    .eventListener(VerboseEventListener(verbose))
+    .connectionSpecs(
+      listOf(
+        ConnectionSpec.MODERN_TLS,
+        ConnectionSpec.CLEARTEXT
+      )
+    ) // The specs may be overridden later.
+    .apply {
+      if (insecure) {
+        hostnameVerifier { _, _ -> true }
 
-          val handshakeCertificates = HandshakeCertificates.Builder()
-              .addTrustedCertificates(trustManager)
-              .addInsecureHost(host!!)
-              .build()
-          sslSocketFactory(handshakeCertificates.sslSocketFactory(),
-              handshakeCertificates.trustManager)
+        val handshakeCertificates = HandshakeCertificates.Builder()
+          .addTrustedCertificates(trustManager)
+          .addInsecureHost(host!!)
+          .build()
+        sslSocketFactory(
+          handshakeCertificates.sslSocketFactory(),
+          handshakeCertificates.trustManager
+        )
 
-          val spec = ConnectionSpec.Builder(ConnectionSpec.COMPATIBLE_TLS)
-              .allEnabledCipherSuites()
-              .allEnabledTlsVersions()
-              .build()
+        val spec = ConnectionSpec.Builder(ConnectionSpec.COMPATIBLE_TLS)
+          .allEnabledCipherSuites()
+          .allEnabledTlsVersions()
+          .build()
 
-          connectionSpecs(listOf(spec, ConnectionSpec.CLEARTEXT))
-        } else if (keyStoreFile != null) {
-          val handshakeCertificates = HandshakeCertificates.Builder()
-              .addTrustedCertificates(trustManager)
-              .build()
-          sslSocketFactory(handshakeCertificates.sslSocketFactory(),
-              handshakeCertificates.trustManager)
-        }
+        connectionSpecs(listOf(spec, ConnectionSpec.CLEARTEXT))
+      } else if (keyStoreFile != null) {
+        val handshakeCertificates = HandshakeCertificates.Builder()
+          .addTrustedCertificates(trustManager)
+          .build()
+        sslSocketFactory(
+          handshakeCertificates.sslSocketFactory(),
+          handshakeCertificates.trustManager
+        )
       }
-      .build()
+    }
+    .build()
 }

@@ -160,8 +160,8 @@ class DerWriter(sink: BufferedSink) {
   fun writeRelativeObjectIdentifier(s: String) {
     // Add a leading dot so each subidentifier has a dot prefix.
     val utf8 = Buffer()
-        .writeByte('.'.code)
-        .writeUtf8(s)
+      .writeByte('.'.code)
+      .writeUtf8(s)
 
     while (!utf8.exhausted()) {
       require(utf8.readByte() == '.'.code.toByte())

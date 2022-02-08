@@ -21,8 +21,6 @@ import app.cash.certifikit.cli.ct.showCrtResponse
 import app.cash.certifikit.cli.errors.UsageException
 import app.cash.certifikit.cli.oscp.OcspResponse
 import app.cash.certifikit.cli.oscp.ocsp
-import java.io.IOException
-import java.net.InetAddress
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -31,6 +29,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import picocli.CommandLine
+import java.io.IOException
+import java.net.InetAddress
 
 suspend fun Main.queryHost(host: String) {
   coroutineScope {
@@ -140,17 +140,17 @@ suspend fun Main.queryHost(host: String) {
 }
 
 private suspend fun showDnsAlternatives(siteResponses: List<Pair<InetAddress, Deferred<SiteResponse>>>) {
-    println()
-    siteResponses.forEach { siteResponse ->
-      val address = siteResponse.first
+  println()
+  siteResponses.forEach { siteResponse ->
+    val address = siteResponse.first
 
-      try {
-        val response = siteResponse.second.await()
-        println("$address: ${response.peerCertificates.firstOrNull()?.commonName}")
-      } catch (e: Exception) {
-        println("$address: $e")
-      }
+    try {
+      val response = siteResponse.second.await()
+      println("$address: ${response.peerCertificates.firstOrNull()?.commonName}")
+    } catch (e: Exception) {
+      println("$address: $e")
     }
+  }
 }
 
 suspend fun Main.dnsLookup(host: String) = withContext(Dispatchers.IO) { client.dns.lookup(host) }
