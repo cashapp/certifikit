@@ -38,7 +38,6 @@ internal fun String.parsePemCertificate(fileName: String? = null): Certificate {
   return CertificateAdapters.certificate.fromDer(data)
 }
 
-@Suppress("BlockingMethodInNonBlockingContext")
 internal suspend fun Path.parsePemCertificate(filesystem: FileSystem = FileSystem.SYSTEM): Certificate {
   return withContext(Dispatchers.IO) {
     try {
@@ -51,7 +50,6 @@ internal suspend fun Path.parsePemCertificate(filesystem: FileSystem = FileSyste
   }
 }
 
-@Suppress("BlockingMethodInNonBlockingContext")
 internal suspend fun X509Certificate.writePem(
   output: Path,
   filesystem: FileSystem = FileSystem.SYSTEM
@@ -63,7 +61,6 @@ internal suspend fun X509Certificate.writePem(
   }
 }
 
-@Suppress("BlockingMethodInNonBlockingContext")
 internal suspend fun Certificate.writePem(
   output: Path,
   filesystem: FileSystem = FileSystem.SYSTEM

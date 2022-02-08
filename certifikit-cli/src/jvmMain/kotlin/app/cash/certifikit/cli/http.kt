@@ -275,7 +275,6 @@ suspend fun OkHttpClient.execute(request: Request): Response {
 
 fun String.request(): Request = Request.Builder().url(this).build()
 
-@Suppress("BlockingMethodInNonBlockingContext")
 suspend fun Response.bodyString(): String {
   return withContext(Dispatchers.IO) {
     body?.string() ?: throw UsageException("No response body")
