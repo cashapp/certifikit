@@ -1,6 +1,3 @@
-include(":certifikit")
-include(":certifikit-cli")
-
 dependencyResolutionManagement {
     repositories {
         mavenCentral()
@@ -9,3 +6,9 @@ dependencyResolutionManagement {
         google()
     }
 }
+
+// enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+enableFeaturePreview("VERSION_CATALOGS")
+
+include(":certifikit")
+include(":certifikit-cli")

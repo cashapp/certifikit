@@ -5,11 +5,12 @@ buildscript {
   }
 
   dependencies {
-    classpath Dependencies.junitGradlePlugin
-    classpath Dependencies.kotlinGradlePlugin
-    classpath Dependencies.dokkaGradlePlugin
-    classpath Dependencies.mavenPublishGradlePlugin
-    classpath Dependencies.spotlessPlugin
+    classpath libs.junitGradlePlugin
+    classpath libs.kotlinGradlePlugin
+    classpath libs.dokkaGradlePlugin
+    classpath libs.mavenPublishGradlePlugin
+    classpath libs.spotlessPlugin
+    classpath libs.graalPlugin
   }
 }
 
@@ -39,7 +40,8 @@ subprojects {
   spotless {
     kotlin {
       target "**/*.kt"
-      ktlint(Versions.ktlintVersion).userData(['indent_size': '2', 'continuation_indent_size': '2'])
+      ktlint(libs.versions.ktlintVersion.get())
+              .userData(['indent_size': '2', 'continuation_indent_size': '2'])
     }
   }
 
