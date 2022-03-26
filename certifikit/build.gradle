@@ -24,8 +24,8 @@ kotlin {
             kotlin.srcDir("$buildDir/generated/sources/kotlinTemplates")
             
             dependencies {
-                implementation Dependencies.okio
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
+                implementation libs.okio
+                implementation(libs.org.jetbrains.kotlinx.kotlinx.datetime)
             }
         }
 
@@ -33,14 +33,14 @@ kotlin {
             dependencies {
                 dependsOn(commonMain)
                 implementation(kotlin("test"))
-                implementation(Dependencies.okio)
-                implementation("com.willowtreeapps.assertk:assertk:0.25")
+                implementation(libs.okio)
+                implementation(libs.com.willowtreeapps.assertk)
             }
         }
 
         getByName("jvmMain") {
             dependencies {
-                implementation Dependencies.okio
+                implementation libs.okio
             }
         }
 
@@ -48,8 +48,8 @@ kotlin {
             dependencies {
                 dependsOn(jvmMain)
                 implementation(kotlin("test"))
-                implementation(Dependencies.okio)
-                implementation Dependencies.assertj
+                implementation(libs.okio)
+                implementation libs.assertj
             }
         }
     }
