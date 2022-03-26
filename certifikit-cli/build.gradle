@@ -1,5 +1,4 @@
 //file:noinspection GroovyAssignabilityCheck
-import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
   id 'org.jetbrains.kotlin.multiplatform'
@@ -56,8 +55,6 @@ kotlin {
         implementation(libs.org.bouncycastle.bcpkix.jdk15on)
         implementation(libs.org.bouncycastle.bcprov.jdk15on)
         implementation(libs.org.bouncycastle.bctls.jdk15on)
-
-//        configurations["kapt"].dependencies.add(project.dependencies.create(libs.info.picocli.picocli.codegen))
       }
     }
 
@@ -84,8 +81,8 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
 graal {
   mainClass(application.mainClassName)
   outputName("cft")
-  graalVersion('21.3.0')
-  javaVersion('11')
+  graalVersion('22.0.0.2')
+  javaVersion('17')
 
   option("--enable-https")
   option("--no-fallback")

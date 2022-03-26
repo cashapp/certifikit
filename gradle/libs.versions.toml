@@ -1,24 +1,35 @@
 [versions]
 com-squareup-okhttp3 = "5.0.0-alpha.6"
+com-squareup-okio = "3.0.0"
 org-bouncycastle = "1.70"
 org-jetbrains-kotlin = "1.6.10"
+org-junit-platform = "1.2.0"
 ktlintVersion = "0.43.2"
 
 [libraries]
+assertj = "org.assertj:assertj-core:3.22.0"
 com-diffplug-spotless-spotless-plugin-gradle = "com.diffplug.spotless:spotless-plugin-gradle:6.2.1"
 com-squareup-okhttp3-logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "com-squareup-okhttp3" }
-com-squareup-okhttp3-okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "com-squareup-okhttp3" }
 com-squareup-okhttp3-mockwebserver-junit5 = { module = "com.squareup.okhttp3:mockwebserver3-junit5", version.ref = "com-squareup-okhttp3" }
+com-squareup-okhttp3-okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "com-squareup-okhttp3" }
 com-squareup-okhttp3-okhttp-bom = { module = "com.squareup.okhttp3:okhttp-bom", version.ref = "com-squareup-okhttp3" }
 com-squareup-okhttp3-okhttp-tls = { module = "com.squareup.okhttp3:okhttp-tls", version.ref = "com-squareup-okhttp3" }
-com-squareup-okio = "com.squareup.okio:okio:3.0.0"
+com-squareup-okio = { module = "com.squareup.okio:okio", version.ref = "com-squareup-okio" }
 com-vanniktech-gradle-maven-publish-plugin = "com.vanniktech:gradle-maven-publish-plugin:0.18.0"
 com-willowtreeapps-assertk = "com.willowtreeapps.assertk:assertk:0.25"
-info-picocli = "info.picocli:picocli:4.6.2"
-info-picocli-picocli-codegen = "info.picocli:picocli-codegen:4.6.1"
-io-netty-netty-bom = "io.netty:netty-bom:4.1.72.Final"
-io-projectreactor-netty-reactor-netty-core = "io.projectreactor.netty:reactor-netty-core:1.0.14"
-io-r2dbc-r2dbc-postgresql = "io.r2dbc:r2dbc-postgresql:0.8.10.RELEASE"
+dokkaGradlePlugin = "org.jetbrains.dokka:dokka-gradle-plugin:0.10.1"
+graalPlugin = "gradle.plugin.com.palantir.graal:gradle-graal:0.10.0"
+info-picocli = "info.picocli:picocli:4.6.3"
+io-netty-netty-bom = "io.netty:netty-bom:4.1.75.Final"
+io-projectreactor-netty-reactor-netty-core = "io.projectreactor.netty:reactor-netty-core:1.0.17"
+io-r2dbc-r2dbc-postgresql = "io.r2dbc:r2dbc-postgresql:0.8.12.RELEASE"
+junitGradlePlugin = { module = "org.junit.platform:junit-platform-gradle-plugin", version.ref = "org-junit-platform" }
+kotlinGradlePlugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10"
+kotlinReflection = "org.jetbrains.kotlin:kotlin-reflect:1.6.10"
+kotlinStdLib = "org.jetbrains.kotlin:kotlin-stdlib:1.6.10"
+mavenPublishGradlePlugin = "com.vanniktech:gradle-maven-publish-plugin:0.19.0"
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "com-squareup-okhttp3" }
+okio = { module = "com.squareup.okio:okio", version.ref = "com-squareup-okio" }
 org-assertj-assertj-core = "org.assertj:assertj-core:3.15.0"
 org-bouncycastle-bcpkix-jdk15on = { module = "org.bouncycastle:bcpkix-jdk15on", version.ref = "org-bouncycastle" }
 org-bouncycastle-bcprov-jdk15on = { module = "org.bouncycastle:bcprov-jdk15on", version.ref = "org-bouncycastle" }
@@ -30,32 +41,22 @@ org-jetbrains-kotlin-kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-re
 org-jetbrains-kotlin-kotlin-scripting-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable", version.ref = "org-jetbrains-kotlin" }
 org-jetbrains-kotlin-kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "org-jetbrains-kotlin" }
 org-jetbrains-kotlin-kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "org-jetbrains-kotlin" }
-org-jetbrains-kotlin-kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "org-jetbrains-kotlin" }
+org-jetbrains-kotlin-kotlin-test = "org.jetbrains.kotlin:kotlin-test:1.6.10"
 org-jetbrains-kotlinx-kotlinx-coroutines-core = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0"
 org-jetbrains-kotlinx-kotlinx-coroutines-jdk8 = "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.0"
 org-jetbrains-kotlinx-kotlinx-coroutines-reactive = "org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.6.0"
-org-jetbrains-kotlinx-kotlinx-datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.3.1"
-org-junit-platform-junit-platform-gradle-plugin = "org.junit.platform:junit-platform-gradle-plugin:1.2.0"
-assertj = "org.assertj:assertj-core:3.15.0"
-dokkaGradlePlugin = "org.jetbrains.dokka:dokka-gradle-plugin:0.10.1"
+org-jetbrains-kotlinx-kotlinx-datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.3.2"
+org-junit-platform-junit-platform-gradle-plugin = { module = "org.junit.platform:junit-platform-gradle-plugin", version.ref = "org-junit-platform" }
+spotlessPlugin = "com.diffplug.spotless:spotless-plugin-gradle:6.3.0"
 junit5Api = "org.junit.jupiter:junit-jupiter-api:5.7.0"
 junit5JupiterEngine = "org.junit.jupiter:junit-jupiter-engine:5.7.0"
-junitGradlePlugin = "org.junit.platform:junit-platform-gradle-plugin:1.2.0"
-kotlinGradlePlugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10"
-kotlinReflection = "org.jetbrains.kotlin:kotlin-reflect:1.6.10"
-kotlinStdLib = "org.jetbrains.kotlin:kotlin-stdlib:1.6.10"
-mavenPublishGradlePlugin = "com.vanniktech:gradle-maven-publish-plugin:0.18.0"
-okhttp = "com.squareup.okhttp3:okhttp:5.0.0-alpha.4"
-okio = "com.squareup.okio:okio:3.0.0"
-spotlessPlugin = "com.diffplug.spotless:spotless-plugin-gradle:6.2.1"
-graalPlugin = "gradle.plugin.com.palantir.graal:gradle-graal:0.10.0"
 
 [plugins]
-com-diffplug-gradle-spotless = "com.diffplug.gradle.spotless:6.2.1"
-com-diffplug-spotless = "com.diffplug.spotless:6.2.1"
+com-diffplug-gradle-spotless = "com.diffplug.gradle.spotless:6.3.0"
+com-diffplug-spotless = "com.diffplug.spotless:6.3.0"
 com-palantir-graal = "com.palantir.graal:0.10.0"
-com-vanniktech-maven-publish = "com.vanniktech.maven.publish:0.18.0"
-com-vanniktech-maven-publish-base = "com.vanniktech.maven.publish.base:0.18.0"
+com-vanniktech-maven-publish = "com.vanniktech.maven.publish:0.19.0"
+com-vanniktech-maven-publish-base = "com.vanniktech.maven.publish.base:0.19.0"
 kotlin = "kotlin:1.6.10"
 kotlin-android = "kotlin-android:1.6.10"
 kotlin-android-extensions = "kotlin-android-extensions:1.6.10"
