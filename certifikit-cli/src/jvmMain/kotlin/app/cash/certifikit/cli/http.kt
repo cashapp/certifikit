@@ -23,11 +23,8 @@ import app.cash.certifikit.cli.errors.classify
 import app.cash.certifikit.cli.okhttp.CapturingTrustManager
 import app.cash.certifikit.cli.oscp.toCertificate
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import okhttp3.Call
-import okhttp3.Callback
 import okhttp3.CipherSuite
 import okhttp3.ConnectionSpec.Companion.MODERN_TLS
 import okhttp3.ConnectionSpec.Companion.RESTRICTED_TLS
@@ -44,6 +41,7 @@ import okhttp3.TlsVersion
 import okhttp3.TlsVersion.TLS_1_1
 import okhttp3.TlsVersion.TLS_1_2
 import okhttp3.TlsVersion.TLS_1_3
+import okhttp3.executeAsync
 import okhttp3.internal.platform.Platform
 import okhttp3.tls.HandshakeCertificates
 import picocli.CommandLine.Help.Ansi
@@ -54,7 +52,6 @@ import java.net.Proxy
 import java.security.cert.X509Certificate
 import javax.net.ssl.X509ExtendedTrustManager
 import javax.net.ssl.X509TrustManager
-import kotlin.coroutines.resumeWithException
 
 enum class Strength(val color: String) {
   Good("green"),
@@ -130,7 +127,7 @@ suspend fun Main.fromHttps(
         .head()
         .build()
     )
-      .await()
+      .executeAsync()
   } catch (ioe: IOException) {
     throw this.classify(ioe)
   }
@@ -236,32 +233,10 @@ class VerboseEventListener(private val verbose: Boolean) : EventListener() {
   }
 }
 
-@OptIn(ExperimentalCoroutinesApi::class)
-suspend fun Call.await(): Response {
-  return suspendCancellableCoroutine { cont ->
-    cont.invokeOnCancellation {
-      cancel()
-    }
-    enqueue(object : Callback {
-      override fun onFailure(call: Call, e: IOException) {
-        if (!cont.isCompleted) {
-          cont.resumeWithException(e)
-        }
-      }
-
-      override fun onResponse(call: Call, response: Response) {
-        if (!cont.isCompleted) {
-          cont.resume(response, onCancellation = { response.close() })
-        }
-      }
-    })
-  }
-}
-
 suspend fun OkHttpClient.execute(request: Request): Response {
   val call = this.newCall(request)
 
-  val response = call.await()
+  val response = call.executeAsync()
 
   if (!response.isSuccessful) {
     val msg: String = response.message
@@ -273,7 +248,12 @@ suspend fun OkHttpClient.execute(request: Request): Response {
   return response
 }
 
-fun String.request(): Request = Request.Builder().url(this).build()
+fun String.request(fn: Request.Builder.() -> Unit = {}): Request = Request.Builder()
+  .url(this)
+  .apply {
+    this.fn()
+  }
+  .build()
 
 suspend fun Response.bodyString(): String {
   return withContext(Dispatchers.IO) {

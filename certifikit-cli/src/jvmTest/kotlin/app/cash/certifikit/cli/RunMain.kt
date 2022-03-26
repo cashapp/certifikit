@@ -16,5 +16,5 @@
 package app.cash.certifikit.cli
 
 fun main() {
-  Main.main("--verbose", "--insecure", "--host", "incomplete-chain.badssl.com")
+  Main.main("--verbose", "--insecure", "--host", "login.microsoftonline.com")
 }

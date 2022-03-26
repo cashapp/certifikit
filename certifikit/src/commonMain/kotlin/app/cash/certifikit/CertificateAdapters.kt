@@ -15,8 +15,11 @@
  */
 package app.cash.certifikit
 
+import app.cash.certifikit.Adapters.ANY_VALUE
 import app.cash.certifikit.Adapters.BIT_STRING
 import app.cash.certifikit.Adapters.OBJECT_IDENTIFIER
+import app.cash.certifikit.CertificateAdapters.attributeTypeAndValue
+import app.cash.certifikit.CertificateAdapters.generalName
 import app.cash.certifikit.attestation.AttestationAdapters
 import okio.ByteString
 
@@ -107,7 +110,7 @@ object CertificateAdapters {
       // https://tools.ietf.org/html/rfc4055#section-2.1
       ObjectIdentifiers.sha256WithRSAEncryption -> Adapters.NULL
       ObjectIdentifiers.rsaEncryption -> Adapters.NULL
-      ObjectIdentifiers.ecPublicKey -> Adapters.OBJECT_IDENTIFIER
+      ObjectIdentifiers.ecPublicKey -> OBJECT_IDENTIFIER
       else -> null
     }
   }
@@ -122,7 +125,7 @@ object CertificateAdapters {
    */
   internal val algorithmIdentifier: BasicDerAdapter<AlgorithmIdentifier> = Adapters.sequence(
     "AlgorithmIdentifier",
-    Adapters.OBJECT_IDENTIFIER.asTypeHint(),
+    OBJECT_IDENTIFIER.asTypeHint(),
     algorithmParameters,
     decompose = {
       listOf(
@@ -183,14 +186,25 @@ object CertificateAdapters {
    *
    * The first property of the pair is the adapter that was used, the second property is the value.
    */
+  internal val generalNameOtherName = ANY_VALUE.withExplicitBox(tag = 0L)
+  internal val generalNameRfc822Name = ANY_VALUE.withExplicitBox(tag = 1L)
   internal val generalNameDnsName = Adapters.IA5_STRING.withTag(tag = 2L)
+  internal val generalNameX400Address = ANY_VALUE.withExplicitBox(tag = 3L)
+  internal val generalNameDirectoryName = ANY_VALUE.withExplicitBox(tag = 4L)
+  internal val generalNameEdiPartyName = ANY_VALUE.withExplicitBox(tag = 5L)
   internal val generalNameUniformResourceIdentifier = Adapters.IA5_STRING.withTag(tag = 6L)
   internal val generalNameIpAddress = Adapters.OCTET_STRING.withTag(tag = 7L)
+  internal val generalNameRegisteredID = ANY_VALUE.withExplicitBox(tag = 8L)
   internal val generalName: DerAdapter<Pair<DerAdapter<*>, Any?>> = Adapters.choice(
+    generalNameOtherName,
+    generalNameRfc822Name,
     generalNameDnsName,
+    generalNameX400Address,
+    generalNameDirectoryName,
+    generalNameEdiPartyName,
     generalNameUniformResourceIdentifier,
     generalNameIpAddress,
-    Adapters.ANY_VALUE
+    generalNameRegisteredID,
   )
 
   /**
@@ -214,6 +228,7 @@ object CertificateAdapters {
       ObjectIdentifiers.keyUsage -> BIT_STRING
       ObjectIdentifiers.extKeyUsage -> extKeyUsage
       ObjectIdentifiers.authorityInfoAccess -> authorityInfoAccess
+      ObjectIdentifiers.cRLDistributionPoints -> cRLDistributionPoints
       AttestationAdapters.KEY_DESCRIPTION_OID -> AttestationAdapters.keyDescription
       else -> null
     }
@@ -237,7 +252,7 @@ object CertificateAdapters {
    */
   internal val extension: BasicDerAdapter<Extension> = Adapters.sequence(
     "Extension",
-    Adapters.OBJECT_IDENTIFIER.asTypeHint(),
+    OBJECT_IDENTIFIER.asTypeHint(),
     Adapters.BOOLEAN.optional(defaultValue = false),
     extensionValue,
     decompose = {
@@ -268,14 +283,14 @@ object CertificateAdapters {
    * AttributeValue ::= ANY -- DEFINED BY AttributeType
    * ```
    */
-  private val attributeTypeAndValue: BasicDerAdapter<AttributeTypeAndValue> = Adapters.sequence(
+  internal val attributeTypeAndValue: BasicDerAdapter<AttributeTypeAndValue> = Adapters.sequence(
     "AttributeTypeAndValue",
-    Adapters.OBJECT_IDENTIFIER,
+    OBJECT_IDENTIFIER,
     Adapters.any(
       String::class to Adapters.UTF8_STRING,
       Nothing::class to Adapters.PRINTABLE_STRING,
       Unit::class to Adapters.TELETEX,
-      AnyValue::class to Adapters.ANY_VALUE
+      AnyValue::class to ANY_VALUE
     ),
     decompose = {
       listOf(
@@ -324,7 +339,7 @@ object CertificateAdapters {
   val subjectPublicKeyInfo: BasicDerAdapter<SubjectPublicKeyInfo> = Adapters.sequence(
     "SubjectPublicKeyInfo",
     algorithmIdentifier,
-    Adapters.BIT_STRING,
+    BIT_STRING,
     decompose = {
       listOf(
         it.algorithm,
@@ -364,8 +379,8 @@ object CertificateAdapters {
     validity,
     name,
     subjectPublicKeyInfo,
-    Adapters.BIT_STRING.withTag(tag = 1L).optional(),
-    Adapters.BIT_STRING.withTag(tag = 2L).optional(),
+    BIT_STRING.withTag(tag = 1L).optional(),
+    BIT_STRING.withTag(tag = 2L).optional(),
     extension.asSequenceOf().withExplicitBox(tag = 3).optional(defaultValue = listOf()),
     decompose = {
       listOf(
@@ -410,7 +425,7 @@ object CertificateAdapters {
     "Certificate",
     tbsCertificate,
     algorithmIdentifier,
-    Adapters.BIT_STRING,
+    BIT_STRING,
     decompose = {
       listOf(
         it.tbsCertificate,
@@ -493,7 +508,7 @@ object CertificateAdapters {
    */
   internal val authorityInfoAccess: BasicDerAdapter<List<AccessDescription>> = Adapters.sequence(
     "AccessDescription",
-    Adapters.OBJECT_IDENTIFIER.asTypeHint(),
+    OBJECT_IDENTIFIER.asTypeHint(),
     generalName,
     decompose = {
       listOf(
@@ -508,4 +523,64 @@ object CertificateAdapters {
       )
     }
   ).asSequenceOf()
+
+  /**
+   * ```
+   *  CRLDistPointSyntax ::= SEQUENCE SIZE (1..MAX) OF DistributionPoint
+   *
+   *  DistributionPoint ::= SEQUENCE {
+   *  distributionPoint [0] DistributionPointName OPTIONAL,
+   *  reasons		  [1] ReasonFlags OPTIONAL,
+   *  cRLIssuer	  [2] GeneralNames OPTIONAL
+   *  }
+   *
+   *  DistributionPointName ::= CHOICE {
+   *  fullname	[0] GeneralNames,
+   *  nameRelativeToCRLIssuer [1] RelativeDistinguishedName
+   *  }
+   *
+   *  ReasonFlags ::= BIT STRING {
+   *  unused(0),
+   *  keyCompromise(1),
+   *  cACompromise(2)
+   *  affiliationChanged(3),
+   *  superseded(4),
+   *  cessationOfOperation(5),
+   *  certificateHold(6)
+   *  }
+   * ```
+   */
+  internal val cRLDistributionPoints: BasicDerAdapter<List<DistributionPoint>> = Adapters.sequence(
+    "CRLDistPointSyntax",
+    distributionPoint.withExplicitBox(tag = 0).optional(),
+    BIT_STRING.optional(),
+    generalName.withExplicitBox(tag = 2).optional(),
+    decompose = {
+      listOf(
+        it.distributionPoint,
+        it.reasons,
+        it.crlIssuer
+      )
+    },
+    construct = {
+      DistributionPoint(
+        distributionPoint = (it[0] as Pair<*,*>).second,
+        reasons = it[1] as BitString?,
+        crlIssuer = it[2]
+      )
+    }
+  ).asSequenceOf()
 }
+
+/**
+ *  DistributionPointName ::= CHOICE {
+ *  fullname	[0] GeneralNames,
+ *  nameRelativeToCRLIssuer [1] RelativeDistinguishedName
+ *  }
+ */
+internal val distributionPointFullName = generalName
+internal val distributionPointNameRelativeToCrlIssuer = attributeTypeAndValue.asSetOf()
+internal val distributionPoint: DerAdapter<Pair<DerAdapter<*>, Any?>> = Adapters.choice(
+  distributionPointFullName,
+  distributionPointNameRelativeToCrlIssuer
+)

@@ -71,6 +71,13 @@ data class Certificate(
         ?.value as BitString?
     }
 
+  val crlDistributionPoints: List<DistributionPoint>
+    get() {
+      return tbsCertificate.extensions
+        .firstOrNull { it.id == ObjectIdentifiers.cRLDistributionPoints }
+        ?.value as List<DistributionPoint>
+    }
+
   val authorityInfoAccess: List<AccessDescription>?
     get() {
       val value = tbsCertificate.extensions
@@ -230,3 +237,9 @@ data class AccessDescription(
       else -> accessMethod
     }
 }
+
+data class DistributionPoint(
+  val distributionPoint: Any?,
+  val reasons: BitString?,
+  val crlIssuer: Any?
+)
