@@ -16,6 +16,8 @@
 package app.cash.certifikit.cli
 
 import app.cash.certifikit.certificatePem
+import app.cash.certifikit.cli.crl.CrlResponse
+import app.cash.certifikit.cli.crl.crl
 import app.cash.certifikit.cli.ct.crt
 import app.cash.certifikit.cli.ct.showCrtResponse
 import app.cash.certifikit.cli.errors.UsageException
@@ -62,7 +64,9 @@ suspend fun Main.queryHost(host: String) {
       System.err.println("Warn: ${CommandLine.Help.Ansi.AUTO.string(" @|yellow No trusted certificates|@")}")
     }
 
-    val ocspResponse = ocsp(client, siteResponse)
+    val ocspResponse = async { ocsp(client, siteResponse) }
+
+    val crlResponse = async { crl(client, siteResponse) }
 
     val output = output
 
@@ -125,6 +129,8 @@ suspend fun Main.queryHost(host: String) {
 
     showOcspResponse(ocspResponse)
 
+    showCrlResponse(crlResponse)
+
     if (siteResponses != null) {
       showDnsAlternatives(siteResponses)
     }
@@ -154,6 +160,14 @@ private suspend fun showDnsAlternatives(siteResponses: List<Pair<InetAddress, De
 }
 
 suspend fun Main.dnsLookup(host: String) = withContext(Dispatchers.IO) { client.dns.lookup(host) }
+
+suspend fun showCrlResponse(crlResponse: Deferred<List<CrlResponse>?>) {
+  val response = crlResponse.await()
+
+  response?.forEach {
+    println(it.prettyPrint())
+  }
+}
 
 suspend fun showOcspResponse(ocspResponse: Deferred<OcspResponse?>) {
   try {

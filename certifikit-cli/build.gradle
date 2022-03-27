@@ -40,6 +40,7 @@ kotlin {
         implementation(libs.info.picocli)
         implementation(libs.com.squareup.okhttp3.okhttp)
         implementation(libs.com.squareup.okhttp3.okhttp.tls)
+        implementation(libs.com.squareup.okhttp3.okhttp.coroutines)
         implementation(libs.com.squareup.okhttp3.logging.interceptor)
 
         implementation(libs.io.projectreactor.netty.reactor.netty.core)
