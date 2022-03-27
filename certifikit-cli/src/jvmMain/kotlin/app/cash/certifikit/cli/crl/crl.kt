@@ -57,14 +57,14 @@ private suspend fun fetchCrl(
 
   return when (distributionPoint) {
     is Pair<*, *> -> {
-      val url = (distributionPoint.second as AnyValue).bytes.utf8()
+      val url = ((distributionPoint.second as Pair<*, *>).second as AnyValue).bytes.utf8()
       fetchCrl(url, client)
     }
     is List<*> -> {
       val cRLIssuer = distributionPoint.map { it as AttributeTypeAndValue }
       CrlResponse(cRLIssuer = cRLIssuer)
     }
-    else -> CrlResponse(failure = IllegalStateException("CRL format not understood"))
+    else -> CrlResponse(failure = IllegalStateException("CRL format not understood $distributionPoint"))
   }
 }
 

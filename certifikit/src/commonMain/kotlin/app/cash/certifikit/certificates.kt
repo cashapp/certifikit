@@ -239,7 +239,7 @@ data class AccessDescription(
 }
 
 data class DistributionPoint(
-  val distributionPoint: Any?,
-  val reasons: BitString?,
-  val crlIssuer: Any?
+  val distributionPoint: Any? = null,
+  val reasons: BitString? = null,
+  val crlIssuer: Any? = null
 )

@@ -564,7 +564,7 @@ object CertificateAdapters {
     },
     construct = {
       DistributionPoint(
-        distributionPoint = (it[0] as Pair<*,*>).second,
+        distributionPoint = it[0],
         reasons = it[1] as BitString?,
         crlIssuer = it[2]
       )
