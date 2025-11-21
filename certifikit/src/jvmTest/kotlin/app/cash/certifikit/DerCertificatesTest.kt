@@ -15,7 +15,10 @@
  */
 package app.cash.certifikit
 
+import app.cash.certifikit.CertificateAdapters.generalName
+import app.cash.certifikit.CertificateAdapters.generalNameOtherName
 import app.cash.certifikit.CertificateAdapters.generalNameUniformResourceIdentifier
+import app.cash.certifikit.DerHeader.Companion.TAG_CLASS_CONTEXT_SPECIFIC
 import app.cash.certifikit.ObjectIdentifiers.basicConstraints
 import app.cash.certifikit.ObjectIdentifiers.commonName
 import app.cash.certifikit.ObjectIdentifiers.organizationalUnitName
@@ -327,15 +330,30 @@ internal class DerCertificatesTest {
             Extension(
               id = authorityInfoAccess,
               critical = false,
-              value = listOf(AccessDescription(ObjectIdentifiers.ocsp, Pair(generalNameUniformResourceIdentifier, "http://ocsp.entrust.net")))
+              value = listOf(
+                AccessDescription(
+                  ObjectIdentifiers.ocsp,
+                  Pair(generalNameUniformResourceIdentifier, "http://ocsp.entrust.net")
+                )
+              )
             ),
             Extension(
               id = crlDistributionPoints,
               critical = false,
-              value = (
-                "302a3028a026a0248622687474703a2f2f63726c2e656e74727573742e6" +
-                  "e65742f726f6f746361312e63726c"
-                ).decodeHex()
+              value = listOf(
+                DistributionPoint(
+                  distributionPoint = Pair(
+                    generalName,
+                    Pair(
+                      generalNameOtherName,
+                      AnyValue(
+                        TAG_CLASS_CONTEXT_SPECIFIC, 6, false, 34,
+                        "http://crl.entrust.net/rootca1.crl".encodeUtf8()
+                      )
+                    )
+                  )
+                )
+              )
             ),
             Extension(
               id = certificatePolicies,
@@ -444,7 +462,6 @@ internal class DerCertificatesTest {
 
     assertThat(okHttpCertificate.signatureValue.byteString)
       .isEqualTo(javaCertificate.signature.toByteString())
-
     assertThat(okHttpCertificate).isEqualTo(
       Certificate(
         tbsCertificate = TbsCertificate(
@@ -599,17 +616,35 @@ internal class DerCertificatesTest {
               id = authorityInfoAccess,
               critical = false,
               value = listOf(
-                AccessDescription(ObjectIdentifiers.ocsp, Pair(generalNameUniformResourceIdentifier, "http://ocsp.entrust.net")),
-                AccessDescription(ObjectIdentifiers.caIssuers, Pair(generalNameUniformResourceIdentifier, "http://aia.entrust.net/l1m-chain256.cer"))
+                AccessDescription(
+                  ObjectIdentifiers.ocsp,
+                  Pair(generalNameUniformResourceIdentifier, "http://ocsp.entrust.net")
+                ),
+                AccessDescription(
+                  ObjectIdentifiers.caIssuers, Pair(
+                  generalNameUniformResourceIdentifier, "http://aia.entrust.net/l1m-chain256.cer"
+                )
+                )
               )
             ),
+
             Extension(
               id = crlDistributionPoints,
               critical = false,
-              value = (
-                "302a3028a026a0248622687474703a2f2f63726c2e656e74727573742e6" +
-                  "e65742f6c6576656c316d2e63726c"
-                ).decodeHex()
+              value = listOf(
+                DistributionPoint(
+                  distributionPoint = Pair(
+                    generalName,
+                    Pair(
+                      generalNameOtherName,
+                      AnyValue(
+                        TAG_CLASS_CONTEXT_SPECIFIC, 6, false, 34,
+                        "http://crl.entrust.net/level1m.crl".encodeUtf8()
+                      )
+                    )
+                  )
+                )
+              )
             ),
             Extension(
               id = certificatePolicies,
@@ -950,7 +985,7 @@ internal class DerCertificatesTest {
     assertThat(decoded.subjectAlternativeNames).isEqualTo(
       listOf(
         Adapters.ANY_VALUE to AnyValue(
-          tagClass = DerHeader.TAG_CLASS_CONTEXT_SPECIFIC,
+          tagClass = TAG_CLASS_CONTEXT_SPECIFIC,
           tag = 1L,
           constructed = false,
           length = 16,

@@ -17,7 +17,6 @@ package app.cash.certifikit.cli.oscp
 
 import app.cash.certifikit.CertificateAdapters
 import app.cash.certifikit.ObjectIdentifiers
-import app.cash.certifikit.cli.await
 import app.cash.certifikit.cli.execute
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -26,6 +25,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.executeAsync
 import okio.ByteString.Companion.toByteString
 import org.bouncycastle.asn1.DEROctetString
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers
@@ -38,8 +38,6 @@ import org.bouncycastle.cert.ocsp.OCSPReq
 import org.bouncycastle.cert.ocsp.OCSPReqBuilder
 import org.bouncycastle.cert.ocsp.OCSPResp
 import java.io.IOException
-import java.lang.IllegalArgumentException
-import java.lang.IllegalStateException
 import java.math.BigInteger
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
@@ -137,7 +135,7 @@ class OcspClient(httpClient: OkHttpClient, val secure: Boolean = false) {
 
   suspend fun submit(host: String): OcspResponse {
     val hostResponse = try {
-      httpClient.newCall(Request.Builder().url("https://$host/").head().build()).await()
+      httpClient.newCall(Request.Builder().url("https://$host/").head().build()).executeAsync()
     } catch (ioe: IOException) {
       return OcspResponse(failure = ioe)
     }
