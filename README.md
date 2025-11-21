@@ -1,10 +1,17 @@
 Certifikit
 ==========
 
+Deprecated
+----------
+
+This library is no longer actively developed.
+
+About
+-----
+
 Kotlin Certificate processing library.
 
 See the [project website](https://cashapp.github.io/certifikit) for documentation and APIs.
-
 
 Get Certifikit
 --------------
